@@ -4,28 +4,55 @@ mod network;
 
 use message::Message;
 use network::Network;
+use node::Node;
+
 
 fn main() {
+
+    let node1 = Node::new(1);
+    let node2 = Node::new(2);
+
+    println!("Node {} created", node1.id);
+    println!("Node {} created", node2.id);
+
     let mut network = Network::new();
+
+    let payload = String::from("proposal");
 
     network.send(Message {
         from: 1,
         to: 2,
         round: 1,
+        payload: payload,
     });
 
-    let delivered = network.deliver_next();
+    //println!("{}", payload);
 
-    match delivered {
+    //let delivered = network.deliver_next();
+
+    if let Some(msg) = network.deliver_next() {
+        println!(
+            "Delivered message from {} to {}",
+            msg.from,
+            msg.to
+        );
+    
+        node2.receive(&msg);
+    }
+
+   /* match delivered {
         Some(msg) => {
             //println!("Delivered message from {} to {}", msg.from, msg.to);
             println!(
-                "Delivered message from {} to {} in round {}",
-                msg.from, msg.to, msg.round
+                "Delivered message from {} to {} in round {} with payload {}",
+                msg.from,
+                msg.to,
+                msg.round,
+                msg.payload
             );
         }
         None => {
             println!("No message to deliver");
         }
-    }
+    }*/
 }
