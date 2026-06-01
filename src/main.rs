@@ -2,12 +2,14 @@ mod message;
 mod node;
 mod network;
 mod state;
+mod trace;
 
 use message::Message;
 use network::Network;
 use node::Node;
 use message::MessageType;
-use state::NodeState;
+use trace::TraceEvent;
+use trace::trace;
 
 
 fn main() {
@@ -31,10 +33,9 @@ fn main() {
     });
 
     if let Some(msg) = network.deliver_next() {
-        println!(
-            "Delivered message from {} to {}",
-            msg.from,
-            msg.to
+        trace(
+            TraceEvent::Deliver,
+            &format!("{} -> {}", msg.from, msg.to),
         );
         node2.receive(&msg);
     }
@@ -48,10 +49,9 @@ fn main() {
     });
 
     if let Some(msg) = network.deliver_next() {
-        println!(
-            "Delivered message from {} to {}",
-            msg.from,
-            msg.to
+        trace(
+            TraceEvent::Deliver,
+            &format!("{} -> {}", msg.from, msg.to),
         );
         node2.receive(&msg);
     }
@@ -68,10 +68,9 @@ fn main() {
     //let delivered = network.deliver_next();
 
     if let Some(msg) = network.deliver_next() {
-        println!(
-            "Delivered message from {} to {}",
-            msg.from,
-            msg.to
+        trace(
+            TraceEvent::Deliver,
+            &format!("{} -> {}", msg.from, msg.to),
         );
         node2.receive(&msg);
     }

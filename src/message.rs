@@ -1,9 +1,11 @@
+#[derive(Debug)]
 pub enum MessageType {
     Proposal,
     Vote,
     Commit,
 }
 
+#[derive(Debug)]
 pub struct Message {
     pub from: u64,
     pub to: u64,

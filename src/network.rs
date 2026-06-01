@@ -1,4 +1,5 @@
 use crate::message::Message;
+use crate::trace::{trace, TraceEvent};
 
 pub struct Network {
     pub queue: Vec<Message>,
@@ -10,6 +11,10 @@ impl Network {
     }
 
     pub fn send(&mut self, msg: Message) {
+        trace(
+            TraceEvent::Send,
+            &format!("{} -> {}", msg.from, msg.to),
+        );
         self.queue.push(msg);
     }
 

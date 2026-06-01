@@ -1,7 +1,9 @@
 use crate::message::Message;
 use crate::message::MessageType;
 use crate::state::NodeState;
+use crate::trace::{trace, TraceEvent};
 
+#[derive(Debug)]
 pub struct Node {
     pub id: u64,
     pub messages_received: u64,
@@ -21,6 +23,10 @@ impl Node {
 impl Node {
     pub fn receive(&mut self, msg: &Message) {
         self.messages_received += 1;
+        trace(
+            TraceEvent::Receive,
+            &format!("Node {} received {:?} from {}", self.id, msg.msg_type, msg.from),
+        );
         println!(
             "Node {} received payload {} in round {}",
             self.id,
@@ -35,21 +41,32 @@ impl Node {
 
         match msg.msg_type {
             MessageType::Proposal => {
-                println!("Node {} received PROPOSAL", self.id);
-                println!("Node {} state changed from {:?} to PROPOSED", self.id, self.state);
+               // println!("Node {} received PROPOSAL", self.id);
+               // println!("Node {} state changed from {:?} to PROPOSED", self.id, self.state);
+                let old_state = self.state.clone();
                 self.state = NodeState::Proposed;
+                trace(
+                    TraceEvent::StateTransition,
+                    &format!("Node {} {:?} -> {:?}", self.id, old_state, self.state),
+                );
             }
         
             MessageType::Vote => {
-                println!("Node {} received VOTE", self.id);
-                println!("Node {} state changed from {:?} to VOTED", self.id, self.state);
+                let old_state = self.state.clone();
                 self.state = NodeState::Voted;
+                trace(
+                    TraceEvent::StateTransition,
+                    &format!("Node {} {:?} -> {:?}", self.id, old_state, self.state),
+                );
             }
         
             MessageType::Commit => {
-                println!("Node {} received COMMIT", self.id);
-                println!("Node {} state changed from {:?} to COMMITTED", self.id, self.state);
+                let old_state = self.state.clone();
                 self.state = NodeState::Committed;
+                trace(
+                    TraceEvent::StateTransition,
+                    &format!("Node {} {:?} -> {:?}", self.id, old_state, self.state),
+                ); 
             }
         }
     }
