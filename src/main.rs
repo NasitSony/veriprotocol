@@ -5,6 +5,7 @@ mod network;
 use message::Message;
 use network::Network;
 use node::Node;
+use message::MessageType;
 
 
 fn main() {
@@ -17,15 +18,49 @@ fn main() {
 
     let mut network = Network::new();
 
-    let payload = String::from("proposal");
+    //let payload = String::from("proposal");
 
     network.send(Message {
         from: 1,
         to: 2,
         round: 1,
-        payload: payload,
+        msg_type: MessageType::Proposal,
+        payload: String::from("proposal"),
     });
 
+    if let Some(msg) = network.deliver_next() {
+        println!(
+            "Delivered message from {} to {}",
+            msg.from,
+            msg.to
+        );
+        node2.receive(&msg);
+    }
+
+    network.send(Message {
+        from: 1,
+        to: 2,
+        round: 2,
+        msg_type: MessageType::Vote,
+        payload: String::from("vote"),
+    });
+
+    if let Some(msg) = network.deliver_next() {
+        println!(
+            "Delivered message from {} to {}",
+            msg.from,
+            msg.to
+        );
+        node2.receive(&msg);
+    }
+
+    network.send(Message {
+        from: 1,
+        to: 2,
+        round: 1,
+        msg_type: MessageType::Commit,
+        payload: String::from("commit"),
+    });
     //println!("{}", payload);
 
     //let delivered = network.deliver_next();

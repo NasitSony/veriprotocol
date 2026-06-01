@@ -1,4 +1,5 @@
 use crate::message::Message;
+use crate::message::MessageType;
 
 pub struct Node {
     pub id: u64,
@@ -28,5 +29,19 @@ impl Node {
             self.id,
             self.messages_received
         );
+
+        match msg.msg_type {
+            MessageType::Proposal => {
+                println!("Node {} received PROPOSAL", self.id);
+            }
+        
+            MessageType::Vote => {
+                println!("Node {} received VOTE", self.id);
+            }
+        
+            MessageType::Commit => {
+                println!("Node {} received COMMIT", self.id);
+            }
+        }
     }
 }
