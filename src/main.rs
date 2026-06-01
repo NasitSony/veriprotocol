@@ -10,7 +10,7 @@ use node::Node;
 fn main() {
 
     let node1 = Node::new(1);
-    let node2 = Node::new(2);
+    let mut node2 = Node::new(2);
 
     println!("Node {} created", node1.id);
     println!("Node {} created", node2.id);
@@ -36,7 +36,6 @@ fn main() {
             msg.from,
             msg.to
         );
-    
         node2.receive(&msg);
     }
 
