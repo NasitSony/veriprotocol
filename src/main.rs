@@ -3,6 +3,7 @@ mod node;
 mod network;
 mod state;
 mod trace;
+mod scheduler;
 
 use message::Message;
 use network::Network;

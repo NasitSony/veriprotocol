@@ -1,13 +1,18 @@
 use crate::message::Message;
 use crate::trace::{trace, TraceEvent};
+use crate::scheduler::FifoScheduler;
 
 pub struct Network {
     pub queue: Vec<Message>,
+    pub scheduler: FifoScheduler,
 }
 
 impl Network {
     pub fn new() -> Self {
-        Self { queue: Vec::new() }
+        Self {
+            queue: Vec::new(),
+            scheduler: FifoScheduler::new(),
+        }
     }
 
     pub fn send(&mut self, msg: Message) {
@@ -19,6 +24,6 @@ impl Network {
     }
 
     pub fn deliver_next(&mut self) -> Option<Message> {
-        self.queue.pop()
+        self.scheduler.choose_next(&mut self.queue)
     }
 }
