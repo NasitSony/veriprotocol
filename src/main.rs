@@ -1,11 +1,13 @@
 mod message;
 mod node;
 mod network;
+mod state;
 
 use message::Message;
 use network::Network;
 use node::Node;
 use message::MessageType;
+use state::NodeState;
 
 
 fn main() {
