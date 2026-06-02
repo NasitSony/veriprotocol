@@ -5,6 +5,12 @@ pub enum MessageType {
     Commit,
 }
 
+#[derive(Debug, Clone)]
+pub enum VoteValue {
+    Yes,
+    No,
+}
+
 #[derive(Debug)]
 pub struct Message {
     pub from: u64,
@@ -12,4 +18,5 @@ pub struct Message {
     pub round: u64,
     pub msg_type: MessageType,
     pub payload: String,
+    pub value: VoteValue,
 }

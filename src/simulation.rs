@@ -1,7 +1,7 @@
-use crate::message::{Message, MessageType};
 use crate::network::Network;
 use crate::node::Node;
 use crate::trace::{trace, TraceEvent};
+use crate::message::{Message, MessageType, VoteValue};
 
 pub struct Simulation {
     pub network: Network,
@@ -25,8 +25,9 @@ impl Simulation {
             from: self.node1.id,
             to: self.node2.id,
             round: 1,
-            msg_type: MessageType::Proposal,
-            payload: String::from("proposal"),
+            msg_type: MessageType::Vote,
+            payload: String::from("vote"),
+            value: VoteValue::Yes,
         });
 
         self.network.send(Message {
@@ -35,14 +36,16 @@ impl Simulation {
             round: 2,
             msg_type: MessageType::Vote,
             payload: String::from("vote"),
+            value: VoteValue::Yes,
         });
 
         self.network.send(Message {
             from: self.node1.id,
             to: self.node2.id,
             round: 3,
-            msg_type: MessageType::Commit,
-            payload: String::from("commit"),
+            msg_type: MessageType::Vote,
+            payload: String::from("vote"),
+            value: VoteValue::Yes,
         });
 
         while let Some(msg) = self.network.deliver_next() {

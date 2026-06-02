@@ -1,20 +1,28 @@
-use crate::message::Message;
-use crate::message::MessageType;
+use crate::message::{Message, MessageType, VoteValue};
 use crate::state::NodeState;
 use crate::trace::{trace, TraceEvent};
+
 
 #[derive(Debug)]
 pub struct Node {
     pub id: u64,
     pub messages_received: u64,
     pub state: NodeState,
+    pub yes_votes: usize,
+    pub no_votes: usize,
+    pub decided: Option<VoteValue>,
 }
+
+
 impl Node {
     pub fn new(id: u64) -> Self {
         Self {
             id,
             messages_received: 0,
             state: NodeState::Idle,
+            yes_votes: 0,
+            no_votes: 0,
+            decided: None,
         }
     }
 }
@@ -54,6 +62,33 @@ impl Node {
             MessageType::Vote => {
                 let old_state = self.state.clone();
                 self.state = NodeState::Voted;
+                match msg.value {
+                    VoteValue::Yes => {
+                        self.yes_votes += 1;
+                    }
+                    VoteValue::No => {
+                        self.no_votes += 1;
+                    }
+
+                    
+                }
+        
+                println!(
+                    "Node {}: YES={} NO={}",
+                    self.id,
+                    self.yes_votes,
+                    self.no_votes
+                );
+
+                if self.yes_votes >= 3 && self.decided.is_none() {
+                    self.decided = Some(VoteValue::Yes);
+                    println!("Node {} DECIDED YES", self.id);
+                }
+                
+                if self.no_votes >= 3 && self.decided.is_none() {
+                    self.decided = Some(VoteValue::No);
+                    println!("Node {} DECIDED NO", self.id);
+                }
                 trace(
                     TraceEvent::StateTransition,
                     &format!("Node {} {:?} -> {:?}", self.id, old_state, self.state),

@@ -1,4 +1,4 @@
-use crate::message::Message;
+use crate::message::{Message, MessageType, VoteValue};
 use crate::trace::{trace, TraceEvent};
 use crate::scheduler::{FifoScheduler, Scheduler};
 
