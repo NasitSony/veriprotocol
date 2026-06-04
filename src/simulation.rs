@@ -1,11 +1,16 @@
 use crate::network::Network;
-use crate::node::Node;
+use crate::node::{Node,NodeAction};
 use crate::trace::{trace, TraceEvent};
 use crate::message::{Message, MessageType, VoteValue};
+
+use std::collections::HashSet;
+
+
 
 pub struct Simulation {
     pub network: Network,
     nodes: Vec<Node>,
+   
 }
 
 impl Simulation {
@@ -16,8 +21,7 @@ impl Simulation {
                 Node::new(1),
                 Node::new(2),
                 Node::new(3),
-                Node::new(4),
-],
+                Node::new(4),],
         }
     }
 
@@ -26,7 +30,7 @@ impl Simulation {
 
         let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
-        for fromNode in  node_ids {
+        for &fromNode in  &node_ids {
             let proposal = Message {
                 from: fromNode,
                 to: 0, // ignored during broadcast
@@ -37,6 +41,8 @@ impl Simulation {
             };
             self.broadcast(proposal);    
         }
+
+       
 
         
         //self.broadcast_proposals();
@@ -67,7 +73,35 @@ impl Simulation {
     
             for node in &mut self.nodes {
                 if node.id == msg.to {
-                    node.receive(&msg);
+                    let actions = node.receive(&msg);
+
+                    for action in actions {
+                      match action {
+                         NodeAction::BroadcastVote(value) => {
+                         self.broadcast(Message {
+                            from: msg.to,
+                            to: 0,
+                            round: msg.round + 1,
+                            msg_type: MessageType::Vote,
+                            payload: String::from("vote"),
+                            value,
+                           });
+                        }
+
+                        NodeAction::BroadcastCommit(value) => {
+                            self.broadcast(Message {
+                               from: msg.to,
+                               to: 0,
+                               round: msg.round + 1,
+                               msg_type: MessageType::Commit,
+                               payload: String::from("commit"),
+                               value,
+                              });
+                           }
+
+
+                      }
+                    }
                     break;
                 }
             }

@@ -1,6 +1,10 @@
 use crate::message::{Message, MessageType, VoteValue};
 use crate::state::NodeState;
 use crate::trace::{trace, TraceEvent};
+use std::collections::HashMap;
+use std::collections::HashSet;
+
+
 
 
 #[derive(Debug)]
@@ -11,6 +15,14 @@ pub struct Node {
     pub yes_votes: usize,
     pub no_votes: usize,
     pub decided: Option<VoteValue>,
+    pub vote_counts: HashMap<(MessageType, VoteValue), usize>,
+    pub completed_quorums: HashSet<(MessageType, VoteValue)>,
+}
+
+#[derive(Debug)]
+pub enum NodeAction {
+    BroadcastVote(VoteValue),
+    BroadcastCommit(VoteValue),
 }
 
 
@@ -23,86 +35,170 @@ impl Node {
             yes_votes: 0,
             no_votes: 0,
             decided: None,
+            vote_counts: HashMap::new(),
+            completed_quorums: HashSet::new(),
         }
     }
 }
 
 
 impl Node {
-    pub fn receive(&mut self, msg: &Message) {
+
+    fn count(&self, msg_type: MessageType, value: VoteValue) -> usize {
+        *self
+            .vote_counts
+            .get(&(msg_type, value))
+            .unwrap_or(&0)
+    }
+
+    pub fn receive(&mut self, msg: &Message) -> Vec<NodeAction> {
         self.messages_received += 1;
-        /*trace(
-            TraceEvent::Receive,
-            &format!("Node {} received {:?} from {}", self.id, msg.msg_type, msg.from),
-        );
-        println!(
-            "Node {} received payload {} in round {}",
-            self.id,
-            msg.payload,
-            msg.round
-        );
-        println!(
-            "Node {} received {} messages",
-            self.id,
-            self.messages_received
-        );*/// I do not need these messages right now
+        let key = (msg.msg_type.clone(), msg.value.clone());
+
+        let count = self.vote_counts.entry(key).or_insert(0);
+        *count += 1;
+        
 
         match msg.msg_type {
             MessageType::Proposal => {
-               // println!("Node {} received PROPOSAL", self.id);
-               // println!("Node {} state changed from {:?} to PROPOSED", self.id, self.state);
-                let old_state = self.state.clone();
-                self.state = NodeState::Proposed;
-                /*trace(
-                    TraceEvent::StateTransition,
-                    &format!("Node {} {:?} -> {:?}", self.id, old_state, self.state),
-                );*/ // Omiting trace for state transition to PROPOSED, as it is not critical for the consensus outcome
+                let proposal_yes = self.count(MessageType::Proposal, VoteValue::Yes);
+                let proposal_no  = self.count(MessageType::Proposal, VoteValue::No);
+            
+                if self.quorum_reached(MessageType::Proposal, VoteValue::Yes, proposal_yes) {
+                    let old_state = self.state.clone();
+                    self.state = NodeState::Proposed;
+            
+                    println!(
+                        "Proposal quorum reached in Node {}: YES={}",
+                        self.id,
+                        proposal_yes
+                    );
+            
+                    println!(
+                        "Node {} state changed from {:?} to {:?}",
+                        self.id,
+                        old_state,
+                        self.state
+                    );
+            
+                    println!(
+                        "Node {} should now broadcast Vote(YES)",
+                        self.id
+                    );
+
+                    return vec![NodeAction::BroadcastVote(VoteValue::Yes)];
+                } else if self.quorum_reached(MessageType::Proposal, VoteValue::No, proposal_no) {
+                    let old_state = self.state.clone();
+                    self.state = NodeState::Proposed;
+            
+                    println!(
+                        "Proposal quorum reached in Node {}: NO={}",
+                        self.id,
+                        proposal_no
+                    );
+            
+                    println!(
+                        "Node {} state changed from {:?} to {:?}",
+                        self.id,
+                        old_state,
+                        self.state
+                    );
+            
+                    println!(
+                        "Node {} should now broadcast Vote(NO)",
+                        self.id
+                    );
+
+                    return vec![NodeAction::BroadcastVote(VoteValue::No)];
+                }
             }
+            
         
             MessageType::Vote => {
-                let old_state = self.state.clone();
-                self.state = NodeState::Voted;
-                match msg.value {
-                    VoteValue::Yes => {
-                        self.yes_votes += 1;
-                    }
-                    VoteValue::No => {
-                        self.no_votes += 1;
-                    }
 
-                    
-                }
-        
-                println!(
-                    "Node {}: YES={} NO={}",
-                    self.id,
-                    self.yes_votes,
-                    self.no_votes
-                );
-
-                if self.yes_votes >= 3 && self.decided.is_none() {
-                    self.decided = Some(VoteValue::Yes);
-                    println!("Node {} DECIDED YES", self.id);
-                }
+                let vote_yes = self.count(MessageType::Vote, VoteValue::Yes);
+                let vote_no  = self.count(MessageType::Vote, VoteValue::No);
+ 
+               
+                if self.quorum_reached(MessageType::Vote, VoteValue::Yes, vote_yes) {
+                    let old_state = self.state.clone();
+                    self.state = NodeState::Voted;
                 
-                if self.no_votes >= 3 && self.decided.is_none() {
-                    self.decided = Some(VoteValue::No);
-                    println!("Node {} DECIDED NO", self.id);
+                    println!("Vote quorum reached in Node {}: YES={}", self.id, vote_yes);
+                    println!("Node {} state changed from {:?} to {:?}", self.id, old_state, self.state);
+                    println!("Node {} should now broadcast Commit(YES)", self.id);
+                
+                    return vec![NodeAction::BroadcastCommit(VoteValue::Yes)];
+                } else if self.quorum_reached(MessageType::Vote, VoteValue::No, vote_no) {
+                    let old_state = self.state.clone();
+                    self.state = NodeState::Voted;
+                
+                    println!("Vote quorum reached in Node {}: NO={}", self.id, vote_no);
+                    println!("Node {} state changed from {:?} to {:?}", self.id, old_state, self.state);
+                    println!("Node {} should now broadcast Commit(NO)", self.id);
+                
+                    return vec![NodeAction::BroadcastCommit(VoteValue::No)];
                 }
-                trace(
-                    TraceEvent::StateTransition,
-                    &format!("Node {} {:?} -> {:?}", self.id, old_state, self.state),
-                );
             }
         
             MessageType::Commit => {
-                let old_state = self.state.clone();
-                self.state = NodeState::Committed;
-                trace(
+                let commit_yes = self.count(MessageType::Commit, VoteValue::Yes);
+                let commit_no  = self.count(MessageType::Commit, VoteValue::No);
+ 
+               
+                if self.quorum_reached(
+                 MessageType::Commit,
+                 VoteValue::Yes,
+                 commit_yes,
+                 ) {
+                    let old_state = self.state.clone();
+                    self.state = NodeState::Committed;
+                    self.decided = Some(VoteValue::Yes);
+                
+                    println!("Commit quorum reached in Node {}: YES={}", self.id, commit_yes);
+                    println!("Node {} state changed from {:?} to {:?}", self.id, old_state, self.state);
+                    println!("Node {} DECIDED YES", self.id);
+                
+                    return vec![];                 }else if self.quorum_reached(
+                     MessageType::Commit,
+                     VoteValue::No, 
+                     commit_no,
+                 ) {
+                    let old_state = self.state.clone();
+                    self.state = NodeState::Committed;
+                    self.decided = Some(VoteValue::No);
+                
+                    println!("Commit quorum reached in Node {}: YES={}", self.id, commit_no);
+                    println!("Node {} state changed from {:?} to {:?}", self.id, old_state, self.state);
+                    println!("Node {} DECIDED YES", self.id);
+                
+                    return vec![];   }
+                
+               /* trace(
                     TraceEvent::StateTransition,
                     &format!("Node {} {:?} -> {:?}", self.id, old_state, self.state),
-                ); 
+                ); */
             }
-        }
+
+            
+        }  return vec![];
     }
+
+    fn quorum_reached(
+        &mut self,
+        msg_type: MessageType,
+        value: VoteValue,
+        count: usize,
+    ) -> bool {
+        let key = (msg_type, value);
+    
+        if count >= 3 && !self.completed_quorums.contains(&key) {
+            self.completed_quorums.insert(key);
+            return true;
+        }
+    
+        false
+    }
+
+    
 }
