@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum MessageType {
     Proposal,
     Vote,
@@ -11,7 +11,7 @@ pub enum VoteValue {
     No,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Message {
     pub from: u64,
     pub to: u64,

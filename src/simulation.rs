@@ -24,7 +24,22 @@ impl Simulation {
     pub fn run(&mut self) {
         println!("Simulation starting");
 
-        self.broadcast_proposals();
+        let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
+
+        for fromNode in  node_ids {
+            let proposal = Message {
+                from: fromNode,
+                to: 0, // ignored during broadcast
+                round: 0,
+                msg_type: MessageType::Proposal,
+                payload: String::from("proposal"),
+                value: VoteValue::Yes,
+            };
+            self.broadcast(proposal);    
+        }
+
+        
+        //self.broadcast_proposals();
         self.deliver_all_messages();
     }
 
@@ -56,6 +71,14 @@ impl Simulation {
                     break;
                 }
             }
+        }
+    }
+
+    fn broadcast(&mut self, template: Message) {
+        for node in &self.nodes {
+            let mut msg = template.clone();
+            msg.to = node.id;
+            self.network.send(msg);
         }
     }
 }
