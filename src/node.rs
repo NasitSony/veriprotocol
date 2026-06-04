@@ -31,7 +31,7 @@ impl Node {
 impl Node {
     pub fn receive(&mut self, msg: &Message) {
         self.messages_received += 1;
-        trace(
+        /*trace(
             TraceEvent::Receive,
             &format!("Node {} received {:?} from {}", self.id, msg.msg_type, msg.from),
         );
@@ -45,7 +45,7 @@ impl Node {
             "Node {} received {} messages",
             self.id,
             self.messages_received
-        );
+        );*/// I do not need these messages right now
 
         match msg.msg_type {
             MessageType::Proposal => {
@@ -53,10 +53,10 @@ impl Node {
                // println!("Node {} state changed from {:?} to PROPOSED", self.id, self.state);
                 let old_state = self.state.clone();
                 self.state = NodeState::Proposed;
-                trace(
+                /*trace(
                     TraceEvent::StateTransition,
                     &format!("Node {} {:?} -> {:?}", self.id, old_state, self.state),
-                );
+                );*/ // Omiting trace for state transition to PROPOSED, as it is not critical for the consensus outcome
             }
         
             MessageType::Vote => {

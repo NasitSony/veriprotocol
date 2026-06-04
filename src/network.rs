@@ -1,12 +1,12 @@
 use crate::message::{Message, MessageType, VoteValue};
 use crate::trace::{trace, TraceEvent};
-use crate::scheduler::{FifoScheduler, Scheduler};
+use crate::scheduler::{FifoScheduler, Scheduler, RandomScheduler};
 
 //pub scheduler: FifoScheduler,
 
 pub struct Network {
     pub queue: Vec<Message>,
-    pub scheduler: FifoScheduler,
+    pub scheduler: RandomScheduler,
 }
 
 
@@ -14,7 +14,7 @@ impl Network {
     pub fn new() -> Self {
         Self {
             queue: Vec::new(),
-            scheduler: FifoScheduler::new(),
+            scheduler: RandomScheduler::new(),
         }
     }
 

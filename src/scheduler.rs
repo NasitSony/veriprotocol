@@ -15,9 +15,19 @@ impl FifoScheduler {
     }
 }
 
+impl RandomScheduler {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
 impl Scheduler for FifoScheduler {
     fn choose_next(&self, queue: &mut Vec<Message>) -> Option<Message> {
-        queue.pop()
+        if queue.is_empty() {
+            None
+        } else {
+            Some(queue.remove(0))
+        }
     }
 }
 

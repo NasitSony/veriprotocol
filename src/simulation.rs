@@ -5,57 +5,56 @@ use crate::message::{Message, MessageType, VoteValue};
 
 pub struct Simulation {
     pub network: Network,
-    pub node1: Node,
-    pub node2: Node,
+    nodes: Vec<Node>,
 }
 
 impl Simulation {
     pub fn new() -> Self {
         Self {
             network: Network::new(),
-            node1: Node::new(1),
-            node2: Node::new(2),
+            nodes: vec![
+                Node::new(1),
+                Node::new(2),
+                Node::new(3),
+                Node::new(4),
+],
         }
     }
 
     pub fn run(&mut self) {
         println!("Simulation starting");
 
-        self.network.send(Message {
-            from: self.node1.id,
-            to: self.node2.id,
-            round: 1,
-            msg_type: MessageType::Vote,
-            payload: String::from("vote"),
-            value: VoteValue::Yes,
-        });
+        self.broadcast_proposals();
+        self.deliver_all_messages();
+    }
 
-        self.network.send(Message {
-            from: self.node1.id,
-            to: self.node2.id,
-            round: 2,
-            msg_type: MessageType::Vote,
-            payload: String::from("vote"),
-            value: VoteValue::Yes,
-        });
+    fn broadcast_proposals(&mut self) {
+        for fromNode in  &self.nodes {
+            for toNode in  &self.nodes {  
+                self.network.send(Message {
+                    from: fromNode.id,
+                    to: toNode.id,
+                    round: 0,
+                    msg_type: MessageType::Proposal,
+                    payload: String::from("proposal"),
+                    value: VoteValue::Yes,
+                });   
+            }
+        }
+    }
 
-        self.network.send(Message {
-            from: self.node1.id,
-            to: self.node2.id,
-            round: 3,
-            msg_type: MessageType::Vote,
-            payload: String::from("vote"),
-            value: VoteValue::Yes,
-        });
-
+    fn deliver_all_messages(&mut self) {
         while let Some(msg) = self.network.deliver_next() {
             trace(
                 TraceEvent::Deliver,
                 &format!("{} -> {}", msg.from, msg.to),
             );
-
-            if msg.to == self.node2.id {
-                self.node2.receive(&msg);
+    
+            for node in &mut self.nodes {
+                if node.id == msg.to {
+                    node.receive(&msg);
+                    break;
+                }
             }
         }
     }
