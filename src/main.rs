@@ -12,4 +12,5 @@ use simulation::Simulation;
 fn main() {
     let mut sim = Simulation::new();
     sim.run();
+    sim.run();
 }
