@@ -58,3 +58,10 @@ Average overhead: +8.1
 
 Observation:
 Random scheduling changes decision latency. Some schedules reach consensus faster than FIFO, while others are slower.
+
+Random Scheduler, 10 runs
+Min: 41
+Max: 46
+Average: 43.70
+Ideal: 36
+Average overhead: +7.70

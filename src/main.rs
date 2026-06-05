@@ -11,7 +11,7 @@ use simulation::Simulation;
 use std::env;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = std::env::args().collect();
 
     let scheduler = args
         .get(1)
@@ -23,10 +23,29 @@ fn main() {
         .and_then(|s| s.parse().ok())
         .unwrap_or(1);
 
+    let mut results: Vec<usize> = Vec::new();
+
     for i in 0..runs {
         println!("\n=== Run {} ===", i + 1);
 
         let mut sim = Simulation::new(scheduler);
         sim.run();
+
+        results.push(sim.metrics.decision_delivery_count);
+    }
+
+    if runs > 1 {
+        let min = results.iter().min().unwrap();
+        let max = results.iter().max().unwrap();
+
+        let sum: usize = results.iter().sum();
+        let avg = sum as f64 / results.len() as f64;
+
+        println!("\n=== Summary ===");
+        println!("Scheduler: {}", scheduler);
+        println!("Runs: {}", runs);
+        println!("Min Decision Delivery Count: {}", min);
+        println!("Max Decision Delivery Count: {}", max);
+        println!("Average Decision Delivery Count: {:.2}", avg);
     }
 }
