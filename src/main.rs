@@ -5,6 +5,7 @@ mod scheduler;
 mod simulation;
 mod state;
 mod trace;
+mod metrics;
 
 use simulation::Simulation;
 

@@ -2,6 +2,7 @@ use crate::network::Network;
 use crate::node::{Node,NodeAction};
 use crate::trace::{trace, TraceEvent};
 use crate::message::{Message, MessageType, VoteValue};
+use crate::metrics::Metrics;
 
 use std::collections::HashSet;
 
@@ -10,7 +11,7 @@ use std::collections::HashSet;
 pub struct Simulation {
     pub network: Network,
     nodes: Vec<Node>,
-   
+    pub metrics: Metrics,
 }
 
 impl Simulation {
@@ -22,6 +23,7 @@ impl Simulation {
                 Node::new(2),
                 Node::new(3),
                 Node::new(4),],
+                metrics: Metrics ::new(), 
         }
     }
 
@@ -47,6 +49,19 @@ impl Simulation {
         
         //self.broadcast_proposals();
         self.deliver_all_messages();
+        self.metrics.decisions = self.nodes
+            .iter()
+            .filter(|node| node.decided.is_some())
+            .count();
+
+            println!("\n=== Metrics ===");
+            println!("Messages Sent: {}", self.metrics.messages_sent);
+            println!("Messages Delivered: {}", self.metrics.messages_delivered);
+            println!(
+                "Decision Delivery Count: {}",
+                self.metrics.decision_delivery_count
+            );
+            println!("Decisions: {}", self.metrics.decisions);
     }
 
     fn broadcast_proposals(&mut self) {
@@ -66,6 +81,8 @@ impl Simulation {
 
     fn deliver_all_messages(&mut self) {
         while let Some(msg) = self.network.deliver_next() {
+            self.metrics.messages_delivered += 1;
+    
             trace(
                 TraceEvent::Deliver,
                 &format!("{} -> {}", msg.from, msg.to),
@@ -74,36 +91,41 @@ impl Simulation {
             for node in &mut self.nodes {
                 if node.id == msg.to {
                     let actions = node.receive(&msg);
-
+    
                     for action in actions {
-                      match action {
-                         NodeAction::BroadcastVote(value) => {
-                         self.broadcast(Message {
-                            from: msg.to,
-                            to: 0,
-                            round: msg.round + 1,
-                            msg_type: MessageType::Vote,
-                            payload: String::from("vote"),
-                            value,
-                           });
+                        match action {
+                            NodeAction::BroadcastVote(value) => {
+                                self.broadcast(Message {
+                                    from: msg.to,
+                                    to: 0,
+                                    round: msg.round + 1,
+                                    msg_type: MessageType::Vote,
+                                    payload: String::from("vote"),
+                                    value,
+                                });
+                            }
+    
+                            NodeAction::BroadcastCommit(value) => {
+                                self.broadcast(Message {
+                                    from: msg.to,
+                                    to: 0,
+                                    round: msg.round + 1,
+                                    msg_type: MessageType::Commit,
+                                    payload: String::from("commit"),
+                                    value,
+                                });
+                            }
                         }
-
-                        NodeAction::BroadcastCommit(value) => {
-                            self.broadcast(Message {
-                               from: msg.to,
-                               to: 0,
-                               round: msg.round + 1,
-                               msg_type: MessageType::Commit,
-                               payload: String::from("commit"),
-                               value,
-                              });
-                           }
-
-
-                      }
                     }
+    
                     break;
                 }
+            }
+    
+            // Stop once all nodes have decided.
+            if self.nodes.iter().all(|node| node.decided.is_some()) {
+                self.metrics.decision_delivery_count = self.metrics.messages_delivered;
+                break;
             }
         }
     }
@@ -112,6 +134,7 @@ impl Simulation {
         for node in &self.nodes {
             let mut msg = template.clone();
             msg.to = node.id;
+            self.metrics.messages_sent += 1;
             self.network.send(msg);
         }
     }
