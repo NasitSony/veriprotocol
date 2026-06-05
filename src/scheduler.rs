@@ -1,5 +1,4 @@
 use crate::message::Message;
-use rand::Rng;
 use rand::RngExt;
 
 pub trait Scheduler {

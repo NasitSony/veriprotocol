@@ -1,10 +1,9 @@
 use crate::network::Network;
-use crate::node::{Node,NodeAction};
-use crate::trace::{trace, TraceEvent};
+use crate::node::{Node, NodeAction};
+use crate::trace::{trace, TraceEvent, Config};
 use crate::message::{Message, MessageType, VoteValue};
 use crate::metrics::Metrics;
 
-use std::collections::HashSet;
 
 
 
@@ -12,18 +11,25 @@ pub struct Simulation {
     pub network: Network,
     nodes: Vec<Node>,
     pub metrics: Metrics,
+    pub config: Config,
 }
 
 impl Simulation {
-    pub fn new() -> Self {
+    pub fn new(scheduler_name: &str) -> Self {
         Self {
-            network: Network::new(),
+            network: Network::new(scheduler_name),
             nodes: vec![
                 Node::new(1),
                 Node::new(2),
                 Node::new(3),
                 Node::new(4),],
                 metrics: Metrics ::new(), 
+                config: Config {
+                    print_trace: false,
+                    print_state_changes: true,
+                    print_quorums: true,
+                    print_decisions: true,
+                },
         }
     }
 
@@ -32,9 +38,9 @@ impl Simulation {
 
         let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
-        for &fromNode in  &node_ids {
+        for &from_node in  &node_ids {
             let proposal = Message {
-                from: fromNode,
+                from: from_node,
                 to: 0, // ignored during broadcast
                 round: 0,
                 msg_type: MessageType::Proposal,
@@ -64,26 +70,12 @@ impl Simulation {
             println!("Decisions: {}", self.metrics.decisions);
     }
 
-    fn broadcast_proposals(&mut self) {
-        for fromNode in  &self.nodes {
-            for toNode in  &self.nodes {  
-                self.network.send(Message {
-                    from: fromNode.id,
-                    to: toNode.id,
-                    round: 0,
-                    msg_type: MessageType::Proposal,
-                    payload: String::from("proposal"),
-                    value: VoteValue::Yes,
-                });   
-            }
-        }
-    }
-
     fn deliver_all_messages(&mut self) {
         while let Some(msg) = self.network.deliver_next() {
             self.metrics.messages_delivered += 1;
     
             trace(
+                &self.config,
                 TraceEvent::Deliver,
                 &format!("{} -> {}", msg.from, msg.to),
             );

@@ -1,28 +1,38 @@
-use crate::message::{Message, MessageType, VoteValue};
-use crate::trace::{trace, TraceEvent};
+use crate::message::{Message};
 use crate::scheduler::{FifoScheduler, Scheduler, RandomScheduler};
 
 //pub scheduler: FifoScheduler,
 
 pub struct Network {
     pub queue: Vec<Message>,
-    pub scheduler: FifoScheduler,
+    pub scheduler: Box<dyn Scheduler>,
 }
 
 
 impl Network {
-    pub fn new() -> Self {
+    pub fn new(scheduler_name: &str) -> Self {
+        let scheduler: Box<dyn Scheduler> = match scheduler_name {
+            "fifo" => Box::new(FifoScheduler::new()),
+            "random" => Box::new(RandomScheduler::new()),
+            _ => {
+                println!("Unknown scheduler {}, using fifo", scheduler_name);
+                Box::new(FifoScheduler::new())
+            }
+        };
+    
         Self {
             queue: Vec::new(),
-            scheduler: FifoScheduler::new(),
+            scheduler,
         }
     }
 
     pub fn send(&mut self, msg: Message) {
-        trace(
-            TraceEvent::Send,
+        /*trace(
+            &self.config,
+            TraceEvent::Decision,
             &format!("{} -> {}", msg.from, msg.to),
-        );
+        );*/
+
         self.queue.push(msg);
     }
 

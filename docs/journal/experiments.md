@@ -27,3 +27,34 @@ Overhead: 6
 
 Ideal minimum deliveries:
 36
+
+
+
+Ideal: 36
+
+FIFO:
+Decision Delivery Count = 44
+Overhead = +8
+
+Random:
+Decision Delivery Count = 45
+Overhead = +9
+
+
+## Experiment 2: Random Scheduler, 10 Runs
+
+Nodes: 4  
+Quorum: 3  
+Ideal decision deliveries: 36  
+
+Decision delivery counts:
+
+43, 44, 44, 45, 42, 44, 47, 41, 46, 45
+
+Min: 41  
+Max: 47  
+Average: 44.1  
+Average overhead: +8.1  
+
+Observation:
+Random scheduling changes decision latency. Some schedules reach consensus faster than FIFO, while others are slower.
