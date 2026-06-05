@@ -6,7 +6,7 @@ use crate::scheduler::{FifoScheduler, Scheduler, RandomScheduler};
 
 pub struct Network {
     pub queue: Vec<Message>,
-    pub scheduler: RandomScheduler,
+    pub scheduler: FifoScheduler,
 }
 
 
@@ -14,7 +14,7 @@ impl Network {
     pub fn new() -> Self {
         Self {
             queue: Vec::new(),
-            scheduler: RandomScheduler::new(),
+            scheduler: FifoScheduler::new(),
         }
     }
 
