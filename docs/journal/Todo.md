@@ -14,3 +14,35 @@
 - CLI: cargo run -- random 10 42
 - Use StdRng
 - Make experiments reproducible
+
+cargo run -- random 10 42
+
+
+# Next Research Tasks
+
+## Adversarial Schedulers
+
+- Delay Commit messages
+- Delay Vote messages
+- Delay Proposal messages
+- Delay quorum-completing messages
+- Delay messages to multiple nodes
+
+## Fault Injection
+
+- Temporary message drops
+- Recoverable message loss
+- Network partitions
+
+## Protocol Abstraction
+
+- Protocol trait
+- Pluggable consensus logic
+- Protocol-specific message handlers
+
+## Metrics
+
+- Average decision round
+- Per-node decision time
+- Messages by type (Proposal/Vote/Commit)
+- Scheduler overhead

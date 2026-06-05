@@ -1,5 +1,5 @@
 use crate::message::{Message};
-use crate::scheduler::{FifoScheduler, Scheduler, RandomScheduler};
+use crate::scheduler::{FifoScheduler, Scheduler, RandomScheduler, DelayScheduler};
 
 //pub scheduler: FifoScheduler,
 
@@ -14,6 +14,7 @@ impl Network {
         let scheduler: Box<dyn Scheduler> = match scheduler_name {
             "fifo" => Box::new(FifoScheduler::new()),
             "random" => Box::new(RandomScheduler::new(seed)),
+            "delay" => Box::new(DelayScheduler::new(1)),
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);
                 Box::new(FifoScheduler::new())

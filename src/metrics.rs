@@ -5,6 +5,7 @@ pub struct Metrics {
     pub messages_delivered: usize,
     pub decisions: usize,
     pub decision_delivery_count: usize,
+    pub messages_sent_until_decision: usize,
 }
 
 
@@ -15,6 +16,7 @@ impl Metrics {
             messages_delivered: 0,
             decisions: 0,
             decision_delivery_count: 0,
+            messages_sent_until_decision: 0,
         }
     }
 }

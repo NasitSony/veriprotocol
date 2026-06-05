@@ -72,3 +72,50 @@ Max: 47
 Average: 44.90
 Ideal: 36
 Average overhead: +8.90
+
+
+## Experiment 3: Random Scheduler (100 Runs)
+
+Nodes: 4
+Quorum: 3
+
+Ideal decision deliveries: 36
+
+Min: 37
+Max: 47
+Average: 44.05
+
+Observation:
+Random scheduling introduces delivery overhead.
+Best observed execution was within one delivery
+of the theoretical minimum.
+
+
+## Experiment 4: Delay Scheduler
+
+Configuration
+
+- Nodes: 4
+- Quorum: 3
+- Scheduler: DelayScheduler
+- Policy: Delay messages to a selected node by moving them to the back of the queue
+
+Results (10 runs)
+
+Decision Delivery Count:
+46, 46, 46, 46, 46, 46, 46, 46, 46, 46
+
+Summary
+
+- Min: 46
+- Max: 46
+- Average: 46.00
+
+Additional Metrics
+
+- Messages Sent Until Decision: 48
+- Undelivered Messages At Decision: 2
+
+Observation
+
+Delaying messages to a specific node increased decision latency compared to FIFO and Random schedulers. The current delay policy produced deterministic behavior and identical results across runs regardless of the delayed node.

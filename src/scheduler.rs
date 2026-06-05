@@ -11,6 +11,11 @@ pub struct FifoScheduler;
 pub struct RandomScheduler {
     rng: StdRng,
 }
+pub struct DelayScheduler {
+    pub delayed_node: u64,
+}
+
+
 
 impl FifoScheduler {
     pub fn new() -> Self {
@@ -23,6 +28,12 @@ impl RandomScheduler {
         Self {
             rng: StdRng::seed_from_u64(seed),
         }
+    }
+}
+
+impl DelayScheduler {
+    pub fn new(delayed_node: u64) -> Self {
+        Self { delayed_node }
     }
 }
 
@@ -49,5 +60,28 @@ impl Scheduler for RandomScheduler {
         let index = rng.random_range(0..queue.len());
 
         Some(queue.remove(index))
+    }
+}
+
+impl Scheduler for DelayScheduler {
+    fn choose_next(&self, queue: &mut Vec<Message>) -> Option<Message> {
+        if queue.is_empty() {
+            return None;
+        }
+
+        let len = queue.len();
+
+        for _ in 0..len {
+            let msg = queue.remove(0);
+
+            if msg.to == self.delayed_node {
+                queue.push(msg);
+            } else {
+                return Some(msg);
+            }
+        }
+
+        // If every message targets delayed_node, eventually deliver one.
+        Some(queue.remove(0))
     }
 }

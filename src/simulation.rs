@@ -67,6 +67,15 @@ impl Simulation {
                 "Decision Delivery Count: {}",
                 self.metrics.decision_delivery_count
             );
+            println!(
+                "Messages Sent Until Decision: {}",
+                self.metrics.messages_sent_until_decision
+            );
+            println!(
+                "Undelivered Messages At Decision: {}",
+                self.metrics.messages_sent_until_decision
+                    - self.metrics.decision_delivery_count
+            );
             println!("Decisions: {}", self.metrics.decisions);
     }
 
@@ -117,6 +126,7 @@ impl Simulation {
             // Stop once all nodes have decided.
             if self.nodes.iter().all(|node| node.decided.is_some()) {
                 self.metrics.decision_delivery_count = self.metrics.messages_delivered;
+                self.metrics.messages_sent_until_decision = self.metrics.messages_sent;
                 break;
             }
         }
