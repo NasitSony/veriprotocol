@@ -23,12 +23,17 @@ fn main() {
         .and_then(|s| s.parse().ok())
         .unwrap_or(1);
 
+    let seed: u64 = args
+        .get(3)
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(42);    
+
     let mut results: Vec<usize> = Vec::new();
 
     for i in 0..runs {
         println!("\n=== Run {} ===", i + 1);
 
-        let mut sim = Simulation::new(scheduler);
+        let mut sim = Simulation::new(scheduler, seed);
         sim.run();
 
         results.push(sim.metrics.decision_delivery_count);

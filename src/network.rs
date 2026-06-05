@@ -10,10 +10,10 @@ pub struct Network {
 
 
 impl Network {
-    pub fn new(scheduler_name: &str) -> Self {
+    pub fn new(scheduler_name: &str, seed: u64) -> Self {
         let scheduler: Box<dyn Scheduler> = match scheduler_name {
             "fifo" => Box::new(FifoScheduler::new()),
-            "random" => Box::new(RandomScheduler::new()),
+            "random" => Box::new(RandomScheduler::new(seed)),
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);
                 Box::new(FifoScheduler::new())

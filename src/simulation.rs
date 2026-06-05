@@ -15,9 +15,9 @@ pub struct Simulation {
 }
 
 impl Simulation {
-    pub fn new(scheduler_name: &str) -> Self {
+    pub fn new(scheduler_name: &str, seed: u64) -> Self {
         Self {
-            network: Network::new(scheduler_name),
+            network: Network::new(scheduler_name, seed),
             nodes: vec![
                 Node::new(1),
                 Node::new(2),

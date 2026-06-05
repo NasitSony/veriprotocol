@@ -1,12 +1,16 @@
 use crate::message::Message;
 use rand::RngExt;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 
 pub trait Scheduler {
     fn choose_next(&self, queue: &mut Vec<Message>) -> Option<Message>;
 }
 
 pub struct FifoScheduler;
-pub struct RandomScheduler;
+pub struct RandomScheduler {
+    rng: StdRng,
+}
 
 impl FifoScheduler {
     pub fn new() -> Self {
@@ -15,8 +19,10 @@ impl FifoScheduler {
 }
 
 impl RandomScheduler {
-    pub fn new() -> Self {
-        Self
+    pub fn new(seed: u64) -> Self {
+        Self {
+            rng: StdRng::seed_from_u64(seed),
+        }
     }
 }
 

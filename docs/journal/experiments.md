@@ -65,3 +65,10 @@ Max: 46
 Average: 43.70
 Ideal: 36
 Average overhead: +7.70
+
+Random Scheduler, 10 runs, seed=42
+Min: 43
+Max: 47
+Average: 44.90
+Ideal: 36
+Average overhead: +8.90
