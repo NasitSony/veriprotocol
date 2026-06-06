@@ -1,5 +1,5 @@
 use crate::message::{Message};
-use crate::scheduler::{FifoScheduler, Scheduler, RandomScheduler, DelayScheduler,CommitDelayScheduler};
+use crate::scheduler::{FifoScheduler, Scheduler, RandomScheduler, DelayScheduler,CommitDelayScheduler, VoteDelayScheduler};
 
 //pub scheduler: FifoScheduler,
 
@@ -16,6 +16,7 @@ impl Network {
             "random" => Box::new(RandomScheduler::new(seed)),
             "delay" => Box::new(DelayScheduler::new(1)),
             "delay-commit" => Box::new(CommitDelayScheduler::new()),
+            "delay-vote" => Box::new(VoteDelayScheduler::new()),
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);
                 Box::new(FifoScheduler::new())

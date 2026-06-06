@@ -19,9 +19,16 @@ pub struct DelayScheduler {
 }
 pub struct CommitDelayScheduler;
 
-
+pub struct VoteDelayScheduler;
 
 impl CommitDelayScheduler {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+
+impl VoteDelayScheduler {
     pub fn new() -> Self {
         Self
     }
@@ -107,6 +114,28 @@ impl Scheduler for CommitDelayScheduler {
             let msg = queue.remove(0);
 
             if msg.msg_type == MessageType::Commit {
+                queue.push(msg);
+            } else {
+                return Some(msg);
+            }
+        }
+
+        Some(queue.remove(0))
+    }
+}
+
+impl Scheduler for VoteDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+        if queue.is_empty() {
+            return None;
+        }
+
+        let len = queue.len();
+
+        for _ in 0..len {
+            let msg = queue.remove(0);
+
+            if msg.msg_type == MessageType::Vote {
                 queue.push(msg);
             } else {
                 return Some(msg);
