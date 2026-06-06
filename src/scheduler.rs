@@ -1,4 +1,4 @@
-use crate::message::Message;
+use crate::message::{Message, MessageType};
 use rand::RngExt;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -17,8 +17,15 @@ pub struct RandomScheduler {
 pub struct DelayScheduler {
     pub delayed_node: u64,
 }
+pub struct CommitDelayScheduler;
 
 
+
+impl CommitDelayScheduler {
+    pub fn new() -> Self {
+        Self
+    }
+}
 
 impl FifoScheduler {
     pub fn new() -> Self {
@@ -84,6 +91,28 @@ impl Scheduler for DelayScheduler {
         }
 
         // If every message targets delayed_node, eventually deliver one.
+        Some(queue.remove(0))
+    }
+}
+
+impl Scheduler for CommitDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+        if queue.is_empty() {
+            return None;
+        }
+
+        let len = queue.len();
+
+        for _ in 0..len {
+            let msg = queue.remove(0);
+
+            if msg.msg_type == MessageType::Commit {
+                queue.push(msg);
+            } else {
+                return Some(msg);
+            }
+        }
+
         Some(queue.remove(0))
     }
 }

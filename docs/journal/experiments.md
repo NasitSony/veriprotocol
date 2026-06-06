@@ -119,3 +119,16 @@ Additional Metrics
 Observation
 
 Delaying messages to a specific node increased decision latency compared to FIFO and Random schedulers. The current delay policy produced deterministic behavior and identical results across runs regardless of the delayed node.
+
+## Experiment Infrastructure Milestone
+
+- FIFO Scheduler
+- Random Scheduler
+- Delay Scheduler
+- Seeded Randomness
+- Multi-run Experiments
+- Reproducible Results
+
+Example:
+
+cargo run -- random 100 42
