@@ -19,4 +19,5 @@ pub struct Message {
     pub msg_type: MessageType,
     pub payload: String,
     pub value: VoteValue,
+    pub delay_count: usize,
 }

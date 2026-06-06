@@ -1,5 +1,5 @@
 use crate::message::{Message};
-use crate::scheduler::{FifoScheduler, Scheduler, RandomScheduler, DelayScheduler,CommitDelayScheduler, VoteDelayScheduler};
+use crate::scheduler::{FifoScheduler, Scheduler, RandomScheduler, DelayScheduler,CommitDelayScheduler, VoteDelayScheduler, ProposalDelayScheduler, BoundedDelayScheduler};
 
 //pub scheduler: FifoScheduler,
 
@@ -17,6 +17,8 @@ impl Network {
             "delay" => Box::new(DelayScheduler::new(1)),
             "delay-commit" => Box::new(CommitDelayScheduler::new()),
             "delay-vote" => Box::new(VoteDelayScheduler::new()),
+            "delay-proposal" => Box::new(ProposalDelayScheduler::new()),
+            "bounded-delay" => Box::new(BoundedDelayScheduler::new(3)),
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);
                 Box::new(FifoScheduler::new())
@@ -35,7 +37,7 @@ impl Network {
             TraceEvent::Decision,
             &format!("{} -> {}", msg.from, msg.to),
         );*/
-        println(
+        println!(
             "Message sent: {} -> {}, type: {:?}, value: {:?}",
             msg.from, msg.to, msg.msg_type, msg.value
         );

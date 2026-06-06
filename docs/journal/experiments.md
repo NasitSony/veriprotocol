@@ -132,3 +132,80 @@ Delaying messages to a specific node increased decision latency compared to FIFO
 Example:
 
 cargo run -- random 100 42
+
+## Experiment: VoteDelayScheduler
+
+Configuration
+
+* Nodes: 4
+* Quorum: 3
+* Scheduler: VoteDelayScheduler
+* Runs: 10
+
+Results
+
+* Messages Sent: 44
+* Decision Delivery Count: 39
+* Undelivered Messages At Decision: 5
+* Decisions: 4
+
+Observation
+
+VoteDelayScheduler reduced the number of messages required to reach consensus compared to FIFO and DelayNode schedulers.
+
+Unlike other schedulers, consensus was reached before all nodes broadcast Commit messages. Only three Commit broadcasters were sufficient for all nodes to collect a Commit quorum and decide.
+
+This reduced total messages sent from 48 to 44 and reduced decision delivery count from 44 to 39.
+
+Takeaway
+
+Message reordering does not always increase consensus latency. Certain delivery schedules can reduce redundant communication and allow consensus to complete with fewer messages.
+
+## Experiment: DelayProposalScheduler
+
+Configuration
+
+* Nodes: 4
+* Quorum: 3
+* Scheduler: DelayProposalScheduler
+* Runs: 10
+
+Results
+
+* Messages Sent: 44
+* Decision Delivery Count: 35
+* Undelivered Messages At Decision: 9
+* Decisions: 4
+
+Observation
+
+Delaying Proposal messages produced the lowest decision delivery count observed so far.
+
+Only three nodes broadcast Vote messages before consensus progressed to the Commit phase. Despite fewer Vote broadcasts, all nodes successfully reached a Commit quorum and decided.
+
+This reduced decision delivery count from 44 (FIFO) to 35.
+
+Takeaway
+
+Message scheduling can significantly alter communication patterns. Delaying Proposal messages reduced redundant Vote broadcasts and allowed consensus to complete with fewer delivered messages than any previously evaluated scheduler.
+
+DelayProposal reduced decision delivery count because delayed Proposal messages postponed some Vote broadcasts. Since quorum is 3, three nodes were sufficient to drive the Vote/Commit progression and allow all nodes to decide. The scheduler therefore reduced redundant phase participation rather than improving the protocol itself.
+
+## Experiment: BoundedDelayScheduler
+
+Configuration
+
+- Nodes: 4
+- Quorum: 3
+- max_delay: 3
+- Scheduler policy: every message may be postponed up to 3 times before delivery
+
+Results
+
+- Min Decision Delivery Count: 44
+- Max Decision Delivery Count: 44
+- Average Decision Delivery Count: 44.00
+
+Observation
+
+Uniform bounded delay behaved similarly to FIFO in this protocol. Since all message types were delayed equally, the scheduler did not selectively affect quorum formation or phase progression.

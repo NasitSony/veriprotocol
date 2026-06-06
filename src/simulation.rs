@@ -46,6 +46,7 @@ impl Simulation {
                 msg_type: MessageType::Proposal,
                 payload: String::from("proposal"),
                 value: VoteValue::Yes,
+                delay_count: 0,
             };
             self.broadcast(proposal);    
         }
@@ -103,6 +104,7 @@ impl Simulation {
                                     msg_type: MessageType::Vote,
                                     payload: String::from("vote"),
                                     value,
+                                    delay_count: msg.delay_count,
                                 });
                             }
     
@@ -114,6 +116,7 @@ impl Simulation {
                                     msg_type: MessageType::Commit,
                                     payload: String::from("commit"),
                                     value,
+                                    delay_count: msg.delay_count,
                                 });
                             }
                         }
