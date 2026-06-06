@@ -27,6 +27,11 @@ pub struct BoundedDelayScheduler {
     pub max_delay: usize,
 }
 
+pub struct ProbabilisticDelayScheduler {
+    max_delay: usize,
+    rng: StdRng,
+}
+
 impl CommitDelayScheduler {
     pub fn new() -> Self {
         Self
@@ -69,6 +74,14 @@ impl DelayScheduler {
 impl BoundedDelayScheduler {
     pub fn new(max_delay: usize) -> Self {
         Self { max_delay: max_delay }
+    }
+}
+
+impl ProbabilisticDelayScheduler {
+    pub fn new(max_delay: usize, seed: u64) -> Self {
+        Self { max_delay: max_delay,
+            rng: StdRng::seed_from_u64(seed),
+         }
     }
 }
 
@@ -206,5 +219,37 @@ impl Scheduler for BoundedDelayScheduler {
         }
 
         Some(queue.remove(0))
+    }
+}
+
+impl Scheduler for ProbabilisticDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+        if queue.is_empty() {
+            return None;
+        }
+
+        let len = queue.len();
+
+        for _ in 0..len {
+            let mut msg = queue.remove(0);
+
+            if msg.delay_count < self.max_delay {
+                let coin = self.rng.random_range(0..2);
+            
+                if coin == 0 {
+                    msg.delay_count += 1;
+                    queue.push(msg);
+                    continue;
+                }
+            } 
+            return Some(msg);
+            
+        }
+
+        if queue.is_empty() {
+            None
+        } else {
+            Some(queue.remove(0))
+        }
     }
 }

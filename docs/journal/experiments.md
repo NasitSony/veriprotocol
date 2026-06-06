@@ -209,3 +209,24 @@ Results
 Observation
 
 Uniform bounded delay behaved similarly to FIFO in this protocol. Since all message types were delayed equally, the scheduler did not selectively affect quorum formation or phase progression.
+
+## Experiment: ProbabilisticDelayScheduler
+
+Configuration
+
+- Nodes: 4
+- Quorum: 3
+- Scheduler: ProbabilisticDelayScheduler
+- max_delay: 3
+- Delay rule: each message may be delayed probabilistically until max_delay
+
+Results
+
+- Runs: 5
+- Min Decision Delivery Count: 44
+- Max Decision Delivery Count: 46
+- Average Decision Delivery Count: 45.00
+
+Observation
+
+Probabilistic delay produced variable decision latency while preserving liveness. Unlike uniform bounded delay, probabilistic delay introduced non-deterministic delivery order and slightly increased average decision latency compared to FIFO.
