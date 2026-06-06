@@ -11,7 +11,7 @@ pub enum VoteValue {
     No,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Message {
     pub from: u64,
     pub to: u64,

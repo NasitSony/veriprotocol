@@ -1,7 +1,8 @@
-use crate::message::{Message, MessageType};
+use crate::message::{Message, MessageType, VoteValue};
 use rand::RngExt;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
+use std::collections::HashMap;
 
 pub trait Scheduler {
     fn choose_next(
@@ -30,6 +31,10 @@ pub struct BoundedDelayScheduler {
 pub struct ProbabilisticDelayScheduler {
     max_delay: usize,
     rng: StdRng,
+}
+
+pub struct QuorumBlockingScheduler {
+    delivered_counts: HashMap<(u64, MessageType, VoteValue), usize>,
 }
 
 impl CommitDelayScheduler {
@@ -82,6 +87,14 @@ impl ProbabilisticDelayScheduler {
         Self { max_delay: max_delay,
             rng: StdRng::seed_from_u64(seed),
          }
+    }
+}
+
+impl QuorumBlockingScheduler {
+    pub fn new() -> Self {
+        Self {
+            delivered_counts: HashMap::new(),
+        }
     }
 }
 
@@ -250,6 +263,71 @@ impl Scheduler for ProbabilisticDelayScheduler {
             None
         } else {
             Some(queue.remove(0))
+        }
+    }
+}
+
+impl Scheduler for QuorumBlockingScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+        if queue.is_empty() {
+            return None;
+        }
+
+        let len = queue.len();
+
+        for _ in 0..len {
+            let msg = queue.remove(0);
+
+            let key = (
+                msg.to,
+                msg.msg_type.clone(),
+                msg.value.clone(),
+            );
+
+            let delivered_so_far = *self
+                .delivered_counts
+                .get(&key)
+                .unwrap_or(&0);
+
+            // If this would be the 3rd matching message,
+            // delay it by moving it to the back.
+            if delivered_so_far == 2 {
+                queue.push(msg);
+                continue;
+            }
+
+            self.delivered_counts.insert(
+                key,
+                delivered_so_far + 1,
+            );
+
+            return Some(msg);
+        }
+
+        // If every message would complete quorum,
+        // force deliver one to avoid deadlock.
+        if queue.is_empty() {
+            None
+        } else {
+            let msg = queue.remove(0);
+
+            let key = (
+                msg.to,
+                msg.msg_type.clone(),
+                msg.value.clone(),
+            );
+
+            let delivered_so_far = *self
+                .delivered_counts
+                .get(&key)
+                .unwrap_or(&0);
+
+            self.delivered_counts.insert(
+                key,
+                delivered_so_far + 1,
+            );
+
+            Some(msg)
         }
     }
 }

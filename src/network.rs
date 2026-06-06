@@ -1,5 +1,5 @@
 use crate::message::{Message};
-use crate::scheduler::{FifoScheduler, Scheduler, RandomScheduler, DelayScheduler,CommitDelayScheduler, VoteDelayScheduler, ProposalDelayScheduler, BoundedDelayScheduler, ProbabilisticDelayScheduler};
+use crate::scheduler::{FifoScheduler, Scheduler, RandomScheduler, DelayScheduler,CommitDelayScheduler, VoteDelayScheduler, ProposalDelayScheduler, BoundedDelayScheduler, ProbabilisticDelayScheduler, QuorumBlockingScheduler};
 
 //pub scheduler: FifoScheduler,
 
@@ -20,6 +20,7 @@ impl Network {
             "delay-proposal" => Box::new(ProposalDelayScheduler::new()),
             "bounded-delay" => Box::new(BoundedDelayScheduler::new(3)),
             "probabilistic-delay" => Box::new(ProbabilisticDelayScheduler::new(3,seed)),
+            "quorum-block" => Box::new(QuorumBlockingScheduler::new()),
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);
                 Box::new(FifoScheduler::new())

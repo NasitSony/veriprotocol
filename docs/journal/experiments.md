@@ -230,3 +230,38 @@ Results
 Observation
 
 Probabilistic delay produced variable decision latency while preserving liveness. Unlike uniform bounded delay, probabilistic delay introduced non-deterministic delivery order and slightly increased average decision latency compared to FIFO.
+
+scheduler,runs,min,max,avg,observation
+fifo,1,44,44,44.00,baseline
+random,10,42,46,44.60,seeded random delivery
+delay-node,10,46,46,46.00,delaying one node increases latency
+delay-commit,10,44,44,44.00,commit delay behaves like FIFO
+delay-vote,10,39,39,39.00,reduces redundant commit broadcasts
+delay-proposal,?,35,35,35.00,reduces redundant vote delivery
+bounded-delay,10,44,44,44.00,uniform delay behaves like FIFO
+probabilistic-delay,5,44,46,45.00,noisy delay slightly worsens latency
+
+
+## Experiment: QuorumBlockingScheduler
+
+Configuration
+
+- Nodes: 4
+- Quorum: 3
+- Scheduler: QuorumBlockingScheduler
+- Policy: delay the 3rd matching message for each `(receiver, message_type, value)`
+
+Result
+
+- Messages Sent: 48
+- Decision Delivery Count: 47
+- Undelivered Messages At Decision: 1
+- Decisions: 4
+
+Observation
+
+QuorumBlockingScheduler produced the highest decision delivery count observed so far. By delaying messages that would complete a quorum, the scheduler increased consensus latency beyond FIFO, Random, DelayNode, DelayCommit, DelayVote, and DelayProposal schedulers.
+
+Takeaway
+
+Targeting quorum-completing messages is more harmful than delaying a node or delaying a protocol phase uniformly.
