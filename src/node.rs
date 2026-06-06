@@ -61,7 +61,7 @@ impl Node {
                 let proposal_no  = self.count(MessageType::Proposal, VoteValue::No);
             
                 if self.quorum_reached(MessageType::Proposal, VoteValue::Yes, proposal_yes) {
-                    let old_state = self.state.clone();
+                   // let old_state = self.state.clone();
                     self.state = NodeState::Proposed;
             
                    /* println!(
@@ -84,7 +84,7 @@ impl Node {
 
                     return vec![NodeAction::BroadcastVote(VoteValue::Yes)];
                 } else if self.quorum_reached(MessageType::Proposal, VoteValue::No, proposal_no) {
-                    let old_state = self.state.clone();
+                  //  let old_state = self.state.clone();
                     self.state = NodeState::Proposed;
             
                    /* println!(
@@ -147,7 +147,7 @@ impl Node {
                  VoteValue::Yes,
                  commit_yes,
                  ) {
-                    let old_state = self.state.clone();
+                   // let old_state = self.state.clone();
                     self.state = NodeState::Committed;
                     self.decided = Some(VoteValue::Yes);
                 
@@ -160,7 +160,7 @@ impl Node {
                      VoteValue::No, 
                      commit_no,
                  ) {
-                    let old_state = self.state.clone();
+                  //  let old_state = self.state.clone();
                     self.state = NodeState::Committed;
                     self.decided = Some(VoteValue::No);
                 

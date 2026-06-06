@@ -8,7 +8,7 @@ mod trace;
 mod metrics;
 
 use simulation::Simulation;
-use std::env;
+//use std::env;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -32,10 +32,12 @@ fn main() {
 
     for i in 0..runs {
         println!("\n=== Run {} ===", i + 1);
-
-        let mut sim = Simulation::new(scheduler, seed);
+    
+        let run_seed = seed + i as u64;
+    
+        let mut sim = Simulation::new(scheduler, run_seed);
         sim.run();
-
+    
         results.push(sim.metrics.decision_delivery_count);
     }
 
