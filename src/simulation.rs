@@ -3,6 +3,7 @@ use crate::node::{Node, NodeAction};
 use crate::trace::{trace, TraceEvent, Config};
 use crate::message::{Message, MessageType, VoteValue};
 use crate::metrics::Metrics;
+use crate::protocol::{Protocol, SimpleConsensusProtocol};
 
 
 
@@ -12,6 +13,7 @@ pub struct Simulation {
     nodes: Vec<Node>,
     pub metrics: Metrics,
     pub config: Config,
+    pub protocol: SimpleConsensusProtocol,
 }
 
 impl Simulation {
@@ -23,13 +25,14 @@ impl Simulation {
                 Node::new(2),
                 Node::new(3),
                 Node::new(4),],
-                metrics: Metrics ::new(), 
-                config: Config {
+            metrics: Metrics ::new(), 
+            config: Config {
                     print_trace: false,
                     print_state_changes: true,
                     print_quorums: true,
                     print_decisions: true,
-                },
+            },
+            protocol: SimpleConsensusProtocol::new(),
         }
     }
 
@@ -92,7 +95,7 @@ impl Simulation {
     
             for node in &mut self.nodes {
                 if node.id == msg.to {
-                    let actions = node.receive(&msg);
+                    let actions = self.protocol.handle_message(node, &msg);
     
                     for action in actions {
                         match action {

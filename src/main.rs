@@ -6,6 +6,7 @@ mod simulation;
 mod state;
 mod trace;
 mod metrics;
+mod protocol;
 
 use simulation::Simulation;
 //use std::env;
