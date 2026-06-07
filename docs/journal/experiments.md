@@ -265,3 +265,26 @@ QuorumBlockingScheduler produced the highest decision delivery count observed so
 Takeaway
 
 Targeting quorum-completing messages is more harmful than delaying a node or delaying a protocol phase uniformly.
+
+## Experiment: TwoPhaseProtocol
+
+TwoPhaseProtocol uses:
+
+Proposal -> Vote -> Decision
+
+Compared to SimpleConsensusProtocol:
+
+- SimpleConsensusProtocol sends up to 48 messages.
+- TwoPhaseProtocol sends up to 32 messages.
+
+Results:
+
+| Protocol | Scheduler | Decision Delivery Count |
+|---|---:|---:|
+| SimpleConsensusProtocol | FIFO | 44 |
+| TwoPhaseProtocol | FIFO | 28 |
+| TwoPhaseProtocol | Random | 30 |
+| TwoPhaseProtocol | QuorumBlocking | 31 |
+
+Observation:
+TwoPhaseProtocol reduces total communication because it removes the Commit phase. QuorumBlockingScheduler remains more harmful than RandomScheduler, suggesting that quorum-aware scheduling continues to increase decision latency across protocols.

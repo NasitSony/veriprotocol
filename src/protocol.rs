@@ -18,6 +18,14 @@ impl SimpleConsensusProtocol {
     }
 }
 
+pub struct TwoPhaseProtocol;
+
+impl TwoPhaseProtocol {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
 
 impl Protocol for SimpleConsensusProtocol {
     fn handle_message(
@@ -158,5 +166,55 @@ impl Protocol for SimpleConsensusProtocol {
     
                 
             }  return vec![];
+    }
+}
+
+impl Protocol for TwoPhaseProtocol {
+    fn handle_message(
+        &mut self,
+        node: &mut Node,
+        msg: &Message,
+    ) -> Vec<NodeAction> {
+        node.messages_received += 1;
+
+        let key = (msg.msg_type.clone(), msg.value.clone());
+        let count = node.vote_counts.entry(key).or_insert(0);
+        *count += 1;
+
+        match msg.msg_type {
+            MessageType::Proposal => {
+                let proposal_yes = node.count(MessageType::Proposal, VoteValue::Yes);
+                let proposal_no = node.count(MessageType::Proposal, VoteValue::No);
+
+                if node.quorum_reached(MessageType::Proposal, VoteValue::Yes, proposal_yes) {
+                    node.state = NodeState::Proposed;
+                    return vec![NodeAction::BroadcastVote(VoteValue::Yes)];
+                } else if node.quorum_reached(MessageType::Proposal, VoteValue::No, proposal_no) {
+                    node.state = NodeState::Proposed;
+                    return vec![NodeAction::BroadcastVote(VoteValue::No)];
+                }
+            }
+
+            MessageType::Vote => {
+                let vote_yes = node.count(MessageType::Vote, VoteValue::Yes);
+                let vote_no = node.count(MessageType::Vote, VoteValue::No);
+
+                if node.quorum_reached(MessageType::Vote, VoteValue::Yes, vote_yes) {
+                    node.state = NodeState::Committed;
+                    node.decided = Some(VoteValue::Yes);
+                    return vec![];
+                } else if node.quorum_reached(MessageType::Vote, VoteValue::No, vote_no) {
+                    node.state = NodeState::Committed;
+                    node.decided = Some(VoteValue::No);
+                    return vec![];
+                }
+            }
+
+            MessageType::Commit => {
+                // TwoPhaseProtocol does not use Commit.
+            }
+        }
+
+        vec![]
     }
 }

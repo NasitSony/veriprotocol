@@ -3,7 +3,7 @@ use crate::node::{Node, NodeAction};
 use crate::trace::{trace, TraceEvent, Config};
 use crate::message::{Message, MessageType, VoteValue};
 use crate::metrics::Metrics;
-use crate::protocol::{Protocol, SimpleConsensusProtocol};
+use crate::protocol::{Protocol, SimpleConsensusProtocol, TwoPhaseProtocol};
 
 
 
@@ -13,28 +13,40 @@ pub struct Simulation {
     nodes: Vec<Node>,
     pub metrics: Metrics,
     pub config: Config,
-    pub protocol: SimpleConsensusProtocol,
+    // pub protocol: SimpleConsensusProtocol,
+    pub protocol: Box<dyn Protocol>
 }
 
 impl Simulation {
-    pub fn new(scheduler_name: &str, seed: u64) -> Self {
+    pub fn new(
+        scheduler_name: &str,
+        seed: u64,
+        protocol_name: &str,
+    ) -> Self {
+        let protocol: Box<dyn Protocol> = match protocol_name {
+            "two-phase" => Box::new(TwoPhaseProtocol::new()),
+            _ => Box::new(SimpleConsensusProtocol::new()),
+        };
+
         Self {
             network: Network::new(scheduler_name, seed),
             nodes: vec![
                 Node::new(1),
                 Node::new(2),
                 Node::new(3),
-                Node::new(4),],
-            metrics: Metrics ::new(), 
+                Node::new(4),
+            ],
+            metrics: Metrics::new(),
             config: Config {
-                    print_trace: false,
-                    print_state_changes: true,
-                    print_quorums: true,
-                    print_decisions: true,
+                print_trace: false,
+                print_state_changes: true,
+                print_quorums: true,
+                print_decisions: true,
             },
-            protocol: SimpleConsensusProtocol::new(),
+            protocol,
         }
     }
+
 
     pub fn run(&mut self) {
         println!("Simulation starting");

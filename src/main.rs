@@ -29,6 +29,10 @@ fn main() {
         .and_then(|s| s.parse().ok())
         .unwrap_or(42);    
 
+    let protocol_name = args.get(4)
+        .map(String::as_str)
+        .unwrap_or("simple");    
+
     let mut results: Vec<usize> = Vec::new();
 
     for i in 0..runs {
@@ -36,7 +40,7 @@ fn main() {
     
         let run_seed = seed + i as u64;
     
-        let mut sim = Simulation::new(scheduler, run_seed);
+        let mut sim = Simulation::new(scheduler, seed, protocol_name);
         sim.run();
     
         results.push(sim.metrics.decision_delivery_count);

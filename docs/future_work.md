@@ -1,0 +1,1 @@
+- Decouple protocol-specific message types from framework messages.

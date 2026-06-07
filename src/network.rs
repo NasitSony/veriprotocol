@@ -38,11 +38,11 @@ impl Network {
             &self.config,
             TraceEvent::Decision,
             &format!("{} -> {}", msg.from, msg.to),
-        );*/
+        );
         println!(
             "Message sent: {} -> {}, type: {:?}, value: {:?}",
             msg.from, msg.to, msg.msg_type, msg.value
-        );
+        );*/
         self.queue.push(msg);
     }
 
