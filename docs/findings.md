@@ -45,3 +45,11 @@ VeriProtocol supports seeded randomized experiments, for example:
 
 ```bash
 cargo run -- random 100 42
+```
+
+## Finding 5: Reproducibility is now supported
+QuorumBlockingScheduler consistently produced the worst observed
+decision latency across all runs. Unlike RandomScheduler, which
+exhibited significant variability, QuorumBlockingScheduler
+reliably delayed quorum formation and resulted in a stable
+decision delivery count of 47.

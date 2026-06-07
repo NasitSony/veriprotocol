@@ -1,0 +1,10 @@
+scheduler,runs,min,max,avg
+fifo,10,44,44,44.00
+random,10,40,47,43.60
+delay-node,10,46,46,46.00
+delay-commit,10,44,44,44.00
+delay-vote,10,39,39,39.00
+delay-proposal,10,35,35,35.00
+bounded-delay,10,44,44,44.00
+probabilistic-delay,10,44,46,45.00
+quorum-block,10,47,47,47.00

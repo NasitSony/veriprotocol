@@ -55,5 +55,8 @@ fn main() {
         println!("Min Decision Delivery Count: {}", min);
         println!("Max Decision Delivery Count: {}", max);
         println!("Average Decision Delivery Count: {:.2}", avg);
+
+        println!("scheduler,runs,min,max,avg");
+        println!("{},{},{},{},{:.2}", scheduler, runs, min, max, avg);
     }
 }
