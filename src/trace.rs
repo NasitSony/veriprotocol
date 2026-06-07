@@ -26,32 +26,30 @@ pub fn trace(
     match event {
         TraceEvent::Send
         | TraceEvent::Deliver
-        | TraceEvent::Receive
-            if config.print_trace =>
-        {
-            println!("[{:?}] {}", event, details);
+        | TraceEvent::Receive => {
+            if config.print_trace {
+                println!("[{:?}] {}", event, details);
+            }
         }
 
-        TraceEvent::StateTransition
-            if config.print_state_changes =>
-        {
-            println!("[{:?}] {}", event, details);
+        TraceEvent::StateTransition => {
+            if config.print_state_changes {
+                println!("[{:?}] {}", event, details);
+            }
         }
 
         TraceEvent::ProposalQuorum
         | TraceEvent::VoteQuorum
-        | TraceEvent::CommitQuorum
-            if config.print_quorums =>
-        {
-            println!("[{:?}] {}", event, details);
+        | TraceEvent::CommitQuorum => {
+            if config.print_quorums {
+                println!("[{:?}] {}", event, details);
+            }
         }
 
-        TraceEvent::Decision
-            if config.print_decisions =>
-        {
-            println!("[{:?}] {}", event, details);
+        TraceEvent::Decision => {
+            if config.print_decisions {
+                println!("[{:?}] {}", event, details);
+            }
         }
-
-        _ => {}
     }
 }

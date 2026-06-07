@@ -75,24 +75,7 @@ impl Simulation {
             .iter()
             .filter(|node| node.decided.is_some())
             .count();
-
-            println!("\n=== Metrics ===");
-            println!("Messages Sent: {}", self.metrics.messages_sent);
-            println!("Messages Delivered: {}", self.metrics.messages_delivered);
-            println!(
-                "Decision Delivery Count: {}",
-                self.metrics.decision_delivery_count
-            );
-            println!(
-                "Messages Sent Until Decision: {}",
-                self.metrics.messages_sent_until_decision
-            );
-            println!(
-                "Undelivered Messages At Decision: {}",
-                self.metrics.messages_sent_until_decision
-                    - self.metrics.decision_delivery_count
-            );
-            println!("Decisions: {}", self.metrics.decisions);
+            self.metrics.print();
     }
 
     fn deliver_all_messages(&mut self) {
