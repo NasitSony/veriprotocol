@@ -71,3 +71,8 @@ Result:
 Interpretation:
 A scheduler can prevent progress without permanently dropping messages
 by causing timeout events to occur before proposal delivery.
+
+
+A scheduler does not need to drop messages forever. Delaying leader-originated messages until timeout events are processed can force a view change and make the original proposal stale.
+
+In a leader-driven protocol, progress depends on timely delivery of the leader’s proposal. A fair scheduler may still delay the leader long enough for replicas to timeout and advance views. The proposal is eventually delivered, but it is stale by then, so liveness can fail without permanent message loss.
