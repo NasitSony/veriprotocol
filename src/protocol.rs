@@ -8,6 +8,15 @@ pub trait Protocol {
         node: &mut Node,
         msg: &Message,
     ) -> Vec<NodeAction>;
+
+    // in Protocol trait
+    //fn initial_actions(&self, node_id: usize) -> Vec<NodeAction> {
+      //  vec![NodeAction::BroadcastProposal]
+    //}
+
+    fn should_send_initial_proposal(&self, _node_id: usize) -> bool {
+        true
+    }
 }
 
 pub struct SimpleConsensusProtocol;
@@ -174,6 +183,9 @@ impl Protocol for SimpleConsensusProtocol {
 }
 
 impl Protocol for TwoPhaseProtocol {
+
+    
+
     fn handle_message(
         &mut self,
         node: &mut Node,
@@ -242,6 +254,18 @@ impl TimeoutProtocol {
 }
 
 impl Protocol for TimeoutProtocol {
+
+    fn should_send_initial_proposal(&self, node_id: usize) -> bool {
+        node_id as u64 == self.leader_for_view(0)
+    }
+
+    /*fn initial_actions(&self, node_id: usize) -> Vec<NodeAction> {
+        if node_id == self.current_leader() {
+            vec![NodeAction::BroadcastProposal]
+        } else {
+            vec![]
+        }
+    }*/
     fn handle_message(
         &mut self,
         node: &mut Node,
@@ -281,6 +305,7 @@ impl Protocol for TimeoutProtocol {
                     return vec![];
                 }
             }
+
             MessageType::Commit => {
                 // later
             }

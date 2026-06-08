@@ -54,17 +54,22 @@ impl Simulation {
 
         let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
-        for &from_node in  &node_ids {
+        for &from_node in &node_ids {
+            if !self.protocol.should_send_initial_proposal(from_node as usize) {
+                continue;
+            }
+    
             let proposal = Message {
                 from: from_node,
-                to: 0, // ignored during broadcast
+                to: 0,
                 round: 0,
                 msg_type: MessageType::Proposal,
                 payload: String::from("proposal"),
                 value: VoteValue::Yes,
                 delay_count: 0,
             };
-            self.broadcast(proposal);    
+    
+            self.broadcast(proposal);
         }
 
        
