@@ -295,6 +295,7 @@ impl Protocol for TimeoutProtocol {
             MessageType::Timeout => {
                 node.view += 1;
                 node.leader = self.leader_for_view(node.view);
+                
                 println!(
                     "Node {} timed out and moved to view {}",
                     node.id,

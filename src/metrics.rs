@@ -6,6 +6,8 @@ pub struct Metrics {
     pub decisions: u64,
     pub messages_delivered_until_decision: u64,
     pub messages_sent_until_decision: u64,
+    pub timeouts_triggered: u64,
+    pub view_changes: u64,
 }
 
 
@@ -17,6 +19,8 @@ impl Metrics {
             decisions: 0,
             messages_delivered_until_decision: 0,
             messages_sent_until_decision: 0,
+            timeouts_triggered: 0,
+            view_changes: 0,
         }
     }
 }
@@ -35,6 +39,8 @@ impl Metrics {
             "Undelivered Messages At Decision: {}",
             self.messages_sent_until_decision - self.messages_delivered_until_decision
         );
+        println!("Timeout triggered: {}", self.timeouts_triggered);
+        println!("View changes: {}", self.view_changes);
         println!("Decisions: {}", self.decisions);
     }
 }

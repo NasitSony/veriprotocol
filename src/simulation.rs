@@ -104,6 +104,11 @@ impl Simulation {
     fn deliver_all_messages(&mut self) {
         while let Some(msg) = self.network.deliver_next() {
             self.metrics.messages_delivered += 1;
+            if msg.msg_type == MessageType::Timeout {
+                self.metrics.timeouts_triggered += 1;
+                self.metrics.view_changes += 1;
+            }
+            
     
             trace(
                 &self.config,
