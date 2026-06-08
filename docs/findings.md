@@ -54,3 +54,20 @@ exhibited significant variability, QuorumBlockingScheduler
 reliably delayed quorum formation and resulted in a stable
 decision delivery count of 47.
 
+
+
+Experiment: Timeout-first scheduling
+
+Observation:
+When timeout messages are delivered before proposal messages,
+all nodes advance to a higher view before processing the proposal.
+
+Result:
+- Decisions: 0
+- Timeouts Triggered: 4
+- View Changes: 4
+- Stale Messages Ignored: 4
+
+Interpretation:
+A scheduler can prevent progress without permanently dropping messages
+by causing timeout events to occur before proposal delivery.

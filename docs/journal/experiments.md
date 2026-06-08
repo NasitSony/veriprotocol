@@ -288,3 +288,20 @@ Results:
 
 Observation:
 TwoPhaseProtocol reduces total communication because it removes the Commit phase. QuorumBlockingScheduler remains more harmful than RandomScheduler, suggesting that quorum-aware scheduling continues to increase decision latency across protocols.
+
+
+## Timeout Protocol Observation
+
+Added view tracking and stale message filtering.
+
+When a node advances to a higher view, messages from older views are ignored.
+
+Motivation:
+A delayed message may eventually arrive, but it may no longer be useful after timeout and view change.
+
+This introduces a distinction between:
+
+- eventually delivered messages
+- useful messages
+
+A fair scheduler may therefore satisfy eventual delivery while still causing repeated timeout behavior.

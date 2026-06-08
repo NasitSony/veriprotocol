@@ -15,6 +15,8 @@ pub struct FifoScheduler;
 
 pub struct TimeoutFirstScheduler;
 
+pub struct DelayLeaderScheduler;
+
 pub struct RandomScheduler {
     rng: StdRng,
 }
@@ -349,5 +351,25 @@ impl Scheduler for TimeoutFirstScheduler {
         } else {
             Some(queue.remove(0))
         }
+    }
+}
+
+impl Scheduler for DelayLeaderScheduler {
+    fn choose_next(
+        &mut self,
+        queue: &mut Vec<Message>,
+    ) -> Option<Message> {
+
+        if queue.is_empty() {
+            return None;
+        }
+
+        if let Some(pos) = queue.iter().position(|msg| {
+            msg.from != 1
+        }) {
+            return Some(queue.remove(pos));
+        }
+
+        Some(queue.remove(0))
     }
 }
