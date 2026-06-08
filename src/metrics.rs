@@ -1,11 +1,11 @@
 // metrics.rs
 
 pub struct Metrics {
-    pub messages_sent: usize,
-    pub messages_delivered: usize,
-    pub decisions: usize,
-    pub decision_delivery_count: usize,
-    pub messages_sent_until_decision: usize,
+    pub messages_sent: u64,
+    pub messages_delivered: u64,
+    pub decisions: u64,
+    pub messages_delivered_until_decision: u64,
+    pub messages_sent_until_decision: u64,
 }
 
 
@@ -15,7 +15,7 @@ impl Metrics {
             messages_sent: 0,
             messages_delivered: 0,
             decisions: 0,
-            decision_delivery_count: 0,
+            messages_delivered_until_decision: 0,
             messages_sent_until_decision: 0,
         }
     }
@@ -26,14 +26,14 @@ impl Metrics {
         println!("\n=== Metrics ===");
         println!("Messages Sent: {}", self.messages_sent);
         println!("Messages Delivered: {}", self.messages_delivered);
-        println!("Decision Delivery Count: {}", self.decision_delivery_count);
+        println!("Decision Delivery Count: {}", self.messages_delivered_until_decision);
         println!(
             "Messages Sent Until Decision: {}",
             self.messages_sent_until_decision
         );
         println!(
             "Undelivered Messages At Decision: {}",
-            self.messages_sent_until_decision - self.decision_delivery_count
+            self.messages_sent_until_decision - self.messages_delivered_until_decision
         );
         println!("Decisions: {}", self.decisions);
     }

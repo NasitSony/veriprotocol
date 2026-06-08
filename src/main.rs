@@ -33,24 +33,24 @@ fn main() {
         .map(String::as_str)
         .unwrap_or("simple");    
 
-    let mut results: Vec<usize> = Vec::new();
+    let mut results: Vec<u64> = Vec::new();
 
     for i in 0..runs {
         println!("\n=== Run {} ===", i + 1);
     
-        let run_seed = seed + i as u64;
+        let _run_seed = seed + i as u64;
     
         let mut sim = Simulation::new(scheduler, seed, protocol_name);
         sim.run();
     
-        results.push(sim.metrics.decision_delivery_count);
+        results.push(sim.metrics.messages_delivered_until_decision);
     }
 
     if runs > 1 {
         let min = results.iter().min().unwrap();
         let max = results.iter().max().unwrap();
 
-        let sum: usize = results.iter().sum();
+        let sum: u64 = results.iter().sum();
         let avg = sum as f64 / results.len() as f64;
 
         println!("\n=== Summary ===");

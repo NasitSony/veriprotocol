@@ -80,7 +80,7 @@ impl Simulation {
         self.metrics.decisions = self.nodes
             .iter()
             .filter(|node| node.decided.is_some())
-            .count();
+            .count() as u64;
             self.metrics.print();
     }
 
@@ -138,7 +138,7 @@ impl Simulation {
     
             // Stop once all nodes have decided.
             if self.nodes.iter().all(|node| node.decided.is_some()) {
-                self.metrics.decision_delivery_count = self.metrics.messages_delivered;
+                self.metrics.messages_delivered_until_decision = self.metrics.messages_delivered;
                 self.metrics.messages_sent_until_decision = self.metrics.messages_sent;
                 break;
             }
