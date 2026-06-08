@@ -12,6 +12,9 @@ pub trait Scheduler {
 }
 
 pub struct FifoScheduler;
+
+pub struct TimeoutFirstScheduler;
+
 pub struct RandomScheduler {
     rng: StdRng,
 }
@@ -328,6 +331,23 @@ impl Scheduler for QuorumBlockingScheduler {
             );
 
             Some(msg)
+        }
+    }
+}
+
+impl Scheduler for TimeoutFirstScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+        if let Some(pos) = queue
+            .iter()
+            .position(|msg| msg.msg_type == MessageType::Timeout)
+        {
+            return Some(queue.remove(pos));
+        }
+
+        if queue.is_empty() {
+            None
+        } else {
+            Some(queue.remove(0))
         }
     }
 }
