@@ -26,7 +26,7 @@ impl Metrics {
         println!("\n=== Metrics ===");
         println!("Messages Sent: {}", self.messages_sent);
         println!("Messages Delivered: {}", self.messages_delivered);
-        println!("Decision Delivery Count: {}", self.messages_delivered_until_decision);
+        //println!("Decision Delivery Count: {}", self.messages_delivered_until_decision);
         println!(
             "Messages Sent Until Decision: {}",
             self.messages_sent_until_decision

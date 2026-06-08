@@ -17,6 +17,9 @@ pub trait Protocol {
     fn should_send_initial_proposal(&self, _node_id: usize) -> bool {
         true
     }
+    fn uses_timeout(&self) -> bool {
+        false
+    }
 }
 
 pub struct SimpleConsensusProtocol;
@@ -259,6 +262,10 @@ impl Protocol for TimeoutProtocol {
         node_id as u64 == self.leader_for_view(0)
     }
 
+    fn uses_timeout(&self) -> bool {
+        true
+    }
+
     /*fn initial_actions(&self, node_id: usize) -> Vec<NodeAction> {
         if node_id == self.current_leader() {
             vec![NodeAction::BroadcastProposal]
@@ -288,6 +295,11 @@ impl Protocol for TimeoutProtocol {
             MessageType::Timeout => {
                 node.view += 1;
                 node.leader = self.leader_for_view(node.view);
+                println!(
+                    "Node {} timed out and moved to view {}",
+                    node.id,
+                    node.view
+                 );
                 return vec![];
             }
 
