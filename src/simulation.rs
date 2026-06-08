@@ -150,6 +150,10 @@ impl Simulation {
                                 // TODO: create timeout messages
                             }
 
+                            NodeAction::StaleMessageIgnored => {
+                                self.metrics.stale_messages_ignored += 1;
+                            }
+
                           
                         }
                     }

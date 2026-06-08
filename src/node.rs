@@ -24,6 +24,7 @@ pub enum NodeAction {
     BroadcastVote(VoteValue),
     BroadcastCommit(VoteValue),
     BroadcastTimeout,
+    StaleMessageIgnored,
 }
 
 

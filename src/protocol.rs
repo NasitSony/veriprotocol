@@ -310,7 +310,7 @@ impl Protocol for TimeoutProtocol {
                     node.id,
                     node.view
                  );
-                return vec![];
+                 return vec![NodeAction::StaleMessageIgnored];
             }
 
             MessageType::Vote => {
