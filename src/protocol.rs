@@ -286,6 +286,15 @@ impl Protocol for TimeoutProtocol {
 
         match msg.msg_type {
             MessageType::Proposal => {
+                if msg.round < node.view {
+                    println!(
+                        "Node {} ignored stale proposal from view {} while in view {}",
+                        node.id,
+                        msg.round,
+                        node.view
+                    );
+                    return vec![];
+                }
                 if msg.from == node.leader {
                     node.state = NodeState::Proposed;
                     return vec![NodeAction::BroadcastVote(VoteValue::Yes)];
