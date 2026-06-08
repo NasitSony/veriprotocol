@@ -3,7 +3,7 @@ use crate::node::{Node, NodeAction};
 use crate::trace::{trace, TraceEvent, Config};
 use crate::message::{Message, MessageType, VoteValue};
 use crate::metrics::Metrics;
-use crate::protocol::{Protocol, SimpleConsensusProtocol, TwoPhaseProtocol};
+use crate::protocol::{Protocol, SimpleConsensusProtocol, TwoPhaseProtocol, TimeoutProtocol};
 
 
 
@@ -25,6 +25,7 @@ impl Simulation {
     ) -> Self {
         let protocol: Box<dyn Protocol> = match protocol_name {
             "two-phase" => Box::new(TwoPhaseProtocol::new()),
+            "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
 
@@ -117,6 +118,12 @@ impl Simulation {
                                     delay_count: msg.delay_count,
                                 });
                             }
+
+                            NodeAction::BroadcastTimeout => {
+                                // TODO: create timeout messages
+                            }
+
+                          
                         }
                     }
     

@@ -15,12 +15,15 @@ pub struct Node {
     pub decided: Option<VoteValue>,
     pub vote_counts: HashMap<(MessageType, VoteValue), usize>,
     pub completed_quorums: HashSet<(MessageType, VoteValue)>,
+    pub(crate) view: u64,
+    pub(crate) leader: u64,
 }
 
 #[derive(Debug)]
 pub enum NodeAction {
     BroadcastVote(VoteValue),
     BroadcastCommit(VoteValue),
+    BroadcastTimeout,
 }
 
 
@@ -33,6 +36,8 @@ impl Node {
             decided: None,
             vote_counts: HashMap::new(),
             completed_quorums: HashSet::new(),
+            view: 0,
+            leader: 1,
         }
     }
 }

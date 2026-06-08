@@ -163,6 +163,10 @@ impl Protocol for SimpleConsensusProtocol {
                         &format!("Node {} {:?} -> {:?}", self.id, old_state, self.state),
                     ); */
                 }
+
+                MessageType::Timeout => {
+                    // ignored by this protocol
+                }
     
                 
             }  return vec![];
@@ -212,6 +216,73 @@ impl Protocol for TwoPhaseProtocol {
 
             MessageType::Commit => {
                 // TwoPhaseProtocol does not use Commit.
+            }
+
+            MessageType::Timeout => {
+                // ignored by this protocol
+            }
+        }
+
+        vec![]
+    }
+}
+
+pub struct TimeoutProtocol {
+    pub num_nodes: u64,
+}
+
+impl TimeoutProtocol {
+    pub fn new(num_nodes: u64) -> Self {
+        Self { num_nodes }
+    }
+
+    fn leader_for_view(&self, view: u64) -> u64 {
+        (view % self.num_nodes) + 1
+    }
+}
+
+impl Protocol for TimeoutProtocol {
+    fn handle_message(
+        &mut self,
+        node: &mut Node,
+        msg: &Message,
+    ) -> Vec<NodeAction> {
+        node.messages_received += 1;
+
+        let key = (msg.msg_type.clone(), msg.value.clone());
+        let count = node.vote_counts.entry(key).or_insert(0);
+        *count += 1;
+
+        match msg.msg_type {
+            MessageType::Proposal => {
+                if msg.from == node.leader {
+                    node.state = NodeState::Proposed;
+                    return vec![NodeAction::BroadcastVote(VoteValue::Yes)];
+                }
+            }
+
+            MessageType::Timeout => {
+                node.view += 1;
+                node.leader = self.leader_for_view(node.view);
+                return vec![];
+            }
+
+            MessageType::Vote => {
+                let vote_yes = node.count(MessageType::Vote, VoteValue::Yes);
+                let vote_no = node.count(MessageType::Vote, VoteValue::No);
+            
+                if node.quorum_reached(MessageType::Vote, VoteValue::Yes, vote_yes) {
+                    node.state = NodeState::Committed;
+                    node.decided = Some(VoteValue::Yes);
+                    return vec![];
+                } else if node.quorum_reached(MessageType::Vote, VoteValue::No, vote_no) {
+                    node.state = NodeState::Committed;
+                    node.decided = Some(VoteValue::No);
+                    return vec![];
+                }
+            }
+            MessageType::Commit => {
+                // later
             }
         }
 

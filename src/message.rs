@@ -3,6 +3,7 @@ pub enum MessageType {
     Proposal,
     Vote,
     Commit,
+    Timeout,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
