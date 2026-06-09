@@ -95,3 +95,7 @@ Therefore, liveness degradation can occur without permanent message loss.
 | FIFO         | 4         | 4        | 4            | 0             |
 | TimeoutFirst | 0         | 4        | 4            | 4             |
 | DelayLeader  | 0         | 4        | 4            | 4             |
+
+FIFO:          Decisions 4, Timeouts 4
+DelayLeader:  Decisions 4, Timeouts 8
+TimeoutFirst: Decisions 0, Timeouts 8

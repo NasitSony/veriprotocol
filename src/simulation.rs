@@ -75,7 +75,7 @@ impl Simulation {
         }
 
         // timeout injection only for timeout-aware protocols
-       if self.protocol.uses_timeout() {
+       /*if self.protocol.uses_timeout() {
             for &node_id in &node_ids {
               let timeout = Message {
                  from: 0,
@@ -90,7 +90,7 @@ impl Simulation {
               self.metrics.messages_sent += 1;
               self.network.send(timeout);
             }
-        }
+        }*/
        
 
         
