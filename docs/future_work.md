@@ -5,3 +5,21 @@
 3. HotStuffProtocol
 4. MVBAProtocol
 5. Scheduler Vulnerability Index
+
+
+
+## Timeout Threshold T
+
+Current timeout behavior injects timeout messages immediately.
+
+Next model:
+
+A timeout becomes enabled only after T scheduler delivery opportunities.
+
+This allows experiments comparing scheduler fairness bound K against timeout threshold T.
+
+Expected relationship:
+
+- If K <= T, delayed proposals should arrive before timeout.
+- If K > T, proposals may arrive eventually but too late for the current view.
+- This can cause view churn without permanent message loss.

@@ -6,13 +6,14 @@ use crate::metrics::Metrics;
 use crate::protocol::{Protocol, SimpleConsensusProtocol, TwoPhaseProtocol, TimeoutProtocol};
 
 
-
+const TIMEOUT_THRESHOLD: u64 = 5;
 
 pub struct Simulation {
     pub network: Network,
     nodes: Vec<Node>,
     pub metrics: Metrics,
     pub config: Config,
+    pub timeout_injected: bool,
     // pub protocol: SimpleConsensusProtocol,
     pub protocol: Box<dyn Protocol>
 }
@@ -45,6 +46,7 @@ impl Simulation {
                 print_decisions: true,
             },
             protocol,
+            timeout_injected: false,
         }
     }
 
@@ -83,12 +85,12 @@ impl Simulation {
                  payload: String::from("timeout"),
                  value: VoteValue::Yes,
                  delay_count: 0,
-            };
+              };
 
-            self.metrics.messages_sent += 1;
-            self.network.send(timeout);
-    }
-}
+              self.metrics.messages_sent += 1;
+              self.network.send(timeout);
+            }
+        }
        
 
         
@@ -104,6 +106,14 @@ impl Simulation {
     fn deliver_all_messages(&mut self) {
         while let Some(msg) = self.network.deliver_next() {
             self.metrics.messages_delivered += 1;
+
+            if self.protocol.uses_timeout()
+                && !self.timeout_injected
+                && self.metrics.messages_delivered >= TIMEOUT_THRESHOLD
+            {
+                self.inject_timeouts();
+                self.timeout_injected = true;
+            }
             if msg.msg_type == MessageType::Timeout {
                 self.metrics.timeouts_triggered += 1;
                 self.metrics.view_changes += 1;
@@ -190,6 +200,25 @@ impl Simulation {
             msg.to = node.id;
             self.metrics.messages_sent += 1;
             self.network.send(msg);
+        }
+    }
+
+    fn inject_timeouts(&mut self) {
+        let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
+    
+        for node_id in node_ids {
+            let timeout = Message {
+                from: 0,
+                to: node_id,
+                round: 0,
+                msg_type: MessageType::Timeout,
+                payload: String::from("timeout"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            };
+    
+            self.metrics.messages_sent += 1;
+            self.network.send(timeout);
         }
     }
 }
