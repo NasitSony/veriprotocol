@@ -31,7 +31,11 @@ fn main() {
 
     let protocol_name = args.get(4)
         .map(String::as_str)
-        .unwrap_or("simple");    
+        .unwrap_or("simple");  
+        
+    let timeout_threshold: u64 = args.get(5)
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(5);  
 
     let mut results: Vec<u64> = Vec::new();
 
@@ -40,7 +44,7 @@ fn main() {
     
         let _run_seed = seed + i as u64;
     
-        let mut sim = Simulation::new(scheduler, seed, protocol_name);
+        let mut sim = Simulation::new(scheduler, seed, protocol_name, timeout_threshold);
         sim.run();
     
         results.push(sim.metrics.messages_delivered_until_decision);

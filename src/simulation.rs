@@ -6,14 +6,13 @@ use crate::metrics::Metrics;
 use crate::protocol::{Protocol, SimpleConsensusProtocol, TwoPhaseProtocol, TimeoutProtocol};
 
 
-const TIMEOUT_THRESHOLD: u64 = 5;
-
 pub struct Simulation {
     pub network: Network,
     nodes: Vec<Node>,
     pub metrics: Metrics,
     pub config: Config,
     pub timeout_injected: bool,
+    pub timeout_threshold: u64,
     // pub protocol: SimpleConsensusProtocol,
     pub protocol: Box<dyn Protocol>
 }
@@ -23,6 +22,7 @@ impl Simulation {
         scheduler_name: &str,
         seed: u64,
         protocol_name: &str,
+        timeout_threshold: u64,
     ) -> Self {
         let protocol: Box<dyn Protocol> = match protocol_name {
             "two-phase" => Box::new(TwoPhaseProtocol::new()),
@@ -47,6 +47,7 @@ impl Simulation {
             },
             protocol,
             timeout_injected: false,
+            timeout_threshold: timeout_threshold,
         }
     }
 
@@ -109,7 +110,7 @@ impl Simulation {
 
             if self.protocol.uses_timeout()
                 && !self.timeout_injected
-                && self.metrics.messages_delivered >= TIMEOUT_THRESHOLD
+                && self.metrics.messages_delivered >= self.timeout_threshold
             {
                 self.inject_timeouts();
                 self.timeout_injected = true;
