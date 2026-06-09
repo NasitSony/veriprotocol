@@ -153,3 +153,14 @@ For the TimeoutFirst scheduler, the transition occurs between `T = 15` and `T = 
 This suggests a critical timeout threshold of `T* = 16`.
 
 Compared to DelayLeader (`T* = 13`), TimeoutFirst requires a larger timeout threshold to avoid unnecessary view changes.
+
+## Summary: Scheduler-Specific Timeout Sensitivity
+
+In the current 4-node TimeoutProtocol model, different schedulers require different timeout thresholds to avoid unnecessary view changes.
+
+| Scheduler | Critical T* | Interpretation |
+|---|---:|---|
+| DelayLeader | 13 | Delaying leader-originated messages causes timeout unless T is at least 13 |
+| TimeoutFirst | 16 | Prioritizing timeout messages is more disruptive and requires a larger T |
+
+This suggests that timeout configuration cannot be evaluated independently of scheduler behavior.
