@@ -122,6 +122,19 @@ impl Simulation {
     
                     for action in actions {
                         match action {
+                            NodeAction::BroadcastProposal => {
+                                self.broadcast(Message {
+                                    from: msg.to,
+                                    to: 0,
+                                    round: msg.round + 1,
+                                    msg_type: MessageType::Proposal,
+                                    payload: String::from("proposal"),
+                                    value: VoteValue::Yes,
+                                    delay_count: msg.delay_count,
+                                });
+                            }
+
+
                             NodeAction::BroadcastVote(value) => {
                                 self.broadcast(Message {
                                     from: msg.to,
@@ -145,6 +158,8 @@ impl Simulation {
                                     delay_count: msg.delay_count,
                                 });
                             }
+
+                            
 
                             NodeAction::BroadcastTimeout => {
                                 // TODO: create timeout messages

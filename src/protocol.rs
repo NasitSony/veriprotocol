@@ -293,7 +293,7 @@ impl Protocol for TimeoutProtocol {
                         msg.round,
                         node.view
                     );
-                    return vec![];
+                    return vec![NodeAction::StaleMessageIgnored];
                 }
                 if msg.from == node.leader {
                     node.state = NodeState::Proposed;
@@ -319,6 +319,10 @@ impl Protocol for TimeoutProtocol {
                     node.view,
                     new_leader
                 );
+
+                if node.id == new_leader {
+                    return vec![NodeAction::BroadcastProposal];
+                }
 
                 if msg.round < node.view {
                     println!(
