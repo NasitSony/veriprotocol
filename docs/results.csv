@@ -12,3 +12,14 @@ scheduler,protocol,messages_sent,messages_delivered,timeouts,view_changes,stale_
 fifo,timeout,24,20,4,4,4,4
 timeout-first,timeout,28,24,7,4,7,4
 delay-leader,timeout,28,20,4,4,3,4
+
+scheduler,protocol,timeout_threshold,messages_sent,messages_delivered,stale_messages_ignored,timeouts_triggered,view_changes,decisions
+fifo,timeout,0,28,20,3,4,4,4
+fifo,timeout,5,24,16,0,0,0,4
+fifo,timeout,20,20,16,0,0,0,4
+delay-leader,timeout,0,32,21,3,4,4,4
+delay-leader,timeout,5,36,22,3,4,4,4
+delay-leader,timeout,20,20,16,0,0,0,4
+timeout-first,timeout,0,32,24,6,4,4,4
+timeout-first,timeout,5,28,20,3,4,4,4
+timeout-first,timeout,20,20,16,0,0,0,4
