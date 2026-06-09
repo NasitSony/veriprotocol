@@ -47,3 +47,77 @@ This creates the distinction between:
 Research Direction
 
 The next stage of VeriProtocol is to study whether a fair scheduler can cause repeated timeout or view-change behavior without permanently dropping messages.
+
+# Finding: Timeout-Driven View Progression and Recovery
+
+## Background
+
+The initial TimeoutProtocol model used a leader-based proposal mechanism. A timeout event caused nodes to advance their local view, but no recovery action was performed after the timeout.
+
+## Extension
+
+The protocol was extended with:
+
+* View progression on timeout.
+* Deterministic leader rotation based on view number.
+* Recovery proposal generation by the new leader.
+* Detection and rejection of stale proposals from earlier views.
+* Metrics for timeout events, view changes, and stale messages.
+
+Leader selection is defined as:
+
+leader(view) = (view mod n) + 1
+
+For four nodes:
+
+* View 0 → Leader 1
+* View 1 → Leader 2
+* View 2 → Leader 3
+* View 3 → Leader 4
+
+## Observation
+
+When a timeout occurs:
+
+1. Nodes advance to a higher view.
+2. A new leader is selected.
+3. The new leader broadcasts a proposal for the new view.
+4. Proposals from older views are ignored as stale.
+
+This converts timeout handling from a pure failure event into a recovery mechanism.
+
+## Experimental Results
+
+### Before Recovery Proposal
+
+Timeout-first and DelayLeader schedulers caused:
+
+* Decisions = 0
+* View Changes = 4
+* Stale Messages Ignored > 0
+
+Nodes advanced views, but no new proposal was generated.
+
+### After Recovery Proposal
+
+The new leader broadcasts a proposal after timeout.
+
+Observed result:
+
+* Decisions = 4
+* View Changes = 4
+* Protocol recovers and terminates.
+
+## Interpretation
+
+Eventual message delivery alone is insufficient for progress when timeout events advance views and invalidate older proposals.
+
+However, view progression combined with leader rotation and recovery proposals restores liveness.
+
+The current model demonstrates the interaction between:
+
+* Scheduler behavior
+* Timeout events
+* View progression
+* Leader rotation
+* Protocol recovery

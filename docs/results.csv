@@ -8,3 +8,7 @@ delay-proposal,10,35,35,35.00
 bounded-delay,10,44,44,44.00
 probabilistic-delay,10,44,46,45.00
 quorum-block,10,47,47,47.00
+scheduler,protocol,messages_sent,messages_delivered,timeouts,view_changes,stale_ignored,decisions
+fifo,timeout,24,20,4,4,4,4
+timeout-first,timeout,28,24,7,4,7,4
+delay-leader,timeout,28,20,4,4,3,4
