@@ -138,3 +138,18 @@ For the DelayLeader scheduler, we observed a sharp transition between `T = 12` a
 This suggests a critical timeout threshold of `T* = 13` for DelayLeader in the current 4-node model.
 
 Below this threshold, leader-originated messages are delayed long enough to trigger timeout-driven view recovery. At or above this threshold, the protocol reaches decision before timeout injection occurs.
+
+## Finding: TimeoutFirst Requires a Larger Timeout Threshold
+
+For the TimeoutFirst scheduler, the transition occurs between `T = 15` and `T = 16`.
+
+| T | Timeouts | View Changes | Stale Ignored | Decisions |
+|---:|---:|---:|---:|---:|
+| 15 | 4 | 4 | 3 | 4 |
+| 16 | 0 | 0 | 0 | 4 |
+| 17 | 0 | 0 | 0 | 4 |
+| 20 | 0 | 0 | 0 | 4 |
+
+This suggests a critical timeout threshold of `T* = 16`.
+
+Compared to DelayLeader (`T* = 13`), TimeoutFirst requires a larger timeout threshold to avoid unnecessary view changes.
