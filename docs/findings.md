@@ -99,3 +99,42 @@ Therefore, liveness degradation can occur without permanent message loss.
 FIFO:          Decisions 4, Timeouts 4
 DelayLeader:  Decisions 4, Timeouts 8
 TimeoutFirst: Decisions 0, Timeouts 8
+
+### Finding: Timeout Threshold Controls Recovery Behavior
+
+Experiments with the TimeoutProtocol show that protocol behavior depends strongly on the relationship between scheduler delay and the timeout threshold.
+
+With a large timeout threshold (T=20), all evaluated schedulers successfully reach a decision without triggering timeout or view-change mechanisms. Delayed messages arrive before the timeout expires and continue to contribute to useful progress.
+
+With smaller timeout thresholds, scheduler-induced delays cause replicas to timeout and advance to newer views. Delayed proposals from older views are eventually delivered, but are classified as stale and ignored. Recovery is achieved through leader rotation and proposal retransmission in the new view.
+
+These results highlight an important distinction between message delivery and useful delivery. Eventual delivery alone does not guarantee useful progress. A message may arrive after a timeout and no longer contribute to protocol advancement.
+
+This observation motivates scheduler-aware evaluation of timeout-based consensus protocols, where protocol behavior depends not only on whether messages arrive, but also on when they arrive relative to timeout boundaries.
+
+## Timeout Threshold Sensitivity
+
+Protocol behavior exhibits a threshold effect with respect to the timeout parameter.
+
+For timeout values between 0 and 10, all runs trigger timeout and view-change recovery before reaching a decision.
+
+For timeout values of 15 and above, decisions are reached without timeout or view change.
+
+Despite identical safety outcomes (all runs decide), smaller timeout values incur additional recovery overhead.
+
+This suggests that protocol behavior is highly sensitive to the relationship between message delay and timeout configuration.
+
+## Finding: Critical Timeout Threshold for DelayLeader
+
+For the DelayLeader scheduler, we observed a sharp transition between `T = 12` and `T = 13`.
+
+| T | Timeouts | View Changes | Stale Ignored | Decisions |
+|---:|---:|---:|---:|---:|
+| 11 | 4 | 4 | 3 | 4 |
+| 12 | 4 | 4 | 3 | 4 |
+| 13 | 0 | 0 | 0 | 4 |
+| 14 | 0 | 0 | 0 | 4 |
+
+This suggests a critical timeout threshold of `T* = 13` for DelayLeader in the current 4-node model.
+
+Below this threshold, leader-originated messages are delayed long enough to trigger timeout-driven view recovery. At or above this threshold, the protocol reaches decision before timeout injection occurs.
