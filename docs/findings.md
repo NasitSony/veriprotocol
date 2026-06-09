@@ -76,3 +76,22 @@ by causing timeout events to occur before proposal delivery.
 A scheduler does not need to drop messages forever. Delaying leader-originated messages until timeout events are processed can force a view change and make the original proposal stale.
 
 In a leader-driven protocol, progress depends on timely delivery of the leader’s proposal. A fair scheduler may still delay the leader long enough for replicas to timeout and advance views. The proposal is eventually delivered, but it is stale by then, so liveness can fail without permanent message loss.
+
+## Insight: Fair Delay Can Still Break Useful Progress
+
+In a leader-driven protocol, progress depends not only on eventual message delivery, but on timely delivery of the leader’s proposal.
+
+A fair scheduler may eventually deliver every message, while still delaying the leader’s proposal long enough for replicas to timeout and advance to a newer view. When the delayed proposal finally arrives, it is stale and ignored.
+
+This creates an important distinction:
+
+- The message was eventually delivered.
+- The message was no longer useful when delivered.
+
+Therefore, liveness degradation can occur without permanent message loss.
+
+| Scheduler    | Decisions | Timeouts | View Changes | Stale Ignored |
+| ------------ | --------- | -------- | ------------ | ------------- |
+| FIFO         | 4         | 4        | 4            | 0             |
+| TimeoutFirst | 0         | 4        | 4            | 4             |
+| DelayLeader  | 0         | 4        | 4            | 4             |

@@ -153,8 +153,6 @@ impl Simulation {
                             NodeAction::StaleMessageIgnored => {
                                 self.metrics.stale_messages_ignored += 1;
                             }
-
-                          
                         }
                     }
     

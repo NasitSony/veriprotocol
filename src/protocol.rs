@@ -303,14 +303,35 @@ impl Protocol for TimeoutProtocol {
 
             MessageType::Timeout => {
                 node.view += 1;
-                node.leader = self.leader_for_view(node.view);
-                
+            
+                let new_leader = self.leader_for_view(node.view);
+            
+                node.leader = new_leader;
+            
                 println!(
                     "Node {} timed out and moved to view {}",
                     node.id,
                     node.view
-                 );
-                 return vec![NodeAction::StaleMessageIgnored];
+                );
+            
+                println!(
+                    "New leader for view {} is node {}",
+                    node.view,
+                    new_leader
+                );
+
+                if msg.round < node.view {
+                    println!(
+                        "Node {} ignored stale proposal from view {} while in view {}",
+                        node.id,
+                        msg.round,
+                        node.view
+                    );
+                
+                    return vec![NodeAction::StaleMessageIgnored];
+                }
+            
+                return vec![];
             }
 
             MessageType::Vote => {
