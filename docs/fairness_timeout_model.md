@@ -121,3 +121,60 @@ The current model demonstrates the interaction between:
 * View progression
 * Leader rotation
 * Protocol recovery
+
+
+## Timeout Threshold Model
+
+The current timeout model injects timeout messages immediately at simulation startup. This is useful for testing view progression, but it does not yet model the relationship between scheduler delay and timeout thresholds.
+
+We define a timeout threshold `T` as:
+
+```text
+T = number of message delivery opportunities allowed before timeout becomes eligible
+```
+
+This means timeout is not injected immediately. Instead, the simulator first allows up to `T` message deliveries. After that point, timeout messages may be injected for nodes that have not yet decided.
+
+### Relation to Scheduler Fairness
+
+Let `K` denote a scheduler delay bound.
+
+```text
+K = maximum number of scheduler opportunities a message can be delayed
+T = timeout threshold
+```
+
+Expected relationship:
+
+```text
+K <= T  => leader proposal should arrive before timeout
+K > T   => proposal may eventually arrive, but too late for the current view
+```
+
+Thus, eventual fairness alone is not sufficient to guarantee progress in timeout-based protocols. A scheduler may eventually deliver all messages but still delay critical leader messages long enough for replicas to advance views.
+
+### Experimental Goal
+
+The goal is to evaluate how different schedulers affect:
+
+* number of decisions
+* number of timeouts
+* number of view changes
+* stale messages ignored
+* messages delivered until decision
+* undelivered messages at decision
+
+### Planned Experiments
+
+| Scheduler       | Timeout Threshold T | Expected Behavior                              |
+| --------------- | ------------------: | ---------------------------------------------- |
+| FIFO            |             small T | likely decides before or after one view change |
+| TimeoutFirst    |             small T | timeout before proposal; view change likely    |
+| DelayLeader     |             small T | leader proposal may become stale               |
+| DelayLeader     |             large T | leader proposal may arrive before timeout      |
+| BoundedDelay(K) |              K <= T | progress without unnecessary view change       |
+| BoundedDelay(K) |               K > T | proposal may become stale and cause view churn |
+
+### Research Question
+
+How large must the timeout threshold `T` be, relative to the scheduler delay bound `K`, to preserve progress in a leader-based consensus protocol?
