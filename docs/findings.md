@@ -225,3 +225,18 @@ This suggests that fairness assumptions significantly affect protocol behavior.
 Current experiments use `T_delivery`, not `T_step`.
 
 Therefore, the measured critical thresholds reflect delivered-message progress, not total scheduler opportunities. Future K-bounded fairness experiments should introduce `T_step` to model scheduler delay more directly.
+
+
+## Finding: K-Bounded Leader Delay Under Step-Based Timeout
+
+With scheduler-step timeout `T_step = 5`, bounded leader delay shows a sharp transition.
+
+| K | Scheduler Steps | Timeouts | View Changes | Decisions |
+|---:|---:|---:|---:|---:|
+| 0 | 16 | 0 | 0 | 4 |
+| 1 | 24 | 4 | 4 | 4 |
+| 2 | 36 | 4 | 4 | 4 |
+| 5 | 41 | 4 | 4 | 4 |
+| 10 | 41 | 4 | 4 | 4 |
+
+Even one bounded delay per leader message is sufficient to trigger timeout-driven recovery when `T_step = 5`.
