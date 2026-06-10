@@ -287,12 +287,7 @@ impl Protocol for TimeoutProtocol {
         match msg.msg_type {
             MessageType::Proposal => {
                 if msg.round < node.view {
-                    println!(
-                        "Node {} ignored stale proposal from view {} while in view {}",
-                        node.id,
-                        msg.round,
-                        node.view
-                    );
+                    
                     return vec![NodeAction::StaleMessageIgnored];
                 }
                 if msg.from == node.leader {
@@ -308,30 +303,12 @@ impl Protocol for TimeoutProtocol {
             
                 node.leader = new_leader;
             
-                println!(
-                    "Node {} timed out and moved to view {}",
-                    node.id,
-                    node.view
-                );
-            
-                println!(
-                    "New leader for view {} is node {}",
-                    node.view,
-                    new_leader
-                );
 
                 if node.id == new_leader {
                     return vec![NodeAction::BroadcastProposal];
                 }
 
                 if msg.round < node.view {
-                    println!(
-                        "Node {} ignored stale proposal from view {} while in view {}",
-                        node.id,
-                        msg.round,
-                        node.view
-                    );
-                
                     return vec![NodeAction::StaleMessageIgnored];
                 }
             

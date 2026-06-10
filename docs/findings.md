@@ -240,3 +240,21 @@ With scheduler-step timeout `T_step = 5`, bounded leader delay shows a sharp tra
 | 10 | 41 | 4 | 4 | 4 |
 
 Even one bounded delay per leader message is sufficient to trigger timeout-driven recovery when `T_step = 5`.
+
+## Finding: Threshold Sensitivity to Bounded Leader Delay
+
+Under a scheduler-step timeout threshold of `T_step = 5`, the protocol exhibits a sharp sensitivity to bounded leader delay.
+
+|  K | Timeouts | View Changes | Decisions |
+| -: | -------: | -----------: | --------: |
+|  0 |        0 |            0 |         4 |
+|  1 |        4 |            4 |         4 |
+|  2 |        4 |            4 |         4 |
+|  5 |        4 |            4 |         4 |
+| 10 |        4 |            4 |         4 |
+
+A single bounded delay applied to leader messages is sufficient to trigger timeout-driven recovery across all replicas.
+
+Although the protocol continues to decide successfully, timeout and view-change mechanisms become active immediately once bounded leader delay is introduced.
+
+This result suggests that timeout behavior is highly sensitive to delays on the protocol's critical path. Additional delay beyond the threshold does not substantially increase recovery activity, indicating the presence of a scheduler-induced phase transition.

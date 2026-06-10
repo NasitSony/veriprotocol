@@ -78,27 +78,7 @@ impl Simulation {
             self.broadcast(proposal);
         }
 
-        // timeout injection only for timeout-aware protocols
-       /*if self.protocol.uses_timeout() {
-            for &node_id in &node_ids {
-              let timeout = Message {
-                 from: 0,
-                 to: node_id,
-                 round: 0,
-                 msg_type: MessageType::Timeout,
-                 payload: String::from("timeout"),
-                 value: VoteValue::Yes,
-                 delay_count: 0,
-              };
-
-              self.metrics.messages_sent += 1;
-              self.network.send(timeout);
-            }
-        }*/
        
-
-        
-        //self.broadcast_proposals();
         self.deliver_all_messages();
         self.metrics.decisions = self.nodes
             .iter()
