@@ -33,7 +33,8 @@ pub struct BoundedDelayScheduler {
     pub max_delay: usize,
 }
 
-pub struct DelayLeaderScheduler {
+pub struct DelayLeaderScheduler;
+pub struct BoundedDelayLeaderScheduler {
     max_delays: usize,
 }
 
@@ -108,6 +109,12 @@ impl QuorumBlockingScheduler {
 }
 
 impl DelayLeaderScheduler {
+    pub fn new() -> Self {
+        Self {  }
+    }
+}
+
+impl BoundedDelayLeaderScheduler {
     pub fn new(max_delays: usize) -> Self {
         Self { max_delays }
     }
@@ -365,8 +372,28 @@ impl Scheduler for TimeoutFirstScheduler {
 }
 
 
-
 impl Scheduler for DelayLeaderScheduler {
+    fn choose_next(
+        &mut self,
+        queue: &mut Vec<Message>,
+    ) -> Option<Message> {
+
+        if queue.is_empty() {
+            return None;
+        }
+
+        if let Some(pos) = queue.iter().position(|msg| {
+            msg.from != 1
+        }) {
+            return Some(queue.remove(pos));
+        }
+
+        Some(queue.remove(0))
+    }
+}
+
+
+impl Scheduler for BoundedDelayLeaderScheduler {
     fn choose_next(
         &mut self,
         queue: &mut Vec<Message>,
