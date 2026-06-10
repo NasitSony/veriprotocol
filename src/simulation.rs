@@ -4,6 +4,7 @@ use crate::trace::{trace, TraceEvent, Config};
 use crate::message::{Message, MessageType, VoteValue};
 use crate::metrics::Metrics;
 use crate::protocol::{Protocol, SimpleConsensusProtocol, TwoPhaseProtocol, TimeoutProtocol};
+use crate::scheduler::SchedulerOutcome;
 
 
 pub struct Simulation {
@@ -107,92 +108,111 @@ impl Simulation {
     }
 
     fn deliver_all_messages(&mut self) {
-        while let Some(msg) = self.network.deliver_next() {
-            self.metrics.messages_delivered += 1;
-
-            if self.protocol.uses_timeout()
-                && !self.timeout_injected
-                && self.metrics.messages_delivered >= self.timeout_threshold
-            {
-                self.inject_timeouts();
-                self.timeout_injected = true;
-            }
-            if msg.msg_type == MessageType::Timeout {
-                self.metrics.timeouts_triggered += 1;
-                self.metrics.view_changes += 1;
-            }
-            
+        loop {
+            match self.network.deliver_next() {
+                SchedulerOutcome::Deliver(msg) => {
+                    self.metrics.scheduler_steps += 1;
+                    self.metrics.messages_delivered += 1;
     
-            trace(
-                &self.config,
-                TraceEvent::Deliver,
-                &format!("{} -> {}", msg.from, msg.to),
-            );
+                    if self.protocol.uses_timeout()
+                        && !self.timeout_injected
+                        && self.metrics.scheduler_steps >= self.timeout_threshold
+                    {
+                        self.inject_timeouts();
+                        self.timeout_injected = true;
+                    }
     
-            for node in &mut self.nodes {
-                if node.id == msg.to {
-                    let actions = self.protocol.handle_message(node, &msg);
+                    if msg.msg_type == MessageType::Timeout {
+                        self.metrics.timeouts_triggered += 1;
+                        self.metrics.view_changes += 1;
+                    }
     
-                    for action in actions {
-                        match action {
-                            NodeAction::BroadcastProposal => {
-                                self.broadcast(Message {
-                                    from: msg.to,
-                                    to: 0,
-                                    round: msg.round + 1,
-                                    msg_type: MessageType::Proposal,
-                                    payload: String::from("proposal"),
-                                    value: VoteValue::Yes,
-                                    delay_count: msg.delay_count,
-                                });
-                            }
-
-
-                            NodeAction::BroadcastVote(value) => {
-                                self.broadcast(Message {
-                                    from: msg.to,
-                                    to: 0,
-                                    round: msg.round + 1,
-                                    msg_type: MessageType::Vote,
-                                    payload: String::from("vote"),
-                                    value,
-                                    delay_count: msg.delay_count,
-                                });
+                    trace(
+                        &self.config,
+                        TraceEvent::Deliver,
+                        &format!("{} -> {}", msg.from, msg.to),
+                    );
+    
+                    for node in &mut self.nodes {
+                        if node.id == msg.to {
+                            let actions = self.protocol.handle_message(node, &msg);
+    
+                            for action in actions {
+                                match action {
+                                    NodeAction::BroadcastProposal => {
+                                        self.broadcast(Message {
+                                            from: msg.to,
+                                            to: 0,
+                                            round: msg.round + 1,
+                                            msg_type: MessageType::Proposal,
+                                            payload: String::from("proposal"),
+                                            value: VoteValue::Yes,
+                                            delay_count: msg.delay_count,
+                                        });
+                                    }
+    
+                                    NodeAction::BroadcastVote(value) => {
+                                        self.broadcast(Message {
+                                            from: msg.to,
+                                            to: 0,
+                                            round: msg.round + 1,
+                                            msg_type: MessageType::Vote,
+                                            payload: String::from("vote"),
+                                            value,
+                                            delay_count: msg.delay_count,
+                                        });
+                                    }
+    
+                                    NodeAction::BroadcastCommit(value) => {
+                                        self.broadcast(Message {
+                                            from: msg.to,
+                                            to: 0,
+                                            round: msg.round + 1,
+                                            msg_type: MessageType::Commit,
+                                            payload: String::from("commit"),
+                                            value,
+                                            delay_count: msg.delay_count,
+                                        });
+                                    }
+    
+                                    NodeAction::BroadcastTimeout => {
+                                        // TODO: create timeout messages
+                                    }
+    
+                                    NodeAction::StaleMessageIgnored => {
+                                        self.metrics.stale_messages_ignored += 1;
+                                    }
+                                }
                             }
     
-                            NodeAction::BroadcastCommit(value) => {
-                                self.broadcast(Message {
-                                    from: msg.to,
-                                    to: 0,
-                                    round: msg.round + 1,
-                                    msg_type: MessageType::Commit,
-                                    payload: String::from("commit"),
-                                    value,
-                                    delay_count: msg.delay_count,
-                                });
-                            }
-
-                            
-
-                            NodeAction::BroadcastTimeout => {
-                                // TODO: create timeout messages
-                            }
-
-                            NodeAction::StaleMessageIgnored => {
-                                self.metrics.stale_messages_ignored += 1;
-                            }
+                            break;
                         }
                     }
     
+                    if self.nodes.iter().all(|node| node.decided.is_some()) {
+                        self.metrics.messages_delivered_until_decision =
+                            self.metrics.messages_delivered;
+                        self.metrics.messages_sent_until_decision =
+                            self.metrics.messages_sent;
+                        break;
+                    }
+                }
+    
+                SchedulerOutcome::Delay => {
+                    self.metrics.scheduler_steps += 1;
+    
+                    if self.protocol.uses_timeout()
+                        && !self.timeout_injected
+                        && self.metrics.scheduler_steps >= self.timeout_threshold
+                    {
+                        self.inject_timeouts();
+                        self.timeout_injected = true;
+                    }
+                }
+    
+                SchedulerOutcome::Empty => {
                     break;
                 }
-            }
-    
-            // Stop once all nodes have decided.
-            if self.nodes.iter().all(|node| node.decided.is_some()) {
-                self.metrics.messages_delivered_until_decision = self.metrics.messages_delivered;
-                self.metrics.messages_sent_until_decision = self.metrics.messages_sent;
-                break;
             }
         }
     }

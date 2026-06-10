@@ -4,11 +4,16 @@ use rand::rngs::StdRng;
 use rand::SeedableRng;
 use std::collections::HashMap;
 
+
+
+pub enum SchedulerOutcome {
+    Deliver(Message),
+    Delay,
+    Empty,
+}
+
 pub trait Scheduler {
-    fn choose_next(
-        &mut self,
-        queue: &mut Vec<Message>,
-    ) -> Option<Message>;
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome;
 }
 
 pub struct FifoScheduler;
@@ -121,11 +126,11 @@ impl BoundedDelayLeaderScheduler {
 }
 
 impl Scheduler for FifoScheduler {
-    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
-            None
+            SchedulerOutcome::Empty
         } else {
-            Some(queue.remove(0))
+            SchedulerOutcome::Deliver(queue.remove(0))
         }
     }
 }
@@ -134,21 +139,21 @@ impl Scheduler for RandomScheduler {
     fn choose_next(
         &mut self,
         queue: &mut Vec<Message>,
-    ) -> Option<Message> {
+    ) -> SchedulerOutcome {
         if queue.is_empty() {
-            return None;
+            return SchedulerOutcome::Empty
         }
 
         let index = self.rng.random_range(0..queue.len());
 
-        Some(queue.remove(index))
+        SchedulerOutcome::Deliver(queue.remove(index))
     }
 }
 
 impl Scheduler for DelayScheduler {
-    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
-            return None;
+            return SchedulerOutcome::Empty;
         }
 
         let len = queue.len();
@@ -158,20 +163,21 @@ impl Scheduler for DelayScheduler {
 
             if msg.to == self.delayed_node {
                 queue.push(msg);
+                return SchedulerOutcome::Delay;
             } else {
-                return Some(msg);
+                return SchedulerOutcome::Deliver(msg);
+               
             }
         }
 
-        // If every message targets delayed_node, eventually deliver one.
-        Some(queue.remove(0))
+        SchedulerOutcome::Empty
     }
 }
 
 impl Scheduler for CommitDelayScheduler {
-    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
-            return None;
+            return SchedulerOutcome::Empty;
         }
 
         let len = queue.len();
@@ -181,19 +187,19 @@ impl Scheduler for CommitDelayScheduler {
 
             if msg.msg_type == MessageType::Commit {
                 queue.push(msg);
+                return SchedulerOutcome::Delay;
             } else {
-                return Some(msg);
+                return SchedulerOutcome::Deliver(msg);
             }
         }
-
-        Some(queue.remove(0))
+        SchedulerOutcome::Empty
     }
 }
 
 impl Scheduler for VoteDelayScheduler {
-    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
-            return None;
+            return SchedulerOutcome::Empty;
         }
 
         let len = queue.len();
@@ -203,19 +209,20 @@ impl Scheduler for VoteDelayScheduler {
 
             if msg.msg_type == MessageType::Vote {
                 queue.push(msg);
+                return SchedulerOutcome::Delay;
             } else {
-                return Some(msg);
+                return SchedulerOutcome::Deliver(msg);
             }
         }
 
-        Some(queue.remove(0))
+       SchedulerOutcome::Empty
     }
 }
 
 impl Scheduler for ProposalDelayScheduler {
-    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
-            return None;
+            return SchedulerOutcome::Empty;
         }
 
         let len = queue.len();
@@ -225,19 +232,19 @@ impl Scheduler for ProposalDelayScheduler {
 
             if msg.msg_type == MessageType::Proposal {
                 queue.push(msg);
+                return SchedulerOutcome::Delay;
             } else {
-                return Some(msg);
+                return SchedulerOutcome::Deliver(msg);
             }
         }
-
-        Some(queue.remove(0))
+        SchedulerOutcome::Empty
     }
 }
 
 impl Scheduler for BoundedDelayScheduler {
-    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
-            return None;
+            return SchedulerOutcome::Empty;
         }
 
         let len = queue.len();
@@ -248,19 +255,19 @@ impl Scheduler for BoundedDelayScheduler {
             if msg.delay_count < self.max_delay {
                 msg.delay_count += 1;
                 queue.push(msg);
+                return SchedulerOutcome::Delay;
             } else {
-                return Some(msg);
+                return SchedulerOutcome::Deliver(msg);
             }
         }
-
-        Some(queue.remove(0))
+        SchedulerOutcome::Empty
     }
 }
 
 impl Scheduler for ProbabilisticDelayScheduler {
-    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
-            return None;
+            return SchedulerOutcome::Empty;
         }
 
         let len = queue.len();
@@ -276,23 +283,24 @@ impl Scheduler for ProbabilisticDelayScheduler {
                     queue.push(msg);
                     continue;
                 }
+                return SchedulerOutcome::Delay;
             } 
-            return Some(msg);
+            return SchedulerOutcome::Deliver(msg);
             
         }
 
         if queue.is_empty() {
-            None
+            SchedulerOutcome::Empty
         } else {
-            Some(queue.remove(0))
+            SchedulerOutcome::Deliver(queue.remove(0))
         }
     }
 }
 
 impl Scheduler for QuorumBlockingScheduler {
-    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
-            return None;
+            return SchedulerOutcome::Empty;
         }
 
         let len = queue.len();
@@ -323,13 +331,13 @@ impl Scheduler for QuorumBlockingScheduler {
                 delivered_so_far + 1,
             );
 
-            return Some(msg);
+            return SchedulerOutcome::Deliver(msg);
         }
 
         // If every message would complete quorum,
         // force deliver one to avoid deadlock.
         if queue.is_empty() {
-            None
+            return SchedulerOutcome::Empty;
         } else {
             let msg = queue.remove(0);
 
@@ -349,24 +357,24 @@ impl Scheduler for QuorumBlockingScheduler {
                 delivered_so_far + 1,
             );
 
-            Some(msg)
+            SchedulerOutcome::Deliver(msg)
         }
     }
 }
 
 impl Scheduler for TimeoutFirstScheduler {
-    fn choose_next(&mut self, queue: &mut Vec<Message>) -> Option<Message> {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if let Some(pos) = queue
             .iter()
             .position(|msg| msg.msg_type == MessageType::Timeout)
         {
-            return Some(queue.remove(pos));
+            return SchedulerOutcome::Deliver(queue.remove(pos));
         }
 
         if queue.is_empty() {
-            None
+           return SchedulerOutcome::Empty;
         } else {
-            Some(queue.remove(0))
+            return SchedulerOutcome::Deliver(queue.remove(0))
         }
     }
 }
@@ -376,19 +384,19 @@ impl Scheduler for DelayLeaderScheduler {
     fn choose_next(
         &mut self,
         queue: &mut Vec<Message>,
-    ) -> Option<Message> {
+    ) -> SchedulerOutcome {
 
         if queue.is_empty() {
-            return None;
+            return SchedulerOutcome::Empty;
         }
 
         if let Some(pos) = queue.iter().position(|msg| {
             msg.from != 1
         }) {
-            return Some(queue.remove(pos));
+            return SchedulerOutcome::Deliver(queue.remove(pos));
         }
 
-        Some(queue.remove(0))
+        SchedulerOutcome::Deliver(queue.remove(0))
     }
 }
 
@@ -397,35 +405,27 @@ impl Scheduler for BoundedDelayLeaderScheduler {
     fn choose_next(
         &mut self,
         queue: &mut Vec<Message>,
-    ) -> Option<Message> {
+    ) -> SchedulerOutcome {
         if queue.is_empty() {
-            return None;
+            return SchedulerOutcome::Empty;
         }
 
         let leader = 1;
+        let i = 0;
 
-        let mut i = 0;
-        while i < queue.len() {
-            let should_delay =
-                queue[i].from == leader &&
-                queue[i].delay_count < self.max_delays;
+        if queue[i].from == leader && queue[i].delay_count < self.max_delays {
+            println!(
+                "Delaying leader message {} of {}",
+                queue[i].delay_count + 1,
+                self.max_delays
+            );
 
-            if should_delay {
-                println!(
-                    "Delaying leader message {} of {}",
-                    queue[i].delay_count + 1,
-                    self.max_delays
-                );
-                
-                let mut msg = queue.remove(i);
-                msg.delay_count += 1;
-                queue.push(msg);
-                continue;
-            }
-
-            return Some(queue.remove(i));
+            let mut msg = queue.remove(i);
+            msg.delay_count += 1;
+            queue.push(msg);
+            return SchedulerOutcome::Delay;
         }
 
-        Some(queue.remove(0))
+        SchedulerOutcome::Deliver(queue.remove(i))
     }
 }

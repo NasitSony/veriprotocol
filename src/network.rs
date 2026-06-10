@@ -1,5 +1,5 @@
 use crate::message::{Message};
-use crate::scheduler::{FifoScheduler, Scheduler, RandomScheduler, DelayScheduler,CommitDelayScheduler, BoundedDelayLeaderScheduler, DelayLeaderScheduler, VoteDelayScheduler, ProposalDelayScheduler, BoundedDelayScheduler, ProbabilisticDelayScheduler, QuorumBlockingScheduler, TimeoutFirstScheduler};
+use crate::scheduler::{SchedulerOutcome, FifoScheduler, Scheduler, RandomScheduler, DelayScheduler,CommitDelayScheduler, BoundedDelayLeaderScheduler, DelayLeaderScheduler, VoteDelayScheduler, ProposalDelayScheduler, BoundedDelayScheduler, ProbabilisticDelayScheduler, QuorumBlockingScheduler, TimeoutFirstScheduler};
 
 //pub scheduler: FifoScheduler,
 
@@ -49,7 +49,7 @@ impl Network {
         self.queue.push(msg);
     }
 
-    pub fn deliver_next(&mut self) -> Option<Message> {
+    pub fn deliver_next(&mut self) -> SchedulerOutcome {
         self.scheduler.choose_next(&mut self.queue)
     }
 }

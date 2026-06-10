@@ -9,6 +9,7 @@ pub struct Metrics {
     pub timeouts_triggered: u64,
     pub view_changes: u64,
     pub stale_messages_ignored: u64,
+    pub scheduler_steps: u64,
 }
 
 
@@ -23,6 +24,7 @@ impl Metrics {
             timeouts_triggered: 0,
             view_changes: 0,
             stale_messages_ignored: 0,
+            scheduler_steps: 0,
         }
     }
 }
@@ -32,7 +34,7 @@ impl Metrics {
         println!("\n=== Metrics ===");
         println!("Messages Sent: {}", self.messages_sent);
         println!("Messages Delivered: {}", self.messages_delivered);
-        //println!("Decision Delivery Count: {}", self.messages_delivered_until_decision);
+        println!("Scheduler Steps: {}", self.scheduler_steps);
         println!("Stale Messages Ignored: {}", self.stale_messages_ignored);
         println!(
             "Messages Sent Until Decision: {}",
