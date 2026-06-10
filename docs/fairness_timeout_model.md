@@ -178,3 +178,21 @@ The goal is to evaluate how different schedulers affect:
 ### Research Question
 
 How large must the timeout threshold `T` be, relative to the scheduler delay bound `K`, to preserve progress in a leader-based consensus protocol?
+
+
+## Model Clarification: Delivery-Based vs Scheduler-Step Timeout
+
+The current implementation uses a delivery-based timeout threshold:
+
+```text
+T_delivery = number of delivered messages before timeout becomes eligible
+
+This means delayed/requeued messages do not consume timeout budget unless they are actually delivered.
+
+For K-bounded scheduler experiments, a stronger model is:
+
+T_step = number of scheduler opportunities before timeout becomes eligible
+
+Under T_step, delaying a message still consumes scheduler budget, even if no message is delivered.
+
+This distinction matters because bounded leader delay may not trigger timeout under T_delivery, even when many scheduler opportunities are spent delaying leader messages.```

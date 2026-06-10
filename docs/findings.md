@@ -199,3 +199,29 @@ continuously force timeout recovery?
 #2 Eventual delivery ≠ useful delivery
 #3 Stale messages after view changes
 #4 Message-count differences under schedulers
+
+Perfect — that confirms the distinction:
+
+delay-leader             -> timeout/view-change occurs
+bounded-delay-leader     -> no timeout/view-change
+
+So now you have a stronger result:
+
+K-bounded leader delay can preserve normal progress when the bound is small enough relative to timeout threshold T.
+
+Finding: Bounded Fairness Restores Progress
+
+Under unbounded leader delay, timeout-driven recovery occurs.
+Under bounded leader delay, consensus completes without timeout or view changes.
+
+This suggests that fairness assumptions significantly affect protocol behavior.
+
+
+
+
+
+## Note: Timeout Threshold Semantics
+
+Current experiments use `T_delivery`, not `T_step`.
+
+Therefore, the measured critical thresholds reflect delivered-message progress, not total scheduler opportunities. Future K-bounded fairness experiments should introduce `T_step` to model scheduler delay more directly.
