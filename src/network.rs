@@ -22,7 +22,7 @@ impl Network {
             "probabilistic-delay" => Box::new(ProbabilisticDelayScheduler::new(3,seed)),
             "quorum-block" => Box::new(QuorumBlockingScheduler::new()),
             "timeout-first" => Box::new(TimeoutFirstScheduler),
-            "delay-leader" => Box::new(DelayLeaderScheduler),
+            "delay-leader" => Box::new(DelayLeaderScheduler::new(10)),
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);
                 Box::new(FifoScheduler::new())

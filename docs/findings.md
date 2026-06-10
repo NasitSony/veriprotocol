@@ -164,3 +164,38 @@ In the current 4-node TimeoutProtocol model, different schedulers require differ
 | TimeoutFirst | 16 | Prioritizing timeout messages is more disruptive and requires a larger T |
 
 This suggests that timeout configuration cannot be evaluated independently of scheduler behavior.
+
+Finding: Scheduler-Specific Timeout Sensitivity
+
+In the current 4-node TimeoutProtocol model, different schedulers require different timeout thresholds to avoid unnecessary view changes.
+
+FIFO          T* = 4
+DelayLeader   T* = 13
+TimeoutFirst  T* = 16
+
+This suggests that timeout configuration cannot be evaluated independently of scheduler behavior.
+
+Critical Timeout Threshold (T*)
+
+16 |                     █ TimeoutFirst
+15 |
+14 |
+13 |             █ DelayLeader
+12 |
+11 |
+10 |
+ 9 |
+ 8 |
+ 7 |
+ 6 |
+ 5 |
+ 4 | █ FIFO
+    +-----------------------------
+
+    Can an adversarial scheduler
+continuously force timeout recovery?
+
+#1 Scheduler-Specific Timeout Sensitivity
+#2 Eventual delivery ≠ useful delivery
+#3 Stale messages after view changes
+#4 Message-count differences under schedulers

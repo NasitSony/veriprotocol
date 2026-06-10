@@ -15,7 +15,7 @@ pub struct FifoScheduler;
 
 pub struct TimeoutFirstScheduler;
 
-pub struct DelayLeaderScheduler;
+
 
 pub struct RandomScheduler {
     rng: StdRng,
@@ -31,6 +31,10 @@ pub struct ProposalDelayScheduler;
 
 pub struct BoundedDelayScheduler {
     pub max_delay: usize,
+}
+
+pub struct DelayLeaderScheduler {
+    max_delays: usize,
 }
 
 pub struct ProbabilisticDelayScheduler {
@@ -100,6 +104,12 @@ impl QuorumBlockingScheduler {
         Self {
             delivered_counts: HashMap::new(),
         }
+    }
+}
+
+impl DelayLeaderScheduler {
+    pub fn new(max_delays: usize) -> Self {
+        Self { max_delays }
     }
 }
 
@@ -354,20 +364,33 @@ impl Scheduler for TimeoutFirstScheduler {
     }
 }
 
+
+
 impl Scheduler for DelayLeaderScheduler {
     fn choose_next(
         &mut self,
         queue: &mut Vec<Message>,
     ) -> Option<Message> {
-
         if queue.is_empty() {
             return None;
         }
 
-        if let Some(pos) = queue.iter().position(|msg| {
-            msg.from != 1
-        }) {
-            return Some(queue.remove(pos));
+        let leader = 1;
+
+        let mut i = 0;
+        while i < queue.len() {
+            let should_delay =
+                queue[i].from == leader &&
+                queue[i].delay_count < self.max_delays;
+
+            if should_delay {
+                let mut msg = queue.remove(i);
+                msg.delay_count += 1;
+                queue.push(msg);
+                continue;
+            }
+
+            return Some(queue.remove(i));
         }
 
         Some(queue.remove(0))
