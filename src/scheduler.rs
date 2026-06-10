@@ -110,13 +110,13 @@ impl QuorumBlockingScheduler {
 
 impl DelayLeaderScheduler {
     pub fn new() -> Self {
-        Self {  }
+        Self
     }
 }
 
 impl BoundedDelayLeaderScheduler {
     pub fn new(max_delays: usize) -> Self {
-        Self { max_delays }
+        Self { max_delays: max_delays,}
     }
 }
 
@@ -411,6 +411,12 @@ impl Scheduler for BoundedDelayLeaderScheduler {
                 queue[i].delay_count < self.max_delays;
 
             if should_delay {
+                println!(
+                    "Delaying leader message {} of {}",
+                    queue[i].delay_count + 1,
+                    self.max_delays
+                );
+                
                 let mut msg = queue.remove(i);
                 msg.delay_count += 1;
                 queue.push(msg);

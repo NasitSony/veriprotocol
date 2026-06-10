@@ -10,7 +10,7 @@ pub struct Network {
 
 
 impl Network {
-    pub fn new(scheduler_name: &str, seed: u64) -> Self {
+    pub fn new(scheduler_name: &str, seed: u64, max_delay: usize) -> Self {
         let scheduler: Box<dyn Scheduler> = match scheduler_name {
             "fifo" => Box::new(FifoScheduler::new()),
             "random" => Box::new(RandomScheduler::new(seed)),
@@ -22,8 +22,8 @@ impl Network {
             "probabilistic-delay" => Box::new(ProbabilisticDelayScheduler::new(3,seed)),
             "quorum-block" => Box::new(QuorumBlockingScheduler::new()),
             "timeout-first" => Box::new(TimeoutFirstScheduler),
-            "delay-leader" => Box::new(DelayLeaderScheduler),
-            "bounded-delay-leader" => Box::new(BoundedDelayLeaderScheduler::new(10)),
+            "delay-leader" => Box::new(DelayLeaderScheduler::new()),
+            "bounded-delay-leader" => Box::new(BoundedDelayLeaderScheduler::new(max_delay)),
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);
                 Box::new(FifoScheduler::new())

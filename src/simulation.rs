@@ -13,6 +13,7 @@ pub struct Simulation {
     pub config: Config,
     pub timeout_injected: bool,
     pub timeout_threshold: u64,
+   
     // pub protocol: SimpleConsensusProtocol,
     pub protocol: Box<dyn Protocol>
 }
@@ -23,6 +24,7 @@ impl Simulation {
         seed: u64,
         protocol_name: &str,
         timeout_threshold: u64,
+        max_delay: usize,
     ) -> Self {
         let protocol: Box<dyn Protocol> = match protocol_name {
             "two-phase" => Box::new(TwoPhaseProtocol::new()),
@@ -31,7 +33,7 @@ impl Simulation {
         };
 
         Self {
-            network: Network::new(scheduler_name, seed),
+            network: Network::new(scheduler_name, seed, max_delay),
             nodes: vec![
                 Node::new(1),
                 Node::new(2),

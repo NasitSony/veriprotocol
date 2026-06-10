@@ -37,6 +37,10 @@ fn main() {
         .and_then(|s| s.parse().ok())
         .unwrap_or(5);  
 
+    let max_delay: u64 = args.get(6)
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(6);  
+
     let mut results: Vec<u64> = Vec::new();
 
     for i in 0..runs {
@@ -44,7 +48,7 @@ fn main() {
     
         let _run_seed = seed + i as u64;
     
-        let mut sim = Simulation::new(scheduler, seed, protocol_name, timeout_threshold);
+        let mut sim = Simulation::new(scheduler, seed, protocol_name, timeout_threshold, max_delay as usize);
         sim.run();
     
         results.push(sim.metrics.messages_delivered_until_decision);
