@@ -305,3 +305,25 @@ This introduces a distinction between:
 - useful messages
 
 A fair scheduler may therefore satisfy eventual delivery while still causing repeated timeout behavior.
+
+## Experiment: K-Bounded Leader Delay Timeout Sweep
+
+CLI format:
+
+```bash
+cargo run -- <scheduler> <runs> <seed> <protocol> <T_step> <K>
+
+cargo run -- bounded-delay-leader 1 42 timeout 6 2
+cargo run -- bounded-delay-leader 1 42 timeout 8 2
+cargo run -- bounded-delay-leader 1 42 timeout 10 2
+cargo run -- bounded-delay-leader 1 42 timeout 12 2
+cargo run -- bounded-delay-leader 1 42 timeout 16 2
+cargo run -- bounded-delay-leader 1 42 timeout 20 2
+
+cargo run -- bounded-delay-leader 1 42 timeout 8 5
+cargo run -- bounded-delay-leader 1 42 timeout 12 5
+cargo run -- bounded-delay-leader 1 42 timeout 16 5
+cargo run -- bounded-delay-leader 1 42 timeout 20 5
+cargo run -- bounded-delay-leader 1 42 timeout 24 5
+cargo run -- bounded-delay-leader 1 42 timeout 32 5 
+```

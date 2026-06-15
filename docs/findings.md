@@ -258,3 +258,51 @@ A single bounded delay applied to leader messages is sufficient to trigger timeo
 Although the protocol continues to decide successfully, timeout and view-change mechanisms become active immediately once bounded leader delay is introduced.
 
 This result suggests that timeout behavior is highly sensitive to delays on the protocol's critical path. Additional delay beyond the threshold does not substantially increase recovery activity, indicating the presence of a scheduler-induced phase transition.
+
+## Finding: Critical Step Timeout for K=1
+
+For `bounded-delay-leader` with `K = 1`, the transition occurs between `T_step = 7` and `T_step = 8`.
+
+| T_step | Timeouts | View Changes | Decisions |
+|---:|---:|---:|---:|
+| 7 | 4 | 4 | 4 |
+| 8 | 0 | 0 | 4 |
+
+Thus, in the current 4-node model, `T_step*(K=1) = 8`.
+
+## Finding: Critical Step Timeout for K=1
+
+For `bounded-delay-leader` with `K = 1`, the transition occurs between `T_step = 7` and `T_step = 8`.
+
+| T_step | Timeouts | View Changes | Decisions |
+|---:|---:|---:|---:|
+| 7 | 4 | 4 | 4 |
+| 8 | 0 | 0 | 4 |
+
+Thus, in the current 4-node TimeoutProtocol model, the critical timeout threshold is:
+
+```text
+T_step*(K=1) = 8```
+
+
+This is exactly the kind of result that can become a figure/table in the paper:
+
+```text
+K=1 -> T* = 8```
+
+
+## Finding: Timeout Threshold Under K-Bounded Leader Delay
+
+Using `bounded-delay-leader` with scheduler-step timeout, the timeout threshold required to avoid unnecessary leader rotation increases with the bounded delay parameter K.
+
+| K | Critical T_step | Behavior Below Threshold | Behavior At/Above Threshold |
+|---:|---:|---|---|
+| 1 | 8 | Timeout + view change | No timeout |
+| 2 | 12 | Timeout + view change | No timeout |
+| 5 | 24 | Timeout + view change | No timeout |
+
+For K=2, the transition occurs between `T_step=10` and `T_step=12`.
+
+For K=5, the transition occurs between `T_step=20` and `T_step=24`.
+
+This shows that K-bounded fairness guarantees eventual delivery, but does not by itself prevent timeout-driven leader rotation. Timeout thresholds must be calibrated against the scheduler's delay budget.

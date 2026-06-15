@@ -414,11 +414,6 @@ impl Scheduler for BoundedDelayLeaderScheduler {
         let i = 0;
 
         if queue[i].from == leader && queue[i].delay_count < self.max_delays {
-            println!(
-                "Delaying leader message {} of {}",
-                queue[i].delay_count + 1,
-                self.max_delays
-            );
 
             let mut msg = queue.remove(i);
             msg.delay_count += 1;
