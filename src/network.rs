@@ -1,5 +1,10 @@
-use crate::message::{Message};
-use crate::scheduler::{SchedulerOutcome, FifoScheduler, Scheduler, RandomScheduler, DelayScheduler,CommitDelayScheduler, BoundedDelayLeaderScheduler, DelayLeaderScheduler, VoteDelayScheduler, ProposalDelayScheduler, BoundedDelayScheduler, ProbabilisticDelayScheduler, QuorumBlockingScheduler, TimeoutFirstScheduler};
+use crate::message::Message;
+use crate::scheduler::{
+    BoundedDelayLeaderScheduler, BoundedDelayScheduler, CommitDelayScheduler, DelayLeaderScheduler,
+    DelayScheduler, FifoScheduler, ProbabilisticDelayScheduler, ProposalDelayScheduler,
+    QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome, TimeoutFirstScheduler,
+    VoteDelayScheduler,
+};
 
 //pub scheduler: FifoScheduler,
 
@@ -7,7 +12,6 @@ pub struct Network {
     pub queue: Vec<Message>,
     pub scheduler: Box<dyn Scheduler>,
 }
-
 
 impl Network {
     pub fn new(scheduler_name: &str, seed: u64, max_delay: usize) -> Self {
@@ -19,7 +23,7 @@ impl Network {
             "delay-vote" => Box::new(VoteDelayScheduler::new()),
             "delay-proposal" => Box::new(ProposalDelayScheduler::new()),
             "bounded-delay" => Box::new(BoundedDelayScheduler::new(3)),
-            "probabilistic-delay" => Box::new(ProbabilisticDelayScheduler::new(3,seed)),
+            "probabilistic-delay" => Box::new(ProbabilisticDelayScheduler::new(3, seed)),
             "quorum-block" => Box::new(QuorumBlockingScheduler::new()),
             "timeout-first" => Box::new(TimeoutFirstScheduler),
             "delay-leader" => Box::new(DelayLeaderScheduler::new()),
@@ -29,7 +33,7 @@ impl Network {
                 Box::new(FifoScheduler::new())
             }
         };
-    
+
         Self {
             queue: Vec::new(),
             scheduler,

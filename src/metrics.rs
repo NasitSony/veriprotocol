@@ -12,7 +12,6 @@ pub struct Metrics {
     pub scheduler_steps: u64,
 }
 
-
 impl Metrics {
     pub fn new() -> Self {
         Self {

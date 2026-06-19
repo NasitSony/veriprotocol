@@ -1,11 +1,10 @@
-use crate::network::Network;
-use crate::node::{Node, NodeAction};
-use crate::trace::{trace, TraceEvent, Config};
 use crate::message::{Message, MessageType, VoteValue};
 use crate::metrics::Metrics;
-use crate::protocol::{Protocol, SimpleConsensusProtocol, TwoPhaseProtocol, TimeoutProtocol};
+use crate::network::Network;
+use crate::node::{Node, NodeAction};
+use crate::protocol::{Protocol, SimpleConsensusProtocol, TimeoutProtocol, TwoPhaseProtocol};
 use crate::scheduler::SchedulerOutcome;
-
+use crate::trace::{Config, TraceEvent, trace};
 
 pub struct Simulation {
     pub network: Network,
@@ -14,9 +13,9 @@ pub struct Simulation {
     pub config: Config,
     pub timeout_injected: bool,
     pub timeout_threshold: u64,
-   
+
     // pub protocol: SimpleConsensusProtocol,
-    pub protocol: Box<dyn Protocol>
+    pub protocol: Box<dyn Protocol>,
 }
 
 impl Simulation {
@@ -35,12 +34,7 @@ impl Simulation {
 
         Self {
             network: Network::new(scheduler_name, seed, max_delay),
-            nodes: vec![
-                Node::new(1),
-                Node::new(2),
-                Node::new(3),
-                Node::new(4),
-            ],
+            nodes: vec![Node::new(1), Node::new(2), Node::new(3), Node::new(4)],
             metrics: Metrics::new(),
             config: Config {
                 print_trace: false,
@@ -54,17 +48,19 @@ impl Simulation {
         }
     }
 
-
     pub fn run(&mut self) {
         println!("Simulation starting");
 
         let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
         for &from_node in &node_ids {
-            if !self.protocol.should_send_initial_proposal(from_node as usize) {
+            if !self
+                .protocol
+                .should_send_initial_proposal(from_node as usize)
+            {
                 continue;
             }
-    
+
             let proposal = Message {
                 from: from_node,
                 to: 0,
@@ -74,17 +70,17 @@ impl Simulation {
                 value: VoteValue::Yes,
                 delay_count: 0,
             };
-    
+
             self.broadcast(proposal);
         }
 
-       
         self.deliver_all_messages();
-        self.metrics.decisions = self.nodes
+        self.metrics.decisions = self
+            .nodes
             .iter()
             .filter(|node| node.decided.is_some())
             .count() as u64;
-            self.metrics.print();
+        self.metrics.print();
     }
 
     fn deliver_all_messages(&mut self) {
@@ -93,7 +89,7 @@ impl Simulation {
                 SchedulerOutcome::Deliver(msg) => {
                     self.metrics.scheduler_steps += 1;
                     self.metrics.messages_delivered += 1;
-    
+
                     if self.protocol.uses_timeout()
                         && !self.timeout_injected
                         && self.metrics.scheduler_steps >= self.timeout_threshold
@@ -101,22 +97,22 @@ impl Simulation {
                         self.inject_timeouts();
                         self.timeout_injected = true;
                     }
-    
+
                     if msg.msg_type == MessageType::Timeout {
                         self.metrics.timeouts_triggered += 1;
                         self.metrics.view_changes += 1;
                     }
-    
+
                     trace(
                         &self.config,
                         TraceEvent::Deliver,
                         &format!("{} -> {}", msg.from, msg.to),
                     );
-    
+
                     for node in &mut self.nodes {
                         if node.id == msg.to {
                             let actions = self.protocol.handle_message(node, &msg);
-    
+
                             for action in actions {
                                 match action {
                                     NodeAction::BroadcastProposal => {
@@ -130,7 +126,7 @@ impl Simulation {
                                             delay_count: msg.delay_count,
                                         });
                                     }
-    
+
                                     NodeAction::BroadcastVote(value) => {
                                         self.broadcast(Message {
                                             from: msg.to,
@@ -142,7 +138,7 @@ impl Simulation {
                                             delay_count: msg.delay_count,
                                         });
                                     }
-    
+
                                     NodeAction::BroadcastCommit(value) => {
                                         self.broadcast(Message {
                                             from: msg.to,
@@ -154,33 +150,32 @@ impl Simulation {
                                             delay_count: msg.delay_count,
                                         });
                                     }
-    
+
                                     NodeAction::BroadcastTimeout => {
                                         // TODO: create timeout messages
                                     }
-    
+
                                     NodeAction::StaleMessageIgnored => {
                                         self.metrics.stale_messages_ignored += 1;
                                     }
                                 }
                             }
-    
+
                             break;
                         }
                     }
-    
+
                     if self.nodes.iter().all(|node| node.decided.is_some()) {
                         self.metrics.messages_delivered_until_decision =
                             self.metrics.messages_delivered;
-                        self.metrics.messages_sent_until_decision =
-                            self.metrics.messages_sent;
+                        self.metrics.messages_sent_until_decision = self.metrics.messages_sent;
                         break;
                     }
                 }
-    
+
                 SchedulerOutcome::Delay => {
                     self.metrics.scheduler_steps += 1;
-    
+
                     if self.protocol.uses_timeout()
                         && !self.timeout_injected
                         && self.metrics.scheduler_steps >= self.timeout_threshold
@@ -189,7 +184,7 @@ impl Simulation {
                         self.timeout_injected = true;
                     }
                 }
-    
+
                 SchedulerOutcome::Empty => {
                     break;
                 }
@@ -208,7 +203,7 @@ impl Simulation {
 
     fn inject_timeouts(&mut self) {
         let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
-    
+
         for node_id in node_ids {
             let timeout = Message {
                 from: 0,
@@ -219,7 +214,7 @@ impl Simulation {
                 value: VoteValue::Yes,
                 delay_count: 0,
             };
-    
+
             self.metrics.messages_sent += 1;
             self.network.send(timeout);
         }

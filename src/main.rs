@@ -1,12 +1,12 @@
 mod message;
+mod metrics;
 mod network;
 mod node;
+mod protocol;
 mod scheduler;
 mod simulation;
 mod state;
 mod trace;
-mod metrics;
-mod protocol;
 
 use simulation::Simulation;
 //use std::env;
@@ -14,43 +14,34 @@ use simulation::Simulation;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
-    let scheduler = args
-        .get(1)
-        .map(|s| s.as_str())
-        .unwrap_or("fifo");
+    let scheduler = args.get(1).map(|s| s.as_str()).unwrap_or("fifo");
 
-    let runs: usize = args
-        .get(2)
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(1);
+    let runs: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(1);
 
-    let seed: u64 = args
-        .get(3)
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(42);    
+    let seed: u64 = args.get(3).and_then(|s| s.parse().ok()).unwrap_or(42);
 
-    let protocol_name = args.get(4)
-        .map(String::as_str)
-        .unwrap_or("simple");  
-        
-    let timeout_threshold: u64 = args.get(5)
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(5);  
+    let protocol_name = args.get(4).map(String::as_str).unwrap_or("simple");
 
-    let max_delay: u64 = args.get(6)
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(6);  
+    let timeout_threshold: u64 = args.get(5).and_then(|s| s.parse().ok()).unwrap_or(5);
+
+    let max_delay: u64 = args.get(6).and_then(|s| s.parse().ok()).unwrap_or(6);
 
     let mut results: Vec<u64> = Vec::new();
 
     for i in 0..runs {
         println!("\n=== Run {} ===", i + 1);
-    
+
         let _run_seed = seed + i as u64;
-    
-        let mut sim = Simulation::new(scheduler, seed, protocol_name, timeout_threshold, max_delay as usize);
+
+        let mut sim = Simulation::new(
+            scheduler,
+            seed,
+            protocol_name,
+            timeout_threshold,
+            max_delay as usize,
+        );
         sim.run();
-    
+
         results.push(sim.metrics.messages_delivered_until_decision);
     }
 

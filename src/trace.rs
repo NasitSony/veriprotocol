@@ -18,15 +18,9 @@ pub struct Config {
     pub print_decisions: bool,
 }
 
-pub fn trace(
-    config: &Config,
-    event: TraceEvent,
-    details: &str,
-) {
+pub fn trace(config: &Config, event: TraceEvent, details: &str) {
     match event {
-        TraceEvent::Send
-        | TraceEvent::Deliver
-        | TraceEvent::Receive => {
+        TraceEvent::Send | TraceEvent::Deliver | TraceEvent::Receive => {
             if config.print_trace {
                 println!("[{:?}] {}", event, details);
             }
@@ -38,9 +32,7 @@ pub fn trace(
             }
         }
 
-        TraceEvent::ProposalQuorum
-        | TraceEvent::VoteQuorum
-        | TraceEvent::CommitQuorum => {
+        TraceEvent::ProposalQuorum | TraceEvent::VoteQuorum | TraceEvent::CommitQuorum => {
             if config.print_quorums {
                 println!("[{:?}] {}", event, details);
             }

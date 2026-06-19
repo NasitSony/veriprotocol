@@ -4,9 +4,6 @@ use crate::state::NodeState;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-
-
-
 #[derive(Debug)]
 pub struct Node {
     pub id: u64,
@@ -25,9 +22,8 @@ pub enum NodeAction {
     BroadcastCommit(VoteValue),
     BroadcastTimeout,
     StaleMessageIgnored,
-    BroadcastProposal
+    BroadcastProposal,
 }
-
 
 impl Node {
     pub fn new(id: u64) -> Self {
@@ -44,33 +40,24 @@ impl Node {
     }
 }
 
-
 impl Node {
-
-   pub(crate) fn count(&self, msg_type: MessageType, value: VoteValue) -> usize {
-        *self
-            .vote_counts
-            .get(&(msg_type, value))
-            .unwrap_or(&0)
+    pub(crate) fn count(&self, msg_type: MessageType, value: VoteValue) -> usize {
+        *self.vote_counts.get(&(msg_type, value)).unwrap_or(&0)
     }
 
-   
-
-   pub(crate) fn quorum_reached(
+    pub(crate) fn quorum_reached(
         &mut self,
         msg_type: MessageType,
         value: VoteValue,
         count: usize,
     ) -> bool {
         let key = (msg_type, value);
-    
+
         if count >= 3 && !self.completed_quorums.contains(&key) {
             self.completed_quorums.insert(key);
             return true;
         }
-    
+
         false
     }
-
-    
 }

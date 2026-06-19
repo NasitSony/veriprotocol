@@ -1,10 +1,8 @@
 use crate::message::{Message, MessageType, VoteValue};
 use rand::RngExt;
-use rand::rngs::StdRng;
 use rand::SeedableRng;
+use rand::rngs::StdRng;
 use std::collections::HashMap;
-
-
 
 pub enum SchedulerOutcome {
     Deliver(Message),
@@ -19,8 +17,6 @@ pub trait Scheduler {
 pub struct FifoScheduler;
 
 pub struct TimeoutFirstScheduler;
-
-
 
 pub struct RandomScheduler {
     rng: StdRng,
@@ -58,7 +54,6 @@ impl CommitDelayScheduler {
     }
 }
 
-
 impl VoteDelayScheduler {
     pub fn new() -> Self {
         Self
@@ -93,15 +88,18 @@ impl DelayScheduler {
 
 impl BoundedDelayScheduler {
     pub fn new(max_delay: usize) -> Self {
-        Self { max_delay: max_delay }
+        Self {
+            max_delay: max_delay,
+        }
     }
 }
 
 impl ProbabilisticDelayScheduler {
     pub fn new(max_delay: usize, seed: u64) -> Self {
-        Self { max_delay: max_delay,
+        Self {
+            max_delay: max_delay,
             rng: StdRng::seed_from_u64(seed),
-         }
+        }
     }
 }
 
@@ -121,7 +119,9 @@ impl DelayLeaderScheduler {
 
 impl BoundedDelayLeaderScheduler {
     pub fn new(max_delays: usize) -> Self {
-        Self { max_delays: max_delays,}
+        Self {
+            max_delays: max_delays,
+        }
     }
 }
 
@@ -136,12 +136,9 @@ impl Scheduler for FifoScheduler {
 }
 
 impl Scheduler for RandomScheduler {
-    fn choose_next(
-        &mut self,
-        queue: &mut Vec<Message>,
-    ) -> SchedulerOutcome {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
-            return SchedulerOutcome::Empty
+            return SchedulerOutcome::Empty;
         }
 
         let index = self.rng.random_range(0..queue.len());
@@ -166,7 +163,6 @@ impl Scheduler for DelayScheduler {
                 return SchedulerOutcome::Delay;
             } else {
                 return SchedulerOutcome::Deliver(msg);
-               
             }
         }
 
@@ -215,7 +211,7 @@ impl Scheduler for VoteDelayScheduler {
             }
         }
 
-       SchedulerOutcome::Empty
+        SchedulerOutcome::Empty
     }
 }
 
@@ -277,16 +273,15 @@ impl Scheduler for ProbabilisticDelayScheduler {
 
             if msg.delay_count < self.max_delay {
                 let coin = self.rng.random_range(0..2);
-            
+
                 if coin == 0 {
                     msg.delay_count += 1;
                     queue.push(msg);
                     continue;
                 }
                 return SchedulerOutcome::Delay;
-            } 
+            }
             return SchedulerOutcome::Deliver(msg);
-            
         }
 
         if queue.is_empty() {
@@ -308,16 +303,9 @@ impl Scheduler for QuorumBlockingScheduler {
         for _ in 0..len {
             let msg = queue.remove(0);
 
-            let key = (
-                msg.to,
-                msg.msg_type.clone(),
-                msg.value.clone(),
-            );
+            let key = (msg.to, msg.msg_type.clone(), msg.value.clone());
 
-            let delivered_so_far = *self
-                .delivered_counts
-                .get(&key)
-                .unwrap_or(&0);
+            let delivered_so_far = *self.delivered_counts.get(&key).unwrap_or(&0);
 
             // If this would be the 3rd matching message,
             // delay it by moving it to the back.
@@ -326,10 +314,7 @@ impl Scheduler for QuorumBlockingScheduler {
                 continue;
             }
 
-            self.delivered_counts.insert(
-                key,
-                delivered_so_far + 1,
-            );
+            self.delivered_counts.insert(key, delivered_so_far + 1);
 
             return SchedulerOutcome::Deliver(msg);
         }
@@ -341,21 +326,11 @@ impl Scheduler for QuorumBlockingScheduler {
         } else {
             let msg = queue.remove(0);
 
-            let key = (
-                msg.to,
-                msg.msg_type.clone(),
-                msg.value.clone(),
-            );
+            let key = (msg.to, msg.msg_type.clone(), msg.value.clone());
 
-            let delivered_so_far = *self
-                .delivered_counts
-                .get(&key)
-                .unwrap_or(&0);
+            let delivered_so_far = *self.delivered_counts.get(&key).unwrap_or(&0);
 
-            self.delivered_counts.insert(
-                key,
-                delivered_so_far + 1,
-            );
+            self.delivered_counts.insert(key, delivered_so_far + 1);
 
             SchedulerOutcome::Deliver(msg)
         }
@@ -372,27 +347,20 @@ impl Scheduler for TimeoutFirstScheduler {
         }
 
         if queue.is_empty() {
-           return SchedulerOutcome::Empty;
+            return SchedulerOutcome::Empty;
         } else {
-            return SchedulerOutcome::Deliver(queue.remove(0))
+            return SchedulerOutcome::Deliver(queue.remove(0));
         }
     }
 }
 
-
 impl Scheduler for DelayLeaderScheduler {
-    fn choose_next(
-        &mut self,
-        queue: &mut Vec<Message>,
-    ) -> SchedulerOutcome {
-
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
             return SchedulerOutcome::Empty;
         }
 
-        if let Some(pos) = queue.iter().position(|msg| {
-            msg.from != 1
-        }) {
+        if let Some(pos) = queue.iter().position(|msg| msg.from != 1) {
             return SchedulerOutcome::Deliver(queue.remove(pos));
         }
 
@@ -400,12 +368,8 @@ impl Scheduler for DelayLeaderScheduler {
     }
 }
 
-
 impl Scheduler for BoundedDelayLeaderScheduler {
-    fn choose_next(
-        &mut self,
-        queue: &mut Vec<Message>,
-    ) -> SchedulerOutcome {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
             return SchedulerOutcome::Empty;
         }
@@ -414,7 +378,6 @@ impl Scheduler for BoundedDelayLeaderScheduler {
         let i = 0;
 
         if queue[i].from == leader && queue[i].delay_count < self.max_delays {
-
             let mut msg = queue.remove(i);
             msg.delay_count += 1;
             queue.push(msg);
