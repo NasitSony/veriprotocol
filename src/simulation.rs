@@ -128,18 +128,11 @@ impl Simulation {
                     for node in &mut self.nodes {
                         if node.id == msg.to {
                             let actions = self.protocol.handle_message(node, &msg);
-                            println!("Protocol selected: {}", self.protocol_name);
-                            println!(
-                                "Delivering to node {} from {}: {:?} action {:?}",
-                                msg.to, msg.from, msg.msg_type, actions
-                            );
 
                             for action in actions {
                                 match action {
                                     NodeAction::BroadcastProposal => {
-                                        println!("Inside BroadcastProposal");
                                         if self.protocol_name == "paxos" {
-                                            println!("Inside paxos");
                                             self.broadcast(Message {
                                                 from: msg.to,
                                                 to: 0,
@@ -150,7 +143,6 @@ impl Simulation {
                                                 delay_count: 0,
                                             });
                                         } else {
-                                            println!("Inside non-paxos");
                                             self.broadcast(Message {
                                                 from: msg.to,
                                                 to: 0,

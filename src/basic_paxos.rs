@@ -29,10 +29,6 @@ impl Protocol for BasicPaxosProtocol {
     fn handle_message(&mut self, node: &mut Node, msg: &Message) -> Vec<NodeAction> {
         match &msg.msg_type {
             MessageType::Prepare { ballot } => {
-                println!(
-                    "Node {} received Prepare({}) from {}",
-                    node.id, ballot, msg.from
-                );
                 if *ballot > node.promised_ballot {
                     node.promised_ballot = *ballot;
 
@@ -48,10 +44,6 @@ impl Protocol for BasicPaxosProtocol {
             }
 
             MessageType::AcceptRequest { ballot, value } => {
-                println!(
-                    "Node {} received Promise({}) from {}",
-                    node.id, ballot, msg.from
-                );
                 if *ballot >= node.promised_ballot {
                     node.promised_ballot = *ballot;
                     node.accepted_ballot = Some(*ballot);
@@ -68,10 +60,6 @@ impl Protocol for BasicPaxosProtocol {
             }
 
             MessageType::Promise { ballot, .. } => {
-                println!(
-                    "Node {} received AcceptRequest({}) from {}",
-                    node.id, ballot, msg.from
-                );
                 if node.id != 1 {
                     return vec![];
                 }
@@ -93,10 +81,6 @@ impl Protocol for BasicPaxosProtocol {
             }
 
             MessageType::Accepted { ballot, value } => {
-                println!(
-                    "Node {} received Accepted({}, {}) from {}",
-                    node.id, ballot, value, msg.from
-                );
                 if node.id != 1 {
                     return vec![];
                 }
@@ -106,7 +90,6 @@ impl Protocol for BasicPaxosProtocol {
 
                     if self.accepted.len() >= 3 && node.decided.is_none() {
                         node.decided = Some(VoteValue::Yes);
-                        println!("Paxos chosen value: {}", value);
                     }
                 }
                 vec![]
