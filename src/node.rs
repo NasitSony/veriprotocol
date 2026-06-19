@@ -14,6 +14,11 @@ pub struct Node {
     pub completed_quorums: HashSet<(MessageType, VoteValue)>,
     pub(crate) view: u64,
     pub(crate) leader: u64,
+
+    // Basic Paxos acceptor state
+    pub(crate) promised_ballot: u64,
+    pub(crate) accepted_ballot: Option<u64>,
+    pub(crate) accepted_value: Option<String>,
 }
 
 #[derive(Debug)]
@@ -23,6 +28,23 @@ pub enum NodeAction {
     BroadcastTimeout,
     StaleMessageIgnored,
     BroadcastProposal,
+    SendPromise {
+        to: u64,
+        ballot: u64,
+        accepted_ballot: Option<u64>,
+        accepted_value: Option<String>,
+    },
+
+    BroadcastAcceptRequest {
+        ballot: u64,
+        value: String,
+    },
+
+    SendAccepted {
+        to: u64,
+        ballot: u64,
+        value: String,
+    },
 }
 
 impl Node {
@@ -36,6 +58,9 @@ impl Node {
             completed_quorums: HashSet::new(),
             view: 0,
             leader: 1,
+            promised_ballot: 0,
+            accepted_ballot: None,
+            accepted_value: None,
         }
     }
 }

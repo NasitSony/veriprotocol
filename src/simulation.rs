@@ -1,3 +1,4 @@
+use crate::basic_paxos::BasicPaxosProtocol;
 use crate::message::{Message, MessageType, VoteValue};
 use crate::metrics::Metrics;
 use crate::network::Network;
@@ -13,6 +14,7 @@ pub struct Simulation {
     pub config: Config,
     pub timeout_injected: bool,
     pub timeout_threshold: u64,
+    protocol_name: String,
 
     // pub protocol: SimpleConsensusProtocol,
     pub protocol: Box<dyn Protocol>,
@@ -28,6 +30,7 @@ impl Simulation {
     ) -> Self {
         let protocol: Box<dyn Protocol> = match protocol_name {
             "two-phase" => Box::new(TwoPhaseProtocol::new()),
+            "paxos" => Box::new(BasicPaxosProtocol::new()),
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -45,41 +48,54 @@ impl Simulation {
             protocol,
             timeout_injected: false,
             timeout_threshold: timeout_threshold,
+            protocol_name: protocol_name.to_string(),
         }
     }
 
     pub fn run(&mut self) {
         println!("Simulation starting");
 
-        let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
-
-        for &from_node in &node_ids {
-            if !self
-                .protocol
-                .should_send_initial_proposal(from_node as usize)
-            {
-                continue;
-            }
-
-            let proposal = Message {
-                from: from_node,
+        if self.protocol_name == "paxos" {
+            self.broadcast(Message {
+                from: 1,
                 to: 0,
                 round: 0,
-                msg_type: MessageType::Proposal,
-                payload: String::from("proposal"),
+                msg_type: MessageType::Prepare { ballot: 1 },
+                payload: String::from("prepare"),
                 value: VoteValue::Yes,
                 delay_count: 0,
-            };
+            });
+        } else {
+            let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
-            self.broadcast(proposal);
+            for &from_node in &node_ids {
+                if !self
+                    .protocol
+                    .should_send_initial_proposal(from_node as usize)
+                {
+                    continue;
+                }
+
+                self.broadcast(Message {
+                    from: from_node,
+                    to: 0,
+                    round: 0,
+                    msg_type: MessageType::Proposal,
+                    payload: String::from("proposal"),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
         }
 
         self.deliver_all_messages();
+
         self.metrics.decisions = self
             .nodes
             .iter()
             .filter(|node| node.decided.is_some())
             .count() as u64;
+
         self.metrics.print();
     }
 
@@ -112,19 +128,39 @@ impl Simulation {
                     for node in &mut self.nodes {
                         if node.id == msg.to {
                             let actions = self.protocol.handle_message(node, &msg);
+                            println!("Protocol selected: {}", self.protocol_name);
+                            println!(
+                                "Delivering to node {} from {}: {:?} action {:?}",
+                                msg.to, msg.from, msg.msg_type, actions
+                            );
 
                             for action in actions {
                                 match action {
                                     NodeAction::BroadcastProposal => {
-                                        self.broadcast(Message {
-                                            from: msg.to,
-                                            to: 0,
-                                            round: msg.round + 1,
-                                            msg_type: MessageType::Proposal,
-                                            payload: String::from("proposal"),
-                                            value: VoteValue::Yes,
-                                            delay_count: msg.delay_count,
-                                        });
+                                        println!("Inside BroadcastProposal");
+                                        if self.protocol_name == "paxos" {
+                                            println!("Inside paxos");
+                                            self.broadcast(Message {
+                                                from: msg.to,
+                                                to: 0,
+                                                round: 0,
+                                                msg_type: MessageType::Prepare { ballot: 1 },
+                                                payload: String::from("prepare"),
+                                                value: VoteValue::Yes,
+                                                delay_count: 0,
+                                            });
+                                        } else {
+                                            println!("Inside non-paxos");
+                                            self.broadcast(Message {
+                                                from: msg.to,
+                                                to: 0,
+                                                round: msg.round + 1,
+                                                msg_type: MessageType::Proposal,
+                                                payload: String::from("proposal"),
+                                                value: VoteValue::Yes,
+                                                delay_count: msg.delay_count,
+                                            });
+                                        }
                                     }
 
                                     NodeAction::BroadcastVote(value) => {
@@ -157,6 +193,57 @@ impl Simulation {
 
                                     NodeAction::StaleMessageIgnored => {
                                         self.metrics.stale_messages_ignored += 1;
+                                    }
+
+                                    NodeAction::SendPromise {
+                                        to,
+                                        ballot,
+                                        accepted_ballot,
+                                        accepted_value,
+                                    } => {
+                                        self.send_to(Message {
+                                            from: msg.to,
+                                            to,
+                                            round: msg.round + 1,
+                                            msg_type: MessageType::Promise {
+                                                ballot,
+                                                accepted_ballot,
+                                                accepted_value,
+                                            },
+                                            payload: String::from("promise"),
+                                            value: msg.value.clone(),
+                                            delay_count: msg.delay_count,
+                                        });
+                                    }
+
+                                    NodeAction::BroadcastAcceptRequest { ballot, value } => {
+                                        self.broadcast(Message {
+                                            from: msg.to,
+                                            to: 0,
+                                            round: msg.round + 1,
+                                            msg_type: MessageType::AcceptRequest {
+                                                ballot,
+                                                value: value.clone(),
+                                            },
+                                            payload: String::from("accept_request"),
+                                            value: msg.value.clone(),
+                                            delay_count: msg.delay_count,
+                                        });
+                                    }
+
+                                    NodeAction::SendAccepted { to, ballot, value } => {
+                                        self.send_to(Message {
+                                            from: msg.to,
+                                            to,
+                                            round: msg.round + 1,
+                                            msg_type: MessageType::Accepted {
+                                                ballot,
+                                                value: value.clone(),
+                                            },
+                                            payload: String::from("accepted"),
+                                            value: msg.value.clone(),
+                                            delay_count: msg.delay_count,
+                                        });
                                     }
                                 }
                             }
@@ -199,6 +286,11 @@ impl Simulation {
             self.metrics.messages_sent += 1;
             self.network.send(msg);
         }
+    }
+
+    fn send_to(&mut self, msg: Message) {
+        self.metrics.messages_sent += 1;
+        self.network.send(msg);
     }
 
     fn inject_timeouts(&mut self) {

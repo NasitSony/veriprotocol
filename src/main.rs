@@ -1,3 +1,4 @@
+mod basic_paxos;
 mod message;
 mod metrics;
 mod network;
