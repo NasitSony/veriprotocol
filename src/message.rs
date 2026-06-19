@@ -4,6 +4,24 @@ pub enum MessageType {
     Vote,
     Commit,
     Timeout,
+
+    // Basic Paxos
+    Prepare {
+        ballot: u64,
+    },
+    Promise {
+        ballot: u64,
+        accepted_ballot: Option<u64>,
+        accepted_value: Option<String>,
+    },
+    AcceptRequest {
+        ballot: u64,
+        value: String,
+    },
+    Accepted {
+        ballot: u64,
+        value: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
