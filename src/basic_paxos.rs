@@ -13,6 +13,8 @@ pub struct BasicPaxosProtocol {
     pub promises: HashSet<u64>,
     pub accepted: HashSet<u64>,
     pub accept_request_sent: bool,
+    pub highest_accepted_ballot: Option<u64>,
+    pub chosen_proposal_value: String,
 }
 
 impl BasicPaxosProtocol {
@@ -23,6 +25,8 @@ impl BasicPaxosProtocol {
             promises: HashSet::new(),
             accepted: HashSet::new(),
             accept_request_sent: false,
+            highest_accepted_ballot: None,
+            chosen_proposal_value: "v1".to_string(),
         }
     }
 }
@@ -57,32 +61,44 @@ impl Protocol for BasicPaxosProtocol {
                     vec![NodeAction::SendAccepted {
                         to: msg.from,
                         ballot: *ballot,
-                        value: value.clone(),
+                        value: self.chosen_proposal_value.clone(),
                     }]
                 } else {
                     vec![]
                 }
             }
 
-            MessageType::Promise { ballot, .. } => {
-               
+            MessageType::Promise {
+                ballot,
+                accepted_ballot,
+                accepted_value,
+            } => {
                 if node.id != 1 {
                     return vec![];
                 }
-
+            
                 if *ballot == self.ballot {
                     self.promises.insert(msg.from);
-
+            
+                    if let (Some(ab), Some(av)) = (accepted_ballot, accepted_value) {
+                        if self.highest_accepted_ballot.is_none()
+                            || *ab > self.highest_accepted_ballot.unwrap()
+                        {
+                            self.highest_accepted_ballot = Some(*ab);
+                            self.chosen_proposal_value = av.clone();
+                        }
+                    }
+            
                     if self.promises.len() >= 3 && !self.accept_request_sent {
                         self.accept_request_sent = true;
-
+            
                         return vec![NodeAction::BroadcastAcceptRequest {
                             ballot: self.ballot,
-                            value: self.value.clone(),
+                            value: self.chosen_proposal_value.clone(),
                         }];
                     }
                 }
-
+            
                 vec![]
             }
 
