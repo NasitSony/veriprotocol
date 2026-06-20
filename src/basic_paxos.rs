@@ -1,20 +1,17 @@
-// src/basic_paxos.rs
-use std::collections::HashSet;
-
 use crate::message::{Message, MessageType, VoteValue};
 use crate::node::{Node, NodeAction};
 use crate::protocol::Protocol;
-
-
+use std::collections::{HashMap, HashSet};
 
 pub struct BasicPaxosProtocol {
     pub ballot: u64,
     pub value: String,
-    pub promises: HashSet<u64>,
-    pub accepted: HashSet<u64>,
+    pub promises_by_ballot: HashMap<u64, HashSet<u64>>,
+    pub accepted_by_ballot: HashMap<u64, HashSet<u64>>,
     pub accept_request_sent: bool,
     pub highest_accepted_ballot: Option<u64>,
     pub chosen_proposal_value: String,
+    pub accept_request_sent_by_ballot: HashSet<u64>,
 }
 
 impl BasicPaxosProtocol {
@@ -22,11 +19,12 @@ impl BasicPaxosProtocol {
         Self {
             ballot: 1,
             value: "v1".to_string(),
-            promises: HashSet::new(),
-            accepted: HashSet::new(),
+            promises_by_ballot: HashMap::new(),
+            accepted_by_ballot: HashMap::new(),
             accept_request_sent: false,
             highest_accepted_ballot: None,
             chosen_proposal_value: "v1".to_string(),
+            accept_request_sent_by_ballot: HashSet::new(),
         }
     }
 }
@@ -73,48 +71,66 @@ impl Protocol for BasicPaxosProtocol {
                 accepted_ballot,
                 accepted_value,
             } => {
-                if node.id != 1 {
+                let proposer_id = *ballot;
+            
+                if node.id != proposer_id {
                     return vec![];
                 }
             
-                if *ballot == self.ballot {
-                    self.promises.insert(msg.from);
+                self.promises_by_ballot
+                    .entry(*ballot)
+                    .or_insert_with(HashSet::new)
+                    .insert(msg.from);
             
-                    if let (Some(ab), Some(av)) = (accepted_ballot, accepted_value) {
-                        if self.highest_accepted_ballot.is_none()
-                            || *ab > self.highest_accepted_ballot.unwrap()
-                        {
-                            self.highest_accepted_ballot = Some(*ab);
-                            self.chosen_proposal_value = av.clone();
-                        }
+                if let (Some(ab), Some(av)) = (accepted_ballot, accepted_value) {
+                    if self.highest_accepted_ballot.is_none()
+                        || *ab > self.highest_accepted_ballot.unwrap()
+                    {
+                        self.highest_accepted_ballot = Some(*ab);
+                        self.chosen_proposal_value = av.clone();
                     }
+                }
             
-                    if self.promises.len() >= 3 && !self.accept_request_sent {
-                        self.accept_request_sent = true;
+                let promise_count = self
+                    .promises_by_ballot
+                    .get(ballot)
+                    .map(|s| s.len())
+                    .unwrap_or(0);
             
-                        return vec![NodeAction::BroadcastAcceptRequest {
-                            ballot: self.ballot,
-                            value: self.chosen_proposal_value.clone(),
-                        }];
-                    }
+                if promise_count >= 3 && !self.accept_request_sent_by_ballot.contains(ballot) {
+                    self.accept_request_sent_by_ballot.insert(*ballot);
+                    
+                    return vec![NodeAction::BroadcastAcceptRequest {
+                        ballot: *ballot,
+                        value: self.chosen_proposal_value.clone(),
+                    }];
                 }
             
                 vec![]
             }
 
-            MessageType::Accepted { ballot, value } => {
-                
-                if node.id != 1 {
+            MessageType::Accepted { ballot, value: _ } => {
+                let proposer_id = *ballot;
+            
+                if node.id != proposer_id {
                     return vec![];
                 }
-
-                if *ballot == self.ballot {
-                    self.accepted.insert(msg.from);
-
-                    if self.accepted.len() >= 3 && node.decided.is_none() {
-                        node.decided = Some(VoteValue::Yes);
-                    }
+            
+                self.accepted_by_ballot
+                    .entry(*ballot)
+                    .or_insert_with(HashSet::new)
+                    .insert(msg.from);
+            
+                let accepted_count = self
+                    .accepted_by_ballot
+                    .get(ballot)
+                    .map(|s| s.len())
+                    .unwrap_or(0);
+            
+                if accepted_count >= 3 && node.decided.is_none() {
+                    node.decided = Some(VoteValue::Yes);
                 }
+            
                 vec![]
             }
 
