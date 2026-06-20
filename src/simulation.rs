@@ -127,6 +127,21 @@ impl Simulation {
 
                     for node in &mut self.nodes {
                         if node.id == msg.to {
+                            match &msg.msg_type {
+                                MessageType::Prepare { .. } => {
+                                    self.metrics.prepare_messages += 1;
+                                }
+                                MessageType::Promise { .. } => {
+                                    self.metrics.promise_messages += 1;
+                                }
+                                MessageType::AcceptRequest { .. } => {
+                                    self.metrics.accept_requests += 1;
+                                }
+                                MessageType::Accepted { .. } => {
+                                    self.metrics.accepted_messages += 1;
+                                }
+                                _ => {}
+                            }
                             let actions = self.protocol.handle_message(node, &msg);
 
                             for action in actions {

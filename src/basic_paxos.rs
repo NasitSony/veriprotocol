@@ -5,6 +5,8 @@ use crate::message::{Message, MessageType, VoteValue};
 use crate::node::{Node, NodeAction};
 use crate::protocol::Protocol;
 
+
+
 pub struct BasicPaxosProtocol {
     pub ballot: u64,
     pub value: String,
@@ -29,6 +31,7 @@ impl Protocol for BasicPaxosProtocol {
     fn handle_message(&mut self, node: &mut Node, msg: &Message) -> Vec<NodeAction> {
         match &msg.msg_type {
             MessageType::Prepare { ballot } => {
+               
                 if *ballot > node.promised_ballot {
                     node.promised_ballot = *ballot;
 
@@ -44,6 +47,8 @@ impl Protocol for BasicPaxosProtocol {
             }
 
             MessageType::AcceptRequest { ballot, value } => {
+               
+                
                 if *ballot >= node.promised_ballot {
                     node.promised_ballot = *ballot;
                     node.accepted_ballot = Some(*ballot);
@@ -60,6 +65,7 @@ impl Protocol for BasicPaxosProtocol {
             }
 
             MessageType::Promise { ballot, .. } => {
+               
                 if node.id != 1 {
                     return vec![];
                 }
@@ -81,6 +87,7 @@ impl Protocol for BasicPaxosProtocol {
             }
 
             MessageType::Accepted { ballot, value } => {
+                
                 if node.id != 1 {
                     return vec![];
                 }

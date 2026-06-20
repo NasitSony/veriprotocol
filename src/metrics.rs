@@ -10,6 +10,11 @@ pub struct Metrics {
     pub view_changes: u64,
     pub stale_messages_ignored: u64,
     pub scheduler_steps: u64,
+
+    pub prepare_messages: u64,
+    pub promise_messages: u64,
+    pub accept_requests: u64,
+    pub accepted_messages: u64,
 }
 
 impl Metrics {
@@ -24,6 +29,10 @@ impl Metrics {
             view_changes: 0,
             stale_messages_ignored: 0,
             scheduler_steps: 0,
+            prepare_messages: 0,
+            promise_messages: 0,
+            accept_requests: 0,
+            accepted_messages: 0,
         }
     }
 }
@@ -46,5 +55,11 @@ impl Metrics {
         println!("Timeout triggered: {}", self.timeouts_triggered);
         println!("View changes: {}", self.view_changes);
         println!("Decisions: {}", self.decisions);
+
+
+        println!("Prepare Messages: {}", self.prepare_messages);
+        println!("Promise Messages: {}", self.promise_messages);
+        println!("Accept Requests: {}", self.accept_requests);
+        println!("Accepted Messages: {}", self.accepted_messages);
     }
 }
