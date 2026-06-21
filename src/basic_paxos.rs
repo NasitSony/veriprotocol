@@ -4,12 +4,10 @@ use crate::protocol::Protocol;
 use std::collections::{HashMap, HashSet};
 
 pub struct BasicPaxosProtocol {
-    pub ballot: u64,
-    pub value: String,
+    pub current_ballot: u64,
     pub proposer_id: u64,
     pub promises_by_ballot: HashMap<u64, HashSet<u64>>,
     pub accepted_by_ballot: HashMap<u64, HashSet<u64>>,
-    pub accept_request_sent: bool,
     pub highest_accepted_ballot: Option<u64>,
     pub chosen_proposal_value: String,
     pub accept_request_sent_by_ballot: HashSet<u64>,
@@ -18,14 +16,11 @@ pub struct BasicPaxosProtocol {
 impl BasicPaxosProtocol {
     pub fn new() -> Self {
         Self {
+            current_ballot: 1,
             proposer_id: 1,
-            ballot: 1,
-            value: "v1".to_string(),
 
             promises_by_ballot: HashMap::new(),
             accepted_by_ballot: HashMap::new(),
-
-            accept_request_sent: false,
             accept_request_sent_by_ballot: HashSet::new(),
 
             highest_accepted_ballot: None,
@@ -39,14 +34,13 @@ impl BasicPaxosProtocol {
         value: String,
     ) -> Self {
         Self {
+            current_ballot: ballot,
             proposer_id,
-            ballot,
-            value: value.clone(),
 
             promises_by_ballot: HashMap::new(),
             accepted_by_ballot: HashMap::new(),
 
-            accept_request_sent: false,
+           
             accept_request_sent_by_ballot: HashSet::new(),
 
             highest_accepted_ballot: None,
