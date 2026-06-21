@@ -30,8 +30,9 @@ impl Simulation {
     ) -> Self {
         let protocol: Box<dyn Protocol> = match protocol_name {
             "two-phase" => Box::new(TwoPhaseProtocol::new()),
-            "paxos" => Box::new(BasicPaxosProtocol::new()),
-            "paxos-adopt" => Box::new(BasicPaxosProtocol::new()),
+            "paxos" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())),
+            "paxos-dual" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())),
+            "paxos-adopt" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 6, "v1".to_string())),
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -68,7 +69,17 @@ impl Simulation {
                 value: VoteValue::Yes,
                 delay_count: 0,
             });
-
+        } else if self.protocol_name == "paxos-dual" {
+            self.broadcast(Message {
+                from: 1,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 1 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+        
             self.broadcast(Message {
                 from: 2,
                 to: 0,
@@ -79,6 +90,7 @@ impl Simulation {
                 delay_count: 0,
             });
         } else if self.protocol_name == "paxos-adopt" {
+            // accepted-value adoption scenario
             for node in &mut self.nodes {
             if node.id == 3 {
                node.accepted_ballot = Some(5);

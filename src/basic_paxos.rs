@@ -6,6 +6,7 @@ use std::collections::{HashMap, HashSet};
 pub struct BasicPaxosProtocol {
     pub ballot: u64,
     pub value: String,
+    pub proposer_id: u64,
     pub promises_by_ballot: HashMap<u64, HashSet<u64>>,
     pub accepted_by_ballot: HashMap<u64, HashSet<u64>>,
     pub accept_request_sent: bool,
@@ -17,14 +18,39 @@ pub struct BasicPaxosProtocol {
 impl BasicPaxosProtocol {
     pub fn new() -> Self {
         Self {
+            proposer_id: 1,
             ballot: 1,
             value: "v1".to_string(),
+
             promises_by_ballot: HashMap::new(),
             accepted_by_ballot: HashMap::new(),
+
             accept_request_sent: false,
+            accept_request_sent_by_ballot: HashSet::new(),
+
             highest_accepted_ballot: None,
             chosen_proposal_value: "v1".to_string(),
+        }
+    }
+
+    pub fn new_with_proposer(
+        proposer_id: u64,
+        ballot: u64,
+        value: String,
+    ) -> Self {
+        Self {
+            proposer_id,
+            ballot,
+            value: value.clone(),
+
+            promises_by_ballot: HashMap::new(),
+            accepted_by_ballot: HashMap::new(),
+
+            accept_request_sent: false,
             accept_request_sent_by_ballot: HashSet::new(),
+
+            highest_accepted_ballot: None,
+            chosen_proposal_value: value,
         }
     }
 }
@@ -72,7 +98,8 @@ impl Protocol for BasicPaxosProtocol {
                 accepted_ballot,
                 accepted_value,
             } => {
-                let proposer_id = 1; //*ballot;
+                //let proposer_id = 1; //*ballot;
+                let proposer_id = self.proposer_id;
             
                 if node.id != proposer_id {
                     return vec![];
@@ -111,7 +138,9 @@ impl Protocol for BasicPaxosProtocol {
             }
 
             MessageType::Accepted { ballot, value: _ } => {
-                let proposer_id = 1;//*ballot;
+                //let proposer_id = 1;//*ballot;
+
+                let proposer_id = self.proposer_id;
             
                 if node.id != proposer_id {
                     return vec![];
