@@ -168,7 +168,7 @@ impl Protocol for BasicPaxosProtocol {
                 vec![]
             }
 
-            MessageType::Accepted { ballot, value: _ } => {
+            MessageType::Accepted { ballot, value } => {
                 //let proposer_id = 1;//*ballot;
 
                 let proposer_id = self.proposer_id;
@@ -190,6 +190,9 @@ impl Protocol for BasicPaxosProtocol {
             
                 if accepted_count >= 3 && node.decided.is_none() {
                     node.decided = Some(VoteValue::Yes);
+                    return vec![NodeAction::RecordChosen {
+                        value: value.clone(),
+                    }];
                 }
             
                 vec![]

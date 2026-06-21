@@ -49,6 +49,10 @@ pub enum NodeAction {
     BroadcastPrepare {
         ballot: u64,
     },
+
+    RecordChosen {
+        value: String,
+    },
 }
 
 impl Node {

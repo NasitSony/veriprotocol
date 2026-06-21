@@ -313,6 +313,14 @@ impl Simulation {
                                             delay_count: msg.delay_count,
                                         });
                                     }
+
+                                    NodeAction::RecordChosen { value } => {
+                                        self.metrics.chosen_values.insert(value);
+                                    
+                                        if self.metrics.chosen_values.len() > 1 {
+                                            self.metrics.safety_violation = true;
+                                        }
+                                    }
                                 }
                             }
 

@@ -1,4 +1,5 @@
 // metrics.rs
+use std::collections::HashSet;
 
 pub struct Metrics {
     pub messages_sent: u64,
@@ -15,6 +16,9 @@ pub struct Metrics {
     pub promise_messages: u64,
     pub accept_requests: u64,
     pub accepted_messages: u64,
+
+    pub chosen_values: HashSet<String>,
+    pub safety_violation: bool,
 }
 
 impl Metrics {
@@ -33,6 +37,9 @@ impl Metrics {
             promise_messages: 0,
             accept_requests: 0,
             accepted_messages: 0,
+
+            chosen_values: HashSet::new(),
+            safety_violation: false,
         }
     }
 }
@@ -61,5 +68,8 @@ impl Metrics {
         println!("Promise Messages: {}", self.promise_messages);
         println!("Accept Requests: {}", self.accept_requests);
         println!("Accepted Messages: {}", self.accepted_messages);
+
+        println!("Chosen Values: {:?}", self.chosen_values);
+        println!("Safety Violation: {}", self.safety_violation);
     }
 }
