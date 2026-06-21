@@ -198,6 +198,12 @@ impl Simulation {
                                 MessageType::Accepted { .. } => {
                                     self.metrics.accepted_messages += 1;
                                 }
+
+                                MessageType::Nack { promised_ballot, .. } => {
+                                    self.metrics.nack_messages += 1;
+                                    self.metrics.max_ballot_seen =
+                                        self.metrics.max_ballot_seen.max(*promised_ballot);
+                                }
                                 _ => {}
                             }
                             let actions = self.protocol.handle_message(node, &msg);
@@ -207,6 +213,10 @@ impl Simulation {
 
 
                                     NodeAction::BroadcastPrepare { ballot } => {
+
+                                        self.metrics.paxos_retries += 1;
+                                        self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
                                         self.broadcast(Message {
                                             from: msg.to,
                                             to: 0,

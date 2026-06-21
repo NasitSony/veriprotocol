@@ -19,6 +19,10 @@ pub struct Metrics {
 
     pub chosen_values: HashSet<String>,
     pub safety_violation: bool,
+
+    pub nack_messages: u64,
+    pub paxos_retries: u64,
+    pub max_ballot_seen: u64,
 }
 
 impl Metrics {
@@ -40,6 +44,10 @@ impl Metrics {
 
             chosen_values: HashSet::new(),
             safety_violation: false,
+
+            nack_messages: 0,
+            paxos_retries: 0,
+            max_ballot_seen: 0,
         }
     }
 }
@@ -69,7 +77,13 @@ impl Metrics {
         println!("Accept Requests: {}", self.accept_requests);
         println!("Accepted Messages: {}", self.accepted_messages);
 
+        println!("Nack Messages: {}", self.nack_messages);
+        println!("Paxos Retries: {}", self.paxos_retries);
+        println!("Max Ballot Seen: {}", self.max_ballot_seen);
+
         println!("Chosen Values: {:?}", self.chosen_values);
         println!("Safety Violation: {}", self.safety_violation);
+
+
     }
 }

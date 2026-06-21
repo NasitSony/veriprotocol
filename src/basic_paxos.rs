@@ -74,6 +74,8 @@ impl BasicPaxosProtocol {
         self.highest_accepted_ballot = None;
         self.chosen_proposal_value = "v1".to_string();
 
+        
+
         Some(NodeAction::BroadcastPrepare {
             ballot: self.current_ballot,
         })
@@ -199,6 +201,9 @@ impl Protocol for BasicPaxosProtocol {
                 ballot: _,
                 promised_ballot,
             } => {
+
+               
+
                 if node.id != self.proposer_id {
                     return vec![];
                 }
