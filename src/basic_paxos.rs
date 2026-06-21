@@ -119,7 +119,11 @@ impl Protocol for BasicPaxosProtocol {
                         value: self.chosen_proposal_value.clone(),
                     }]
                 } else {
-                    vec![]
+                    vec![NodeAction::SendNack {
+                        to: msg.from,
+                        ballot: *ballot,
+                        promised_ballot: node.promised_ballot,
+                    }]
                 }
             }
 
