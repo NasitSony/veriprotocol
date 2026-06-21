@@ -33,7 +33,7 @@ impl Simulation {
             "paxos" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())),
             "paxos-dual" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())),
             "paxos-adopt" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 6, "v1".to_string())),
-            "paxos-retry" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 6, "v1".to_string())),
+            "paxos-retry" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())),
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -279,6 +279,25 @@ impl Simulation {
                                                 accepted_value,
                                             },
                                             payload: String::from("promise"),
+                                            value: msg.value.clone(),
+                                            delay_count: msg.delay_count,
+                                        });
+                                    }
+
+                                    NodeAction::SendNack {
+                                        to,
+                                        ballot,
+                                        promised_ballot,
+                                    } => {
+                                        self.send_to(Message {
+                                            from: msg.to,
+                                            to,
+                                            round: msg.round + 1,
+                                            msg_type: MessageType::Nack {
+                                                ballot,
+                                                promised_ballot,
+                                            },
+                                            payload: String::from("nack"),
                                             value: msg.value.clone(),
                                             delay_count: msg.delay_count,
                                         });

@@ -53,6 +53,12 @@ pub enum NodeAction {
     RecordChosen {
         value: String,
     },
+
+    SendNack {
+        to: u64,
+        ballot: u64,
+        promised_ballot: u64,
+    },
 }
 
 impl Node {

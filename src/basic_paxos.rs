@@ -84,10 +84,9 @@ impl Protocol for BasicPaxosProtocol {
     fn handle_message(&mut self, node: &mut Node, msg: &Message) -> Vec<NodeAction> {
         match &msg.msg_type {
             MessageType::Prepare { ballot } => {
-               
                 if *ballot > node.promised_ballot {
                     node.promised_ballot = *ballot;
-
+            
                     vec![NodeAction::SendPromise {
                         to: msg.from,
                         ballot: *ballot,
@@ -95,13 +94,11 @@ impl Protocol for BasicPaxosProtocol {
                         accepted_value: node.accepted_value.clone(),
                     }]
                 } else {
-                    if node.id == self.proposer_id {
-                        if let Some(action) = self.retry_with_higher_ballot() {
-                            return vec![action];
-                        }
-                    }
-                
-                    vec![]
+                    vec![NodeAction::SendNack {
+                        to: msg.from,
+                        ballot: *ballot,
+                        promised_ballot: node.promised_ballot,
+                    }]
                 }
             }
 
@@ -192,6 +189,25 @@ impl Protocol for BasicPaxosProtocol {
                     node.decided = Some(VoteValue::Yes);
                     return vec![NodeAction::RecordChosen {
                         value: value.clone(),
+                    }];
+                }
+            
+                vec![]
+            }
+
+            MessageType::Nack {
+                ballot: _,
+                promised_ballot,
+            } => {
+                if node.id != self.proposer_id {
+                    return vec![];
+                }
+            
+                if *promised_ballot >= self.current_ballot {
+                    self.current_ballot = promised_ballot + 1;
+            
+                    return vec![NodeAction::BroadcastPrepare {
+                        ballot: self.current_ballot,
                     }];
                 }
             

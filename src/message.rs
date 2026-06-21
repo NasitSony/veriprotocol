@@ -22,6 +22,11 @@ pub enum MessageType {
         ballot: u64,
         value: String,
     },
+
+    Nack {
+        ballot: u64,
+        promised_ballot: u64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
