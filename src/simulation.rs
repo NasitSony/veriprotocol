@@ -31,6 +31,7 @@ impl Simulation {
         let protocol: Box<dyn Protocol> = match protocol_name {
             "two-phase" => Box::new(TwoPhaseProtocol::new()),
             "paxos" => Box::new(BasicPaxosProtocol::new()),
+            "paxos-adopt" => Box::new(BasicPaxosProtocol::new()),
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -55,6 +56,8 @@ impl Simulation {
     pub fn run(&mut self) {
         println!("Simulation starting");
 
+
+
         if self.protocol_name == "paxos" {
             self.broadcast(Message {
                 from: 1,
@@ -65,7 +68,34 @@ impl Simulation {
                 value: VoteValue::Yes,
                 delay_count: 0,
             });
-        } else {
+
+            self.broadcast(Message {
+                from: 2,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 2 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+        } else if self.protocol_name == "paxos-adopt" {
+            for node in &mut self.nodes {
+            if node.id == 3 {
+               node.accepted_ballot = Some(5);
+               node.accepted_value = Some("old".to_string());
+            }
+        }
+
+        self.broadcast(Message {
+           from: 1,
+           to: 0,
+           round: 0,
+           msg_type: MessageType::Prepare { ballot: 6 },
+           payload: String::from("prepare"),
+           value: VoteValue::Yes,
+           delay_count: 0,
+        });
+        }else {
             let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
             for &from_node in &node_ids {

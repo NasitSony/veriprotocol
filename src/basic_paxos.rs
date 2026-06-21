@@ -50,6 +50,7 @@ impl Protocol for BasicPaxosProtocol {
 
             MessageType::AcceptRequest { ballot, value } => {
                
+                println!("Broadcasting AcceptRequest({}, {})", ballot, value);
                 
                 if *ballot >= node.promised_ballot {
                     node.promised_ballot = *ballot;
@@ -71,7 +72,7 @@ impl Protocol for BasicPaxosProtocol {
                 accepted_ballot,
                 accepted_value,
             } => {
-                let proposer_id = *ballot;
+                let proposer_id = 1; //*ballot;
             
                 if node.id != proposer_id {
                     return vec![];
@@ -110,7 +111,7 @@ impl Protocol for BasicPaxosProtocol {
             }
 
             MessageType::Accepted { ballot, value: _ } => {
-                let proposer_id = *ballot;
+                let proposer_id = 1;//*ballot;
             
                 if node.id != proposer_id {
                     return vec![];
