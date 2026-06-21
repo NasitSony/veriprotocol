@@ -11,6 +11,9 @@ pub struct BasicPaxosProtocol {
     pub highest_accepted_ballot: Option<u64>,
     pub chosen_proposal_value: String,
     pub accept_request_sent_by_ballot: HashSet<u64>,
+    pub retry_count: u64,
+    pub max_retries: u64,
+    
 }
 
 impl BasicPaxosProtocol {
@@ -25,6 +28,9 @@ impl BasicPaxosProtocol {
 
             highest_accepted_ballot: None,
             chosen_proposal_value: "v1".to_string(),
+
+            retry_count: 0,
+            max_retries: 3,
         }
     }
 
@@ -45,7 +51,32 @@ impl BasicPaxosProtocol {
 
             highest_accepted_ballot: None,
             chosen_proposal_value: value,
+
+            retry_count: 0,
+            max_retries: 3,
         }
+    }
+}
+
+impl BasicPaxosProtocol {
+    fn retry_with_higher_ballot(&mut self) -> Option<NodeAction> {
+        if self.retry_count >= self.max_retries {
+            return None;
+        }
+
+        self.retry_count += 1;
+        self.current_ballot += 1;
+
+        self.promises_by_ballot.clear();
+        self.accepted_by_ballot.clear();
+        self.accept_request_sent_by_ballot.clear();
+
+        self.highest_accepted_ballot = None;
+        self.chosen_proposal_value = "v1".to_string();
+
+        Some(NodeAction::BroadcastPrepare {
+            ballot: self.current_ballot,
+        })
     }
 }
 
@@ -64,6 +95,12 @@ impl Protocol for BasicPaxosProtocol {
                         accepted_value: node.accepted_value.clone(),
                     }]
                 } else {
+                    if node.id == self.proposer_id {
+                        if let Some(action) = self.retry_with_higher_ballot() {
+                            return vec![action];
+                        }
+                    }
+                
                     vec![]
                 }
             }

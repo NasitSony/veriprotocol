@@ -33,6 +33,7 @@ impl Simulation {
             "paxos" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())),
             "paxos-dual" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())),
             "paxos-adopt" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 6, "v1".to_string())),
+            "paxos-retry" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 6, "v1".to_string())),
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -98,6 +99,7 @@ impl Simulation {
             }
         }
 
+
         self.broadcast(Message {
            from: 1,
            to: 0,
@@ -107,6 +109,20 @@ impl Simulation {
            value: VoteValue::Yes,
            delay_count: 0,
         });
+        }else if self.protocol_name == "paxos-retry" {
+            for node in &mut self.nodes {
+                node.promised_ballot = 1;
+            }
+        
+            self.broadcast(Message {
+                from: 1,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 1 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
         }else {
             let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
@@ -188,18 +204,21 @@ impl Simulation {
 
                             for action in actions {
                                 match action {
+
+
+                                    NodeAction::BroadcastPrepare { ballot } => {
+                                        self.broadcast(Message {
+                                            from: msg.to,
+                                            to: 0,
+                                            round: msg.round + 1,
+                                            msg_type: MessageType::Prepare { ballot },
+                                            payload: String::from("prepare"),
+                                            value: VoteValue::Yes,
+                                            delay_count: msg.delay_count,
+                                        });
+                                    }
+
                                     NodeAction::BroadcastProposal => {
-                                        if self.protocol_name == "paxos" {
-                                            self.broadcast(Message {
-                                                from: msg.to,
-                                                to: 0,
-                                                round: 0,
-                                                msg_type: MessageType::Prepare { ballot: 1 },
-                                                payload: String::from("prepare"),
-                                                value: VoteValue::Yes,
-                                                delay_count: 0,
-                                            });
-                                        } else {
                                             self.broadcast(Message {
                                                 from: msg.to,
                                                 to: 0,
@@ -209,7 +228,7 @@ impl Simulation {
                                                 value: VoteValue::Yes,
                                                 delay_count: msg.delay_count,
                                             });
-                                        }
+                                        
                                     }
 
                                     NodeAction::BroadcastVote(value) => {
