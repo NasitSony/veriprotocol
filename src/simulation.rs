@@ -153,6 +153,7 @@ impl Simulation {
                   delay_count: 0,
                 });
         } else if self.protocol_name == "paxos-timeout-retry" {
+            self.metrics.timeouts_triggered += 1;
     let actions = self.protocol.on_timeout();
 
     for action in actions {
