@@ -46,6 +46,10 @@ impl Simulation {
                 BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
             ),
 
+            "paxos-timeout-max" => Box::new(
+                BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+            ),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -174,6 +178,23 @@ impl Simulation {
                 });
             }
             _ => {}
+        }
+    }
+} else if self.protocol_name == "paxos-timeout-max" {
+    for _ in 0..4 {
+        self.metrics.timeouts_triggered += 1;
+
+        let actions = self.protocol.on_timeout();
+
+        for action in actions {
+            match action {
+                NodeAction::BroadcastPrepare { ballot } => {
+                    self.metrics.paxos_retries += 1;
+                    self.metrics.max_ballot_seen =
+                        self.metrics.max_ballot_seen.max(ballot);
+                }
+                _ => {}
+            }
         }
     }
 } else {
