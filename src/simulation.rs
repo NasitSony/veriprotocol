@@ -31,9 +31,12 @@ impl Simulation {
         let protocol: Box<dyn Protocol> = match protocol_name {
             "two-phase" => Box::new(TwoPhaseProtocol::new()),
             "paxos" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())),
-            "paxos-dual" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())),
             "paxos-adopt" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 6, "v1".to_string())),
             "paxos-retry" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())),
+            "paxos-dual" => Box::new( BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+                .with_ballot_value(2, "v2")
+                .with_ballot_value(3, "v2")
+            ),
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };

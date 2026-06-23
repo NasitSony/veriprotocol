@@ -13,11 +13,14 @@ pub struct BasicPaxosProtocol {
     pub accept_request_sent_by_ballot: HashSet<u64>,
     pub retry_count: u64,
     pub max_retries: u64,
-    
+    pub proposed_values_by_ballot: HashMap<u64, String>,
 }
 
 impl BasicPaxosProtocol {
     pub fn new() -> Self {
+        let mut proposed_values_by_ballot = HashMap::new();
+        proposed_values_by_ballot.insert(1, "v1".to_string());
+
         Self {
             current_ballot: 1,
             proposer_id: 1,
@@ -31,6 +34,8 @@ impl BasicPaxosProtocol {
 
             retry_count: 0,
             max_retries: 3,
+
+            proposed_values_by_ballot,
         }
     }
 
@@ -39,6 +44,10 @@ impl BasicPaxosProtocol {
         ballot: u64,
         value: String,
     ) -> Self {
+
+        let mut proposed_values_by_ballot = HashMap::new();
+        proposed_values_by_ballot.insert(1, "v1".to_string());
+
         Self {
             current_ballot: ballot,
             proposer_id,
@@ -54,6 +63,8 @@ impl BasicPaxosProtocol {
 
             retry_count: 0,
             max_retries: 3,
+
+            proposed_values_by_ballot,
         }
     }
 }
@@ -80,6 +91,21 @@ impl BasicPaxosProtocol {
             ballot: self.current_ballot,
         })
     }
+
+    fn value_for_ballot(&self, ballot: u64) -> String {
+        self.proposed_values_by_ballot
+            .get(&ballot)
+            .cloned()
+            .unwrap_or_else(|| self.chosen_proposal_value.clone())
+    }
+
+    pub fn with_ballot_value(mut self, ballot: u64, value: &str) -> Self {
+        self.proposed_values_by_ballot
+            .insert(ballot, value.to_string());
+        self
+}
+
+
 }
 
 impl Protocol for BasicPaxosProtocol {
@@ -116,7 +142,7 @@ impl Protocol for BasicPaxosProtocol {
                     vec![NodeAction::SendAccepted {
                         to: msg.from,
                         ballot: *ballot,
-                        value: self.chosen_proposal_value.clone(),
+                        value: value.clone(),
                     }]
                 } else {
                     vec![NodeAction::SendNack {
@@ -162,9 +188,15 @@ impl Protocol for BasicPaxosProtocol {
                 if promise_count >= 3 && !self.accept_request_sent_by_ballot.contains(ballot) {
                     self.accept_request_sent_by_ballot.insert(*ballot);
                     
+                    let proposed_value = if self.highest_accepted_ballot.is_some() {
+                        self.chosen_proposal_value.clone()
+                    } else {
+                        self.value_for_ballot(*ballot)
+                    };
+
                     return vec![NodeAction::BroadcastAcceptRequest {
                         ballot: *ballot,
-                        value: self.chosen_proposal_value.clone(),
+                        value: proposed_value,
                     }];
                 }
             
