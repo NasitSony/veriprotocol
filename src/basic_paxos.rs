@@ -159,6 +159,7 @@ impl Protocol for BasicPaxosProtocol {
                 accepted_value,
             } => {
                 //let proposer_id = 1; //*ballot;
+               
                 let proposer_id = self.proposer_id;
             
                 if node.id != proposer_id {
