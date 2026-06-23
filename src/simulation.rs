@@ -41,6 +41,11 @@ impl Simulation {
                 .with_ballot_value(1, "v1")
                 .with_ballot_value(3, "v2")
             ),
+
+            "paxos-timeout-retry" => Box::new(
+                BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+            ),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -147,7 +152,30 @@ impl Simulation {
                   value: VoteValue::Yes,
                   delay_count: 0,
                 });
-        }else {
+        } else if self.protocol_name == "paxos-timeout-retry" {
+    let actions = self.protocol.on_timeout();
+
+    for action in actions {
+        match action {
+            NodeAction::BroadcastPrepare { ballot } => {
+                self.metrics.paxos_retries += 1;
+                self.metrics.max_ballot_seen =
+                    self.metrics.max_ballot_seen.max(ballot);
+
+                self.broadcast(Message {
+                    from: 1,
+                    to: 0,
+                    round: 1,
+                    msg_type: MessageType::Prepare { ballot },
+                    payload: String::from("prepare"),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+            _ => {}
+        }
+    }
+} else {
             let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
             for &from_node in &node_ids {

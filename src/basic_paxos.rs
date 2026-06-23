@@ -103,7 +103,11 @@ impl BasicPaxosProtocol {
         self.proposed_values_by_ballot
             .insert(ballot, value.to_string());
         self
-}
+    }
+
+    pub fn on_timeout(&mut self) -> Option<NodeAction> {
+        self.retry_with_higher_ballot()
+    }
 
 
 }
@@ -258,5 +262,13 @@ impl Protocol for BasicPaxosProtocol {
 
             _ => vec![],
         }
+    }
+
+    fn on_timeout(&mut self) -> Vec<NodeAction> {
+       if let Some(action) = self.retry_with_higher_ballot() {
+           vec![action]
+       } else {
+           vec![]
+       }
     }
 }
