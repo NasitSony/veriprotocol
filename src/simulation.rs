@@ -186,6 +186,10 @@ impl Simulation {
 
         let actions = self.protocol.on_timeout();
 
+        if actions.is_empty() {
+             self.metrics.paxos_retry_exhausted = true;
+        }
+
         for action in actions {
             match action {
                 NodeAction::BroadcastPrepare { ballot } => {

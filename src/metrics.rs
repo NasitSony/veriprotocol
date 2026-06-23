@@ -23,6 +23,8 @@ pub struct Metrics {
     pub nack_messages: u64,
     pub paxos_retries: u64,
     pub max_ballot_seen: u64,
+
+    pub paxos_retry_exhausted: bool,
 }
 
 impl Metrics {
@@ -48,6 +50,8 @@ impl Metrics {
             nack_messages: 0,
             paxos_retries: 0,
             max_ballot_seen: 0,
+
+            paxos_retry_exhausted: false,
         }
     }
 }
@@ -83,6 +87,8 @@ impl Metrics {
 
         println!("Chosen Values: {:?}", self.chosen_values);
         println!("Safety Violation: {}", self.safety_violation);
+
+        println!("Paxos Retry Exhausted: {}", self.paxos_retry_exhausted);
 
 
     }
