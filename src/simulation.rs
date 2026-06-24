@@ -58,6 +58,10 @@ impl Simulation {
                 BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
             ),
 
+            "paxos-partition-heal" => Box::new(
+                BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+            ),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -166,16 +170,16 @@ impl Simulation {
                 });
         } else if self.protocol_name == "paxos-timeout-retry" {
             self.metrics.timeouts_triggered += 1;
-    let actions = self.protocol.on_timeout();
+              let actions = self.protocol.on_timeout();
 
-    for action in actions {
-        match action {
-            NodeAction::BroadcastPrepare { ballot } => {
-                self.metrics.paxos_retries += 1;
-                self.metrics.max_ballot_seen =
-                    self.metrics.max_ballot_seen.max(ballot);
+            for action in actions {
+                match action {
+                   NodeAction::BroadcastPrepare { ballot } => {
+                     self.metrics.paxos_retries += 1;
+                     self.metrics.max_ballot_seen =
+                     self.metrics.max_ballot_seen.max(ballot);
 
-                self.broadcast(Message {
+                     self.broadcast(Message {
                     from: 1,
                     to: 0,
                     round: 1,
@@ -267,6 +271,54 @@ impl Simulation {
         }
     }
 
+    self.metrics.timeouts_triggered += 1;
+
+    let actions = self.protocol.on_timeout();
+
+    for action in actions {
+        match action {
+            NodeAction::BroadcastPrepare { ballot } => {
+                self.metrics.paxos_retries += 1;
+                self.metrics.max_ballot_seen =
+                    self.metrics.max_ballot_seen.max(ballot);
+
+                self.broadcast(Message {
+                    from: 1,
+                    to: 0,
+                    round: 1,
+                    msg_type: MessageType::Prepare { ballot },
+                    payload: String::from("prepare"),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+            _ => {}
+        }
+    }
+} else if self.protocol_name == "paxos-partition-heal" {
+    // Partition-like phase:
+    // proposer can reach only 2 acceptors, not enough for full progress.
+    self.network.send(Message {
+        from: 1,
+        to: 2,
+        round: 0,
+        msg_type: MessageType::Prepare { ballot: 1 },
+        payload: String::from("prepare"),
+        value: VoteValue::Yes,
+        delay_count: 0,
+    });
+
+    self.network.send(Message {
+        from: 1,
+        to: 3,
+        round: 0,
+        msg_type: MessageType::Prepare { ballot: 1 },
+        payload: String::from("prepare"),
+        value: VoteValue::Yes,
+        delay_count: 0,
+    });
+
+    // Heal/retry phase.
     self.metrics.timeouts_triggered += 1;
 
     let actions = self.protocol.on_timeout();
