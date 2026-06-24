@@ -54,6 +54,10 @@ impl Simulation {
                 BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
             ),
 
+            "paxos-missed-accept-recovery" => Box::new(
+                BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+            ),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -226,6 +230,42 @@ impl Simulation {
         value: VoteValue::Yes,
         delay_count: 0,
     });
+
+    self.metrics.timeouts_triggered += 1;
+
+    let actions = self.protocol.on_timeout();
+
+    for action in actions {
+        match action {
+            NodeAction::BroadcastPrepare { ballot } => {
+                self.metrics.paxos_retries += 1;
+                self.metrics.max_ballot_seen =
+                    self.metrics.max_ballot_seen.max(ballot);
+
+                self.broadcast(Message {
+                    from: 1,
+                    to: 0,
+                    round: 1,
+                    msg_type: MessageType::Prepare { ballot },
+                    payload: String::from("prepare"),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+            _ => {}
+        }
+    }
+} else if self.protocol_name == "paxos-missed-accept-recovery" {
+    // Simulate partial Phase-2 progress:
+    // two acceptors already accepted v1 at ballot 1,
+    // but not enough Accepted messages reached proposer to decide.
+    for node in &mut self.nodes {
+        if node.id == 2 || node.id == 3 {
+            node.promised_ballot = 1;
+            node.accepted_ballot = Some(1);
+            node.accepted_value = Some("v1".to_string());
+        }
+    }
 
     self.metrics.timeouts_triggered += 1;
 
