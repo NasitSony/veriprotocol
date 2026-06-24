@@ -50,6 +50,10 @@ impl Simulation {
                 BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
             ),
 
+            "paxos-partial-timeout" => Box::new(
+                BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+            ),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -201,7 +205,53 @@ impl Simulation {
             }
         }
     }
-} else {
+} else if self.protocol_name == "paxos-partial-timeout" {
+    // Send Prepare(1) only to 2 nodes, not quorum.
+    self.network.send(Message {
+        from: 1,
+        to: 2,
+        round: 0,
+        msg_type: MessageType::Prepare { ballot: 1 },
+        payload: String::from("prepare"),
+        value: VoteValue::Yes,
+        delay_count: 0,
+    });
+
+    self.network.send(Message {
+        from: 1,
+        to: 3,
+        round: 0,
+        msg_type: MessageType::Prepare { ballot: 1 },
+        payload: String::from("prepare"),
+        value: VoteValue::Yes,
+        delay_count: 0,
+    });
+
+    self.metrics.timeouts_triggered += 1;
+
+    let actions = self.protocol.on_timeout();
+
+    for action in actions {
+        match action {
+            NodeAction::BroadcastPrepare { ballot } => {
+                self.metrics.paxos_retries += 1;
+                self.metrics.max_ballot_seen =
+                    self.metrics.max_ballot_seen.max(ballot);
+
+                self.broadcast(Message {
+                    from: 1,
+                    to: 0,
+                    round: 1,
+                    msg_type: MessageType::Prepare { ballot },
+                    payload: String::from("prepare"),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+            _ => {}
+        }
+    }
+}else {
             let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
             for &from_node in &node_ids {
