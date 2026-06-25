@@ -68,6 +68,13 @@ impl Simulation {
                 .with_ballot_value(2, "v2")
             ),
 
+            "paxos-race" => Box::new(
+                BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+                .with_ballot_value(1, "v1")
+                .with_ballot_value(2, "v2")
+                .with_ballot_value(3, "v2")
+            ),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -359,6 +366,29 @@ impl Simulation {
             node.accepted_value = Some("v1".to_string());
         }
     }
+
+    self.broadcast(Message {
+        from: 2,
+        to: 0,
+        round: 0,
+        msg_type: MessageType::Prepare { ballot: 2 },
+        payload: String::from("prepare"),
+        value: VoteValue::Yes,
+        delay_count: 0,
+    });
+} else if self.protocol_name == "paxos-race" {
+    // Two proposers race:
+    // proposer 1 starts ballot 1 with v1
+    // proposer 2 starts ballot 2 with v2
+    self.broadcast(Message {
+        from: 1,
+        to: 0,
+        round: 0,
+        msg_type: MessageType::Prepare { ballot: 1 },
+        payload: String::from("prepare"),
+        value: VoteValue::Yes,
+        delay_count: 0,
+    });
 
     self.broadcast(Message {
         from: 2,
