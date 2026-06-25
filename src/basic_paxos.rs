@@ -14,6 +14,7 @@ pub struct BasicPaxosProtocol {
     pub retry_count: u64,
     pub max_retries: u64,
     pub proposed_values_by_ballot: HashMap<u64, String>,
+    pub quorum_size: usize,
 }
 
 impl BasicPaxosProtocol {
@@ -36,6 +37,7 @@ impl BasicPaxosProtocol {
             max_retries: 3,
 
             proposed_values_by_ballot,
+            quorum_size: 3,
         }
     }
 
@@ -65,11 +67,19 @@ impl BasicPaxosProtocol {
             max_retries: 3,
 
             proposed_values_by_ballot,
+            quorum_size: 3,
         }
     }
 }
 
 impl BasicPaxosProtocol {
+
+    pub fn with_quorum_size(mut self, quorum_size: usize) -> Self {
+        self.quorum_size = quorum_size;
+        self
+    }
+
+
     fn retry_with_higher_ballot(&mut self) -> Option<NodeAction> {
         if self.retry_count >= self.max_retries {
             return None;
@@ -190,7 +200,7 @@ impl Protocol for BasicPaxosProtocol {
                     .map(|s| s.len())
                     .unwrap_or(0);
             
-                if promise_count >= 3 && !self.accept_request_sent_by_ballot.contains(ballot) {
+                if promise_count >= self.quorum_size && !self.accept_request_sent_by_ballot.contains(ballot) {
                     self.accept_request_sent_by_ballot.insert(*ballot);
                     
                     let proposed_value = if self.highest_accepted_ballot.is_some() {
@@ -228,7 +238,7 @@ impl Protocol for BasicPaxosProtocol {
                     .map(|s| s.len())
                     .unwrap_or(0);
             
-                if accepted_count >= 3 && node.decided.is_none() {
+                if accepted_count >= self.quorum_size && node.decided.is_none() {
                     node.decided = Some(VoteValue::Yes);
                     return vec![NodeAction::RecordChosen {
                         value: value.clone(),

@@ -18,6 +18,8 @@ pub struct Simulation {
 
     // pub protocol: SimpleConsensusProtocol,
     pub protocol: Box<dyn Protocol>,
+
+    pub node_count: usize,
 }
 
 impl Simulation {
@@ -27,45 +29,66 @@ impl Simulation {
         protocol_name: &str,
         timeout_threshold: u64,
         max_delay: usize,
+        node_count: usize,
     ) -> Self {
+
+        //let node_count = 4;
+
+        let nodes: Vec<Node> = (1..=node_count as u64)
+          .map(Node::new)
+          .collect();
+
+        let quorum_size = (node_count / 2) + 1;
+
+        println!("Nodes: {}", node_count);
+        println!("Quorum: {}", quorum_size);
+
         let protocol: Box<dyn Protocol> = match protocol_name {
             "two-phase" => Box::new(TwoPhaseProtocol::new()),
             "paxos" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())),
-            "paxos-adopt" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 6, "v1".to_string())),
-            "paxos-retry" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())),
+            "paxos-adopt" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 6, "v1".to_string()).with_quorum_size(quorum_size)),
+            "paxos-retry" => Box::new(BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string()).with_quorum_size(quorum_size)),
             "paxos-dual" => Box::new( BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
                 .with_ballot_value(2, "v2")
                 .with_ballot_value(3, "v2")
+                .with_quorum_size(quorum_size)
             ),
             "paxos-dual-adopt" => Box::new( BasicPaxosProtocol::new_with_proposer(2, 3, "v2".to_string())
                 .with_ballot_value(1, "v1")
                 .with_ballot_value(3, "v2")
+                .with_quorum_size(quorum_size)
             ),
 
             "paxos-timeout-retry" => Box::new(
                 BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+                .with_quorum_size(quorum_size)
             ),
 
             "paxos-timeout-max" => Box::new(
                 BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+                .with_quorum_size(quorum_size)
             ),
 
             "paxos-partial-timeout" => Box::new(
                 BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+                .with_quorum_size(quorum_size)
             ),
 
             "paxos-missed-accept-recovery" => Box::new(
                 BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+                .with_quorum_size(quorum_size)
             ),
 
             "paxos-partition-heal" => Box::new(
                 BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+                .with_quorum_size(quorum_size)
             ),
 
             "paxos-crash-recovery" => Box::new(
                 BasicPaxosProtocol::new_with_proposer(2, 2, "v2".to_string())
                 .with_ballot_value(1, "v1")
                 .with_ballot_value(2, "v2")
+                .with_quorum_size(quorum_size)
             ),
 
             "paxos-race" => Box::new(
@@ -73,18 +96,21 @@ impl Simulation {
                 .with_ballot_value(1, "v1")
                 .with_ballot_value(2, "v2")
                 .with_ballot_value(3, "v2")
+                .with_quorum_size(quorum_size)
             ),
 
             "paxos-leader-handoff" => Box::new(
                 BasicPaxosProtocol::new_with_proposer(2, 2, "v2".to_string())
                 .with_ballot_value(1, "v1")
                 .with_ballot_value(2, "v2")
+                .with_quorum_size(quorum_size)
             ),
 
             "paxos-partition-heal-adopt" => Box::new(
                 BasicPaxosProtocol::new_with_proposer(2, 2, "v2".to_string())
                 .with_ballot_value(1, "v1")
                 .with_ballot_value(2, "v2")
+                .with_quorum_size(quorum_size)
             ),
 
             "timeout" => Box::new(TimeoutProtocol::new(4)),
@@ -93,7 +119,7 @@ impl Simulation {
 
         Self {
             network: Network::new(scheduler_name, seed, max_delay),
-            nodes: vec![Node::new(1), Node::new(2), Node::new(3), Node::new(4)],
+            nodes,//vec![Node::new(1), Node::new(2), Node::new(3), Node::new(4)],
             metrics: Metrics::new(),
             config: Config {
                 print_trace: false,
@@ -105,7 +131,12 @@ impl Simulation {
             timeout_injected: false,
             timeout_threshold: timeout_threshold,
             protocol_name: protocol_name.to_string(),
+            node_count,
         }
+    }
+
+    fn quorum_size(&self) -> usize {
+        (self.nodes.len() / 2) + 1
     }
 
     pub fn run(&mut self) {

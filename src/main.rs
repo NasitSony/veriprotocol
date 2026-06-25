@@ -27,6 +27,10 @@ fn main() {
 
     let max_delay: u64 = args.get(6).and_then(|s| s.parse().ok()).unwrap_or(6);
 
+    let node_count: usize = args.get(7)
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(4);
+
     let mut results: Vec<u64> = Vec::new();
 
     for i in 0..runs {
@@ -40,6 +44,7 @@ fn main() {
             protocol_name,
             timeout_threshold,
             max_delay as usize,
+            node_count,
         );
         sim.run();
 
