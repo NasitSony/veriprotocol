@@ -81,6 +81,12 @@ impl Simulation {
                 .with_ballot_value(2, "v2")
             ),
 
+            "paxos-partition-heal-adopt" => Box::new(
+                BasicPaxosProtocol::new_with_proposer(2, 2, "v2".to_string())
+                .with_ballot_value(1, "v1")
+                .with_ballot_value(2, "v2")
+            ),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -416,6 +422,27 @@ impl Simulation {
     }
 
     // New leader/proposer takes over with higher ballot.
+    self.broadcast(Message {
+        from: 2,
+        to: 0,
+        round: 0,
+        msg_type: MessageType::Prepare { ballot: 2 },
+        payload: String::from("prepare"),
+        value: VoteValue::Yes,
+        delay_count: 0,
+    });
+} else if self.protocol_name == "paxos-partition-heal-adopt" {
+    // During partition, v1 was accepted by a subset.
+    for node in &mut self.nodes {
+        if node.id == 2 || node.id == 3 {
+            node.promised_ballot = 1;
+            node.accepted_ballot = Some(1);
+            node.accepted_value = Some("v1".to_string());
+        }
+    }
+
+    // Partition heals. New proposer/leader tries v2 at higher ballot,
+    // but must adopt v1 from acceptor promises.
     self.broadcast(Message {
         from: 2,
         to: 0,
