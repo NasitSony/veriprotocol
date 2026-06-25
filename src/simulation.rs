@@ -75,6 +75,12 @@ impl Simulation {
                 .with_ballot_value(3, "v2")
             ),
 
+            "paxos-leader-handoff" => Box::new(
+                BasicPaxosProtocol::new_with_proposer(2, 2, "v2".to_string())
+                .with_ballot_value(1, "v1")
+                .with_ballot_value(2, "v2")
+            ),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -390,6 +396,26 @@ impl Simulation {
         delay_count: 0,
     });
 
+    self.broadcast(Message {
+        from: 2,
+        to: 0,
+        round: 0,
+        msg_type: MessageType::Prepare { ballot: 2 },
+        payload: String::from("prepare"),
+        value: VoteValue::Yes,
+        delay_count: 0,
+    });
+} else if self.protocol_name == "paxos-leader-handoff" {
+    // Old leader/proposer partially progressed with v1.
+    for node in &mut self.nodes {
+        if node.id == 2 {
+            node.promised_ballot = 1;
+            node.accepted_ballot = Some(1);
+            node.accepted_value = Some("v1".to_string());
+        }
+    }
+
+    // New leader/proposer takes over with higher ballot.
     self.broadcast(Message {
         from: 2,
         to: 0,
