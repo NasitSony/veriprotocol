@@ -113,6 +113,11 @@ impl Simulation {
                 .with_quorum_size(quorum_size)
             ),
 
+            "paxos-membership-change" => Box::new(
+                BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
+                .with_quorum_size(quorum_size)
+            ),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
         };
@@ -483,6 +488,16 @@ impl Simulation {
         value: VoteValue::Yes,
         delay_count: 0,
     });
+} else if self.protocol_name == "paxos-membership-change" {
+    self.broadcast(Message {
+        from: 1,
+        to: 0,
+        round: 0,
+        msg_type: MessageType::MembershipChange { new_node_count: self.node_count + 2 },
+        payload: String::from("membership-change"),
+        value: VoteValue::Yes,
+        delay_count: 0,
+    });
 }else {
             let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
@@ -537,6 +552,8 @@ impl Simulation {
                         self.metrics.view_changes += 1;
                     }
 
+                    
+
                     trace(
                         &self.config,
                         TraceEvent::Deliver,
@@ -564,6 +581,15 @@ impl Simulation {
                                     self.metrics.max_ballot_seen =
                                         self.metrics.max_ballot_seen.max(*promised_ballot);
                                 }
+
+                                 MessageType::MembershipChange { .. } => {
+                                     self.metrics.membership_changes += 1;
+                                }
+
+                                MessageType::MembershipAck { .. } =>  {
+                                   self.metrics.membership_acks += 1;
+                                }
+
                                 _ => {}
                             }
                             let actions = self.protocol.handle_message(node, &msg);
@@ -709,6 +735,31 @@ impl Simulation {
                                         if self.metrics.chosen_values.len() > 1 {
                                             self.metrics.safety_violation = true;
                                         }
+                                    }
+
+                                    NodeAction::SendMembershipAck { to, new_node_count } => {
+                                        self.metrics.messages_sent += 1;
+                                        self.network.send(Message {
+                                              from: msg.to,
+                                              to,
+                                              round: msg.round + 1,
+                                              msg_type: MessageType::MembershipAck { new_node_count },
+                                              payload: String::from("membership-ack"),
+                                              value: VoteValue::Yes,
+                                              delay_count: msg.delay_count,
+                                            });
+                                   }
+
+                                     NodeAction::BroadcastMembershipChange { new_node_count } => {
+                                        self.broadcast(Message {
+                                              from: msg.to,
+                                              to: 0,
+                                              round: msg.round + 1,
+                                              msg_type: MessageType::MembershipChange { new_node_count },
+                                              payload: String::from("membership-change"),
+                                              value: VoteValue::Yes,
+                                              delay_count: msg.delay_count,
+                                            });
                                     }
                                 }
                             }

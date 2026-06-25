@@ -27,6 +27,14 @@ pub enum MessageType {
         ballot: u64,
         promised_ballot: u64,
     },
+
+    MembershipChange {
+        new_node_count: usize,
+    },
+    
+    MembershipAck {
+       new_node_count: usize,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

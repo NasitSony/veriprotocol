@@ -59,6 +59,15 @@ pub enum NodeAction {
         ballot: u64,
         promised_ballot: u64,
     },
+
+    BroadcastMembershipChange {
+        new_node_count: usize,
+    },
+    
+    SendMembershipAck {
+       to: u64,
+       new_node_count: usize,
+    },
 }
 
 impl Node {

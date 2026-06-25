@@ -25,6 +25,9 @@ pub struct Metrics {
     pub max_ballot_seen: u64,
 
     pub paxos_retry_exhausted: bool,
+
+    pub membership_changes: u64,
+    pub membership_acks: u64,
 }
 
 impl Metrics {
@@ -52,6 +55,9 @@ impl Metrics {
             max_ballot_seen: 0,
 
             paxos_retry_exhausted: false,
+
+            membership_changes: 0,
+            membership_acks:0,
         }
     }
 }
@@ -84,6 +90,9 @@ impl Metrics {
         println!("Nack Messages: {}", self.nack_messages);
         println!("Paxos Retries: {}", self.paxos_retries);
         println!("Max Ballot Seen: {}", self.max_ballot_seen);
+
+        println!("Membership Changes: {}", self.membership_changes);
+        println!("Membership Acks: {}", self.membership_acks);
 
         println!("Chosen Values: {:?}", self.chosen_values);
         println!("Safety Violation: {}", self.safety_violation);

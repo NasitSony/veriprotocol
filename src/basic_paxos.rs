@@ -270,6 +270,17 @@ impl Protocol for BasicPaxosProtocol {
                 vec![]
             }
 
+            MessageType::MembershipChange { new_node_count } => {
+               vec![NodeAction::SendMembershipAck {
+                    to: msg.from,
+                    new_node_count: *new_node_count,
+                }]
+            }
+
+            MessageType::MembershipAck { new_node_count: _ } => {
+               vec![]
+            }
+
             _ => vec![],
         }
     }
