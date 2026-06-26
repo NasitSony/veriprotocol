@@ -38,3 +38,8 @@ VeriProtocol is a scheduler-aware consensus simulation framework for studying ho
 cargo run -- fifo
 cargo run -- random 10 42
 cargo run -- quorum-block
+cargo run -- fifo 1 42 raft-election 5 6 5
+cargo run -- fifo 1 42 raft-leader-crash 5 6 5
+cargo run -- fifo 1 42 raft-partition-heal 5 6 5
+cargo run -- fifo 1 42 raft-membership-change 5 6 5
+```
