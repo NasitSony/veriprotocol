@@ -38,6 +38,11 @@ pub struct Metrics {
     pub raft_leader_id: Option<u64>,
     pub raft_election_count: u64,
 
+    pub append_entries_messages: u64,
+    pub append_response_messages: u64,
+    pub heartbeat_successes: u64,
+    pub heartbeat_rejections: u64,
+
 }
 
 impl Metrics {
@@ -78,6 +83,12 @@ impl Metrics {
             raft_leader_id: None,
             raft_election_count: 0,
 
+            append_entries_messages: 0,
+            append_response_messages: 0,
+            heartbeat_successes: 0,
+            heartbeat_rejections: 0,
+
+
         }
     }
 }
@@ -110,6 +121,11 @@ impl Metrics {
         println!("Raft Leader Elected: {}", self.raft_leader_elected);
         println!("Raft Leader Id: {:?}", self.raft_leader_id);
         println!("Raft Election Count: {}", self.raft_election_count);
+
+        println!("AppendEntries Messages: {}", self.append_entries_messages);
+        println!("AppendResponse Messages: {}", self.append_response_messages);
+        println!("Heartbeat Successes: {}", self.heartbeat_successes);
+        println!("Heartbeat Rejections: {}", self.heartbeat_rejections);
 
         println!("Nack Messages: {}", self.nack_messages);
         println!("Paxos Retries: {}", self.paxos_retries);

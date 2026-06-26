@@ -625,9 +625,27 @@ impl Simulation {
                                                 self.metrics.votes_rejected += 1;
                                             }
                                         }
-
                                         _ => {}
                                     }
+
+                                        match &msg.msg_type {
+                                            MessageType::AppendEntries { .. } => {
+                                                self.metrics.append_entries_messages += 1;
+                                            }
+
+                                            MessageType::AppendResponse { success, .. } => {
+                                                self.metrics.append_response_messages += 1;
+                                                if *success {
+                                                    self.metrics.heartbeat_successes += 1;
+                                                } else {
+                                                    self.metrics.heartbeat_rejections += 1;
+                                                }
+                                            }
+
+                                            _ => {}
+                                        }
+
+                                      
                                     let actions = self.protocol.handle_message(node, &msg);
 
                                     for action in actions {
@@ -813,7 +831,7 @@ impl Simulation {
                                             });
                                         }
 
-                                        NodeAction::SendVoteResponse {
+                                                                                NodeAction::SendVoteResponse {
                                             to,
                                             term,
                                             vote_granted,
@@ -848,8 +866,53 @@ impl Simulation {
                                                     node.raft_current_term = term;
                                                 }
                                             }
+
+                                            self.broadcast(Message {
+                                                from: leader_id,
+                                                to: 0,
+                                                round: 0,
+                                                msg_type: MessageType::AppendEntries {
+                                                    term,
+                                                    leader_id,
+                                                },
+                                                payload: String::from("append-entries"),
+                                                value: VoteValue::Yes,
+                                                delay_count: 0,
+                                            });
                                         }
+
+                                        NodeAction::BroadcastAppendEntries { term, leader_id } => {
+                                            self.broadcast(Message {
+                                                from: leader_id,
+                                                to: 0,
+                                                round: 0,
+                                                msg_type: MessageType::AppendEntries {
+                                                    term,
+                                                    leader_id,
+                                                },
+                                                payload: String::from("append-entries"),
+                                                value: VoteValue::Yes,
+                                                delay_count: 0,
+                                            });
                                         }
+
+                                        NodeAction::SendAppendResponse { to, term, success } => {
+                                            self.metrics.messages_sent += 1;
+
+                                            self.network.send(Message {
+                                                from: msg.to,
+                                                to,
+                                                round: msg.round + 1,
+                                                msg_type: MessageType::AppendResponse {
+                                                    term,
+                                                    success,
+                                                },
+                                                payload: String::from("append-response"),
+                                                value: VoteValue::Yes,
+                                                delay_count: msg.delay_count,
+                                            });
+                                        }
+                                    }
 
                                         
                                     }

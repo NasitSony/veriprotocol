@@ -88,6 +88,17 @@ pub enum NodeAction {
         leader_id: u64,
         term: u64,
     },
+
+    BroadcastAppendEntries {
+        term: u64,
+        leader_id: u64,
+    },
+
+    SendAppendResponse {
+        to: u64,
+        term: u64,
+        success: bool,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
