@@ -83,6 +83,11 @@ pub enum NodeAction {
         term: u64,
         vote_granted: bool,
     },
+
+    BecomeRaftLeader {
+        leader_id: u64,
+        term: u64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -34,6 +34,10 @@ pub struct Metrics {
     pub votes_granted: u64,
     pub votes_rejected: u64,
 
+    pub raft_leader_elected: bool,
+    pub raft_leader_id: Option<u64>,
+    pub raft_election_count: u64,
+
 }
 
 impl Metrics {
@@ -70,6 +74,10 @@ impl Metrics {
             votes_granted: 0,
             votes_rejected: 0,
 
+            raft_leader_elected: false,
+            raft_leader_id: None,
+            raft_election_count: 0,
+
         }
     }
 }
@@ -98,6 +106,10 @@ impl Metrics {
         println!("Promise Messages: {}", self.promise_messages);
         println!("Accept Requests: {}", self.accept_requests);
         println!("Accepted Messages: {}", self.accepted_messages);
+
+        println!("Raft Leader Elected: {}", self.raft_leader_elected);
+        println!("Raft Leader Id: {:?}", self.raft_leader_id);
+        println!("Raft Election Count: {}", self.raft_election_count);
 
         println!("Nack Messages: {}", self.nack_messages);
         println!("Paxos Retries: {}", self.paxos_retries);

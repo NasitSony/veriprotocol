@@ -7,6 +7,7 @@ use crate::protocol::{Protocol, SimpleConsensusProtocol, TimeoutProtocol, TwoPha
 use crate::scheduler::SchedulerOutcome;
 use crate::trace::{Config, TraceEvent, trace};
 use crate::raft::RaftProtocol;
+use crate::node::RaftRole;
 
 pub struct Simulation {
     pub network: Network,
@@ -830,6 +831,23 @@ impl Simulation {
                                                 value: VoteValue::Yes,
                                                 delay_count: msg.delay_count,
                                             });
+                                        }
+
+
+                                        NodeAction::BecomeRaftLeader { leader_id, term } => {
+                                            self.metrics.raft_leader_elected = true;
+                                            self.metrics.raft_leader_id = Some(leader_id);
+                                            self.metrics.raft_election_count += 1;
+
+                                            for node in &mut self.nodes {
+                                                if node.id == leader_id {
+                                                    node.raft_role = RaftRole::Leader;
+                                                    node.raft_current_term = term;
+                                                } else {
+                                                    node.raft_role = RaftRole::Follower;
+                                                    node.raft_current_term = term;
+                                                }
+                                            }
                                         }
                                         }
 

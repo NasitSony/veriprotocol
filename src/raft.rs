@@ -53,6 +53,31 @@ impl Protocol for RaftProtocol {
                     return vec![];
                 }
 
+                let votes = self
+                    .votes_by_term
+                    .entry(*term)
+                    .or_insert_with(HashSet::new);
+
+                votes.insert(msg.from);
+
+                if votes.len() >= self.quorum_size && self.leader_id.is_none() {
+                    self.leader_id = Some(msg.to);
+                    self.election_count += 1;
+
+                    return vec![NodeAction::BecomeRaftLeader {
+                        leader_id: msg.to,
+                        term: *term,
+                    }];
+                }
+
+                vec![]
+            }
+
+            MessageType::VoteResponse { term, vote_granted } => {
+                if !*vote_granted {
+                    return vec![];
+                }
+
                 self.votes_by_term
                     .entry(*term)
                     .or_insert_with(HashSet::new)
