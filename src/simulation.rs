@@ -22,7 +22,7 @@ pub struct Simulation {
     pub protocol: Box<dyn Protocol>,
 
     pub node_count: usize,
-}
+} 
 
 impl Simulation {
     pub fn new(
@@ -124,6 +124,8 @@ impl Simulation {
 
             "raft-leader-crash" => Box::new(RaftProtocol::new(quorum_size)),
 
+            "raft-partition-heal" => Box::new(RaftProtocol::new(quorum_size)),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
 
@@ -206,7 +208,7 @@ impl Simulation {
            value: VoteValue::Yes,
            delay_count: 0,
         });
-        }else if self.protocol_name == "paxos-retry" {
+                       }else if self.protocol_name == "paxos-retry" {
             for node in &mut self.nodes {
                 node.promised_ballot = 1;
             }
@@ -242,7 +244,8 @@ impl Simulation {
               let actions = self.protocol.on_timeout();
 
             for action in actions {
-                match action {
+               // self.apply_action(&msg, action);
+               match action {
                    NodeAction::BroadcastPrepare { ballot } => {
                      self.metrics.paxos_retries += 1;
                      self.metrics.max_ballot_seen =
@@ -260,7 +263,7 @@ impl Simulation {
             }
             _ => {}
         }
-    }
+            }
         } else if self.protocol_name == "paxos-timeout-max" {
             for _ in 0..4 {
                 self.metrics.timeouts_triggered += 1;
@@ -309,6 +312,7 @@ impl Simulation {
             let actions = self.protocol.on_timeout();
 
             for action in actions {
+                
                 match action {
                     NodeAction::BroadcastPrepare { ballot } => {
                         self.metrics.paxos_retries += 1;
@@ -345,6 +349,7 @@ impl Simulation {
             let actions = self.protocol.on_timeout();
 
             for action in actions {
+                
                 match action {
                     NodeAction::BroadcastPrepare { ballot } => {
                         self.metrics.paxos_retries += 1;
@@ -393,6 +398,7 @@ impl Simulation {
             let actions = self.protocol.on_timeout();
 
             for action in actions {
+               
                 match action {
                     NodeAction::BroadcastPrepare { ballot } => {
                         self.metrics.paxos_retries += 1;
@@ -548,6 +554,50 @@ impl Simulation {
                     value: VoteValue::Yes,
                     delay_count: 0,
                 });
+        } else if self.protocol_name == "raft-partition-heal" {
+                // First leader election: node 1 becomes leader in term 1.
+                self.broadcast(Message {
+                    from: 1,
+                    to: 0,
+                    round: 0,
+                    msg_type: MessageType::RequestVote {
+                        term: 1,
+                        candidate_id: 1,
+                    },
+                    payload: String::from("request-vote"),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+
+                // Partition-like transition:
+                // majority side elects node 2 in higher term.
+                self.broadcast(Message {
+                    from: 2,
+                    to: 0,
+                    round: 10,
+                    msg_type: MessageType::RequestVote {
+                        term: 2,
+                        candidate_id: 2,
+                    },
+                    payload: String::from("request-vote"),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+
+                // Heal phase:
+                // new leader's heartbeat reaches everyone, including old leader.
+                self.broadcast(Message {
+                    from: 2,
+                    to: 0,
+                    round: 20,
+                    msg_type: MessageType::AppendEntries {
+                        term: 2,
+                        leader_id: 2,
+                    },
+                    payload: String::from("append-entries"),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
             }else {
                     let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
@@ -610,340 +660,18 @@ impl Simulation {
                                 &format!("{} -> {}", msg.from, msg.to),
                             );
 
+                            self.count_message_metrics(&msg);
+
                             for node in &mut self.nodes {
                                 if node.id == msg.to {
-                                    match &msg.msg_type {
-                                        MessageType::Prepare { .. } => {
-                                            self.metrics.prepare_messages += 1;
-                                        }
-                                        MessageType::Promise { .. } => {
-                                            self.metrics.promise_messages += 1;
-                                        }
-                                        MessageType::AcceptRequest { .. } => {
-                                            self.metrics.accept_requests += 1;
-                                        }
-                                        MessageType::Accepted { .. } => {
-                                            self.metrics.accepted_messages += 1;
-                                        }
-
-                                        MessageType::Nack { promised_ballot, .. } => {
-                                            self.metrics.nack_messages += 1;
-                                            self.metrics.max_ballot_seen =
-                                                self.metrics.max_ballot_seen.max(*promised_ballot);
-                                        }
-
-                                        MessageType::MembershipChange { .. } => {
-                                            self.metrics.membership_changes += 1;
-                                        }
-
-                                        MessageType::MembershipAck { .. } =>  {
-                                        self.metrics.membership_acks += 1;
-                                        }
-
-                                        _ => {}
-                                    }
-                                    match &msg.msg_type {
-                                        MessageType::RequestVote { .. } => {
-                                            self.metrics.request_vote_messages += 1;
-                                        }
-
-                                        MessageType::VoteResponse { vote_granted, .. } => {
-                                            self.metrics.vote_response_messages += 1;
-
-                                            if *vote_granted {
-                                                self.metrics.votes_granted += 1;
-                                            } else {
-                                                self.metrics.votes_rejected += 1;
-                                            }
-                                        }
-                                        _ => {}
-                                    }
-
-                                        match &msg.msg_type {
-                                            MessageType::AppendEntries { .. } => {
-                                                self.metrics.append_entries_messages += 1;
-                                            }
-
-                                            MessageType::AppendResponse { success, .. } => {
-                                                self.metrics.append_response_messages += 1;
-                                                if *success {
-                                                    self.metrics.heartbeat_successes += 1;
-                                                } else {
-                                                    self.metrics.heartbeat_rejections += 1;
-                                                }
-                                            }
-
-                                            _ => {}
-                                        }
+                                    
 
                                       
                                     let actions = self.protocol.handle_message(node, &msg);
 
                                     for action in actions {
-                                        match action {
-
-
-                                            NodeAction::BroadcastPrepare { ballot } => {
-
-                                                self.metrics.paxos_retries += 1;
-                                                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
-
-                                                self.broadcast(Message {
-                                                    from: msg.to,
-                                                    to: 0,
-                                                    round: msg.round + 1,
-                                                    msg_type: MessageType::Prepare { ballot },
-                                                    payload: String::from("prepare"),
-                                                    value: VoteValue::Yes,
-                                                    delay_count: msg.delay_count,
-                                                });
-                                            }
-
-                                            NodeAction::BroadcastProposal => {
-                                                    self.broadcast(Message {
-                                                        from: msg.to,
-                                                        to: 0,
-                                                        round: msg.round + 1,
-                                                        msg_type: MessageType::Proposal,
-                                                        payload: String::from("proposal"),
-                                                        value: VoteValue::Yes,
-                                                        delay_count: msg.delay_count,
-                                                    });
-                                                
-                                            }
-
-                                            NodeAction::BroadcastVote(value) => {
-                                                self.broadcast(Message {
-                                                    from: msg.to,
-                                                    to: 0,
-                                                    round: msg.round + 1,
-                                                    msg_type: MessageType::Vote,
-                                                    payload: String::from("vote"),
-                                                    value,
-                                                    delay_count: msg.delay_count,
-                                                });
-                                            }
-
-                                            NodeAction::BroadcastCommit(value) => {
-                                                self.broadcast(Message {
-                                                    from: msg.to,
-                                                    to: 0,
-                                                    round: msg.round + 1,
-                                                    msg_type: MessageType::Commit,
-                                                    payload: String::from("commit"),
-                                                    value,
-                                                    delay_count: msg.delay_count,
-                                                });
-                                            }
-
-                                            NodeAction::BroadcastTimeout => {
-                                                // TODO: create timeout messages
-                                            }
-
-                                            NodeAction::StaleMessageIgnored => {
-                                                self.metrics.stale_messages_ignored += 1;
-                                            }
-
-                                            NodeAction::SendPromise {
-                                                to,
-                                                ballot,
-                                                accepted_ballot,
-                                                accepted_value,
-                                            } => {
-                                                self.send_to(Message {
-                                                    from: msg.to,
-                                                    to,
-                                                    round: msg.round + 1,
-                                                    msg_type: MessageType::Promise {
-                                                        ballot,
-                                                        accepted_ballot,
-                                                        accepted_value,
-                                                    },
-                                                    payload: String::from("promise"),
-                                                    value: msg.value.clone(),
-                                                    delay_count: msg.delay_count,
-                                                });
-                                            }
-
-                                            NodeAction::SendNack {
-                                                to,
-                                                ballot,
-                                                promised_ballot,
-                                            } => {
-                                                self.send_to(Message {
-                                                    from: msg.to,
-                                                    to,
-                                                    round: msg.round + 1,
-                                                    msg_type: MessageType::Nack {
-                                                        ballot,
-                                                        promised_ballot,
-                                                    },
-                                                    payload: String::from("nack"),
-                                                    value: msg.value.clone(),
-                                                    delay_count: msg.delay_count,
-                                                });
-                                            }
-
-                                            NodeAction::BroadcastAcceptRequest { ballot, value } => {
-                                                self.broadcast(Message {
-                                                    from: msg.to,
-                                                    to: 0,
-                                                    round: msg.round + 1,
-                                                    msg_type: MessageType::AcceptRequest {
-                                                        ballot,
-                                                        value: value.clone(),
-                                                    },
-                                                    payload: String::from("accept_request"),
-                                                    value: msg.value.clone(),
-                                                    delay_count: msg.delay_count,
-                                                });
-                                            }
-
-                                            NodeAction::SendAccepted { to, ballot, value } => {
-                                                self.send_to(Message {
-                                                    from: msg.to,
-                                                    to,
-                                                    round: msg.round + 1,
-                                                    msg_type: MessageType::Accepted {
-                                                        ballot,
-                                                        value: value.clone(),
-                                                    },
-                                                    payload: String::from("accepted"),
-                                                    value: msg.value.clone(),
-                                                    delay_count: msg.delay_count,
-                                                });
-                                            }
-
-                                            NodeAction::RecordChosen { value } => {
-                                                self.metrics.chosen_values.insert(value);
-                                            
-                                                if self.metrics.chosen_values.len() > 1 {
-                                                    self.metrics.safety_violation = true;
-                                                }
-                                            }
-
-                                            NodeAction::SendMembershipAck { to, new_node_count } => {
-                                                self.metrics.messages_sent += 1;
-                                                self.network.send(Message {
-                                                    from: msg.to,
-                                                    to,
-                                                    round: msg.round + 1,
-                                                    msg_type: MessageType::MembershipAck { new_node_count },
-                                                    payload: String::from("membership-ack"),
-                                                    value: VoteValue::Yes,
-                                                    delay_count: msg.delay_count,
-                                                    });
-                                        }
-
-                                            NodeAction::BroadcastMembershipChange { new_node_count } => {
-                                                self.broadcast(Message {
-                                                    from: msg.to,
-                                                    to: 0,
-                                                    round: msg.round + 1,
-                                                    msg_type: MessageType::MembershipChange { new_node_count },
-                                                    payload: String::from("membership-change"),
-                                                    value: VoteValue::Yes,
-                                                    delay_count: msg.delay_count,
-                                                    });
-                                            }
-
-                                            NodeAction::BroadcastRequestVote { term, candidate_id } => {
-                                            self.broadcast(Message {
-                                                from: candidate_id,
-                                                to: 0,
-                                                round: 0,
-                                                msg_type: MessageType::RequestVote {
-                                                    term,
-                                                    candidate_id,
-                                                },
-                                                payload: String::from("request-vote"),
-                                                value: VoteValue::Yes,
-                                                delay_count: 0,
-                                            });
-                                        }
-
-                                                                                NodeAction::SendVoteResponse {
-                                            to,
-                                            term,
-                                            vote_granted,
-                                        } => {
-                                            self.metrics.messages_sent += 1;
-                                            self.network.send(Message {
-                                                from: msg.to,
-                                                to,
-                                                round: msg.round + 1,
-                                                msg_type: MessageType::VoteResponse {
-                                                    term,
-                                                    vote_granted,
-                                                },
-                                                payload: String::from("vote-response"),
-                                                value: VoteValue::Yes,
-                                                delay_count: msg.delay_count,
-                                            });
-                                        }
-
-
-                                        NodeAction::BecomeRaftLeader { leader_id, term } => {
-                                            self.metrics.raft_leader_elected = true;
-                                            self.metrics.raft_leader_id = Some(leader_id);
-                                            self.metrics.raft_election_count += 1;
-
-                                            for node in &mut self.nodes {
-                                                if node.id == leader_id {
-                                                    node.raft_role = RaftRole::Leader;
-                                                    node.raft_current_term = term;
-                                                } else {
-                                                    node.raft_role = RaftRole::Follower;
-                                                    node.raft_current_term = term;
-                                                }
-                                            }
-
-                                            self.broadcast(Message {
-                                                from: leader_id,
-                                                to: 0,
-                                                round: 0,
-                                                msg_type: MessageType::AppendEntries {
-                                                    term,
-                                                    leader_id,
-                                                },
-                                                payload: String::from("append-entries"),
-                                                value: VoteValue::Yes,
-                                                delay_count: 0,
-                                            });
-                                        }
-
-                                        NodeAction::BroadcastAppendEntries { term, leader_id } => {
-                                            self.broadcast(Message {
-                                                from: leader_id,
-                                                to: 0,
-                                                round: 0,
-                                                msg_type: MessageType::AppendEntries {
-                                                    term,
-                                                    leader_id,
-                                                },
-                                                payload: String::from("append-entries"),
-                                                value: VoteValue::Yes,
-                                                delay_count: 0,
-                                            });
-                                        }
-
-                                        NodeAction::SendAppendResponse { to, term, success } => {
-                                            self.metrics.messages_sent += 1;
-
-                                            self.network.send(Message {
-                                                from: msg.to,
-                                                to,
-                                                round: msg.round + 1,
-                                                msg_type: MessageType::AppendResponse {
-                                                    term,
-                                                    success,
-                                                },
-                                                payload: String::from("append-response"),
-                                                value: VoteValue::Yes,
-                                                delay_count: msg.delay_count,
-                                            });
-                                        }
-                                    }
+                                        self.apply_action(&msg, action);
+                                        
 
                                         
                                     }
@@ -1011,4 +739,339 @@ impl Simulation {
                     self.network.send(timeout);
                 }
             }
+
+            fn apply_action(&mut self, msg: &Message, action: NodeAction){
+                        
+                match action {
+
+
+                    NodeAction::BroadcastPrepare { ballot } => {
+
+                        self.metrics.paxos_retries += 1;
+                        self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
+                        self.broadcast(Message {
+                            from: msg.to,
+                            to: 0,
+                            round: msg.round + 1,
+                            msg_type: MessageType::Prepare { ballot },
+                            payload: String::from("prepare"),
+                            value: VoteValue::Yes,
+                            delay_count: msg.delay_count,
+                        });
+                    }
+
+                    NodeAction::BroadcastProposal => {
+                            self.broadcast(Message {
+                                from: msg.to,
+                                to: 0,
+                                round: msg.round + 1,
+                                msg_type: MessageType::Proposal,
+                                payload: String::from("proposal"),
+                                value: VoteValue::Yes,
+                                delay_count: msg.delay_count,
+                            });
+                        
+                    }
+
+                    NodeAction::BroadcastVote(value) => {
+                        self.broadcast(Message {
+                            from: msg.to,
+                            to: 0,
+                            round: msg.round + 1,
+                            msg_type: MessageType::Vote,
+                            payload: String::from("vote"),
+                            value,
+                            delay_count: msg.delay_count,
+                        });
+                    }
+
+                    NodeAction::BroadcastCommit(value) => {
+                        self.broadcast(Message {
+                            from: msg.to,
+                            to: 0,
+                            round: msg.round + 1,
+                            msg_type: MessageType::Commit,
+                            payload: String::from("commit"),
+                            value,
+                            delay_count: msg.delay_count,
+                        });
+                    }
+
+                    NodeAction::BroadcastTimeout => {
+                        // TODO: create timeout messages
+                    }
+
+                    NodeAction::StaleMessageIgnored => {
+                        self.metrics.stale_messages_ignored += 1;
+                    }
+
+                    NodeAction::SendPromise {
+                        to,
+                        ballot,
+                        accepted_ballot,
+                        accepted_value,
+                    } => {
+                        self.send_to(Message {
+                            from: msg.to,
+                            to,
+                            round: msg.round + 1,
+                            msg_type: MessageType::Promise {
+                                ballot,
+                                accepted_ballot,
+                                accepted_value,
+                            },
+                            payload: String::from("promise"),
+                            value: msg.value.clone(),
+                            delay_count: msg.delay_count,
+                        });
+                    }
+
+                    NodeAction::SendNack {
+                        to,
+                        ballot,
+                        promised_ballot,
+                    } => {
+                        self.send_to(Message {
+                            from: msg.to,
+                            to,
+                            round: msg.round + 1,
+                            msg_type: MessageType::Nack {
+                                ballot,
+                                promised_ballot,
+                            },
+                            payload: String::from("nack"),
+                            value: msg.value.clone(),
+                            delay_count: msg.delay_count,
+                        });
+                    }
+
+                    NodeAction::BroadcastAcceptRequest { ballot, value } => {
+                        self.broadcast(Message {
+                            from: msg.to,
+                            to: 0,
+                            round: msg.round + 1,
+                            msg_type: MessageType::AcceptRequest {
+                                ballot,
+                                value: value.clone(),
+                            },
+                            payload: String::from("accept_request"),
+                            value: msg.value.clone(),
+                            delay_count: msg.delay_count,
+                        });
+                    }
+
+                    NodeAction::SendAccepted { to, ballot, value } => {
+                        self.send_to(Message {
+                            from: msg.to,
+                            to,
+                            round: msg.round + 1,
+                            msg_type: MessageType::Accepted {
+                                ballot,
+                                value: value.clone(),
+                            },
+                            payload: String::from("accepted"),
+                            value: msg.value.clone(),
+                            delay_count: msg.delay_count,
+                        });
+                    }
+
+                    NodeAction::RecordChosen { value } => {
+                        self.metrics.chosen_values.insert(value);
+                    
+                        if self.metrics.chosen_values.len() > 1 {
+                            self.metrics.safety_violation = true;
+                        }
+                    }
+
+                    NodeAction::SendMembershipAck { to, new_node_count } => {
+                        self.metrics.messages_sent += 1;
+                        self.network.send(Message {
+                            from: msg.to,
+                            to,
+                            round: msg.round + 1,
+                            msg_type: MessageType::MembershipAck { new_node_count },
+                            payload: String::from("membership-ack"),
+                            value: VoteValue::Yes,
+                            delay_count: msg.delay_count,
+                            });
+                    }
+
+                    NodeAction::BroadcastMembershipChange { new_node_count } => {
+                        self.broadcast(Message {
+                            from: msg.to,
+                            to: 0,
+                            round: msg.round + 1,
+                            msg_type: MessageType::MembershipChange { new_node_count },
+                            payload: String::from("membership-change"),
+                            value: VoteValue::Yes,
+                            delay_count: msg.delay_count,
+                            });
+                    }
+
+                    NodeAction::BroadcastRequestVote { term, candidate_id } => {
+                            self.broadcast(Message {
+                                from: candidate_id,
+                                to: 0,
+                                round: 0,
+                                msg_type: MessageType::RequestVote {
+                                    term,
+                                    candidate_id,
+                                },
+                                payload: String::from("request-vote"),
+                                value: VoteValue::Yes,
+                                delay_count: 0,
+                            });
+                    }
+
+                    NodeAction::SendVoteResponse {
+                        to,
+                        term,
+                        vote_granted,
+                    } => {
+                        self.metrics.messages_sent += 1;
+                        self.network.send(Message {
+                            from: msg.to,
+                            to,
+                            round: msg.round + 1,
+                            msg_type: MessageType::VoteResponse {
+                                term,
+                                vote_granted,
+                            },
+                            payload: String::from("vote-response"),
+                            value: VoteValue::Yes,
+                            delay_count: msg.delay_count,
+                        });
+                    }
+
+
+                    NodeAction::BecomeRaftLeader { leader_id, term } => {
+                        self.metrics.raft_leader_elected = true;
+                        self.metrics.raft_leader_id = Some(leader_id);
+                        self.metrics.raft_election_count += 1;
+
+                        for node in &mut self.nodes {
+                            if node.id == leader_id {
+                                node.raft_role = RaftRole::Leader;
+                                node.raft_current_term = term;
+                            } else {
+                                node.raft_role = RaftRole::Follower;
+                                node.raft_current_term = term;
+                            }
+                        }
+
+                        self.broadcast(Message {
+                            from: leader_id,
+                            to: 0,
+                            round: 0,
+                            msg_type: MessageType::AppendEntries {
+                                term,
+                                leader_id,
+                            },
+                            payload: String::from("append-entries"),
+                            value: VoteValue::Yes,
+                            delay_count: 0,
+                        });
+                    }
+
+                    NodeAction::BroadcastAppendEntries { term, leader_id } => {
+                        self.broadcast(Message {
+                            from: leader_id,
+                            to: 0,
+                            round: 0,
+                            msg_type: MessageType::AppendEntries {
+                                term,
+                                leader_id,
+                            },
+                            payload: String::from("append-entries"),
+                            value: VoteValue::Yes,
+                            delay_count: 0,
+                        });
+                    }
+
+                    NodeAction::SendAppendResponse { to, term, success } => {
+                        self.metrics.messages_sent += 1;
+
+                        self.network.send(Message {
+                            from: msg.to,
+                            to,
+                            round: msg.round + 1,
+                            msg_type: MessageType::AppendResponse {
+                                term,
+                                success,
+                            },
+                            payload: String::from("append-response"),
+                            value: VoteValue::Yes,
+                            delay_count: msg.delay_count,
+                        });
+                    }
+               }
+        
+            }
+
+    fn count_message_metrics(&mut self, msg: &Message){
+            match &msg.msg_type {
+                    MessageType::Prepare { .. } => {
+                        self.metrics.prepare_messages += 1;
+                    }
+                    MessageType::Promise { .. } => {
+                        self.metrics.promise_messages += 1;
+                    }
+                    MessageType::AcceptRequest { .. } => {
+                        self.metrics.accept_requests += 1;
+                    }
+                    MessageType::Accepted { .. } => {
+                        self.metrics.accepted_messages += 1;
+                    }
+
+                    MessageType::Nack { promised_ballot, .. } => {
+                        self.metrics.nack_messages += 1;
+                        self.metrics.max_ballot_seen =
+                            self.metrics.max_ballot_seen.max(*promised_ballot);
+                    }
+
+                    MessageType::MembershipChange { .. } => {
+                        self.metrics.membership_changes += 1;
+                    }
+
+                    MessageType::MembershipAck { .. } =>  {
+                    self.metrics.membership_acks += 1;
+                    }
+
+                    _ => {}
+                }
+                match &msg.msg_type {
+                    MessageType::RequestVote { .. } => {
+                        self.metrics.request_vote_messages += 1;
+                    }
+
+                    MessageType::VoteResponse { vote_granted, .. } => {
+                        self.metrics.vote_response_messages += 1;
+
+                        if *vote_granted {
+                            self.metrics.votes_granted += 1;
+                        } else {
+                            self.metrics.votes_rejected += 1;
+                        }
+                    }
+                    _ => {}
+                }
+
+                match &msg.msg_type {
+                    MessageType::AppendEntries { .. } => {
+                        self.metrics.append_entries_messages += 1;
+                    }
+
+                    MessageType::AppendResponse { success, .. } => {
+                        self.metrics.append_response_messages += 1;
+                        if *success {
+                            self.metrics.heartbeat_successes += 1;
+                        } else {
+                            self.metrics.heartbeat_rejections += 1;
+                        }
+                    }
+
+                    _ => {}
+                }
+    }        
 }
