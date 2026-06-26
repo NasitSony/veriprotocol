@@ -119,10 +119,12 @@ impl Simulation {
                 .with_quorum_size(quorum_size)
             ),
 
+            "raft-election" => Box::new(RaftProtocol::new(quorum_size)),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
 
-            "raft" => Box::new(RaftProtocol::new(quorum_size)),
+            
         };
 
         Self {
@@ -256,578 +258,645 @@ impl Simulation {
             _ => {}
         }
     }
-} else if self.protocol_name == "paxos-timeout-max" {
-    for _ in 0..4 {
-        self.metrics.timeouts_triggered += 1;
+        } else if self.protocol_name == "paxos-timeout-max" {
+            for _ in 0..4 {
+                self.metrics.timeouts_triggered += 1;
 
-        let actions = self.protocol.on_timeout();
+                let actions = self.protocol.on_timeout();
 
-        if actions.is_empty() {
-             self.metrics.paxos_retry_exhausted = true;
-        }
-
-        for action in actions {
-            match action {
-                NodeAction::BroadcastPrepare { ballot } => {
-                    self.metrics.paxos_retries += 1;
-                    self.metrics.max_ballot_seen =
-                        self.metrics.max_ballot_seen.max(ballot);
-                }
-                _ => {}
-            }
-        }
-    }
-} else if self.protocol_name == "paxos-partial-timeout" {
-    // Send Prepare(1) only to 2 nodes, not quorum.
-    self.network.send(Message {
-        from: 1,
-        to: 2,
-        round: 0,
-        msg_type: MessageType::Prepare { ballot: 1 },
-        payload: String::from("prepare"),
-        value: VoteValue::Yes,
-        delay_count: 0,
-    });
-
-    self.network.send(Message {
-        from: 1,
-        to: 3,
-        round: 0,
-        msg_type: MessageType::Prepare { ballot: 1 },
-        payload: String::from("prepare"),
-        value: VoteValue::Yes,
-        delay_count: 0,
-    });
-
-    self.metrics.timeouts_triggered += 1;
-
-    let actions = self.protocol.on_timeout();
-
-    for action in actions {
-        match action {
-            NodeAction::BroadcastPrepare { ballot } => {
-                self.metrics.paxos_retries += 1;
-                self.metrics.max_ballot_seen =
-                    self.metrics.max_ballot_seen.max(ballot);
-
-                self.broadcast(Message {
-                    from: 1,
-                    to: 0,
-                    round: 1,
-                    msg_type: MessageType::Prepare { ballot },
-                    payload: String::from("prepare"),
-                    value: VoteValue::Yes,
-                    delay_count: 0,
-                });
-            }
-            _ => {}
-        }
-    }
-} else if self.protocol_name == "paxos-missed-accept-recovery" {
-    // Simulate partial Phase-2 progress:
-    // two acceptors already accepted v1 at ballot 1,
-    // but not enough Accepted messages reached proposer to decide.
-    for node in &mut self.nodes {
-        if node.id == 2 || node.id == 3 {
-            node.promised_ballot = 1;
-            node.accepted_ballot = Some(1);
-            node.accepted_value = Some("v1".to_string());
-        }
-    }
-
-    self.metrics.timeouts_triggered += 1;
-
-    let actions = self.protocol.on_timeout();
-
-    for action in actions {
-        match action {
-            NodeAction::BroadcastPrepare { ballot } => {
-                self.metrics.paxos_retries += 1;
-                self.metrics.max_ballot_seen =
-                    self.metrics.max_ballot_seen.max(ballot);
-
-                self.broadcast(Message {
-                    from: 1,
-                    to: 0,
-                    round: 1,
-                    msg_type: MessageType::Prepare { ballot },
-                    payload: String::from("prepare"),
-                    value: VoteValue::Yes,
-                    delay_count: 0,
-                });
-            }
-            _ => {}
-        }
-    }
-} else if self.protocol_name == "paxos-partition-heal" {
-    // Partition-like phase:
-    // proposer can reach only 2 acceptors, not enough for full progress.
-    self.network.send(Message {
-        from: 1,
-        to: 2,
-        round: 0,
-        msg_type: MessageType::Prepare { ballot: 1 },
-        payload: String::from("prepare"),
-        value: VoteValue::Yes,
-        delay_count: 0,
-    });
-
-    self.network.send(Message {
-        from: 1,
-        to: 3,
-        round: 0,
-        msg_type: MessageType::Prepare { ballot: 1 },
-        payload: String::from("prepare"),
-        value: VoteValue::Yes,
-        delay_count: 0,
-    });
-
-    // Heal/retry phase.
-    self.metrics.timeouts_triggered += 1;
-
-    let actions = self.protocol.on_timeout();
-
-    for action in actions {
-        match action {
-            NodeAction::BroadcastPrepare { ballot } => {
-                self.metrics.paxos_retries += 1;
-                self.metrics.max_ballot_seen =
-                    self.metrics.max_ballot_seen.max(ballot);
-
-                self.broadcast(Message {
-                    from: 1,
-                    to: 0,
-                    round: 1,
-                    msg_type: MessageType::Prepare { ballot },
-                    payload: String::from("prepare"),
-                    value: VoteValue::Yes,
-                    delay_count: 0,
-                });
-            }
-            _ => {}
-        }
-    }
-} else if self.protocol_name == "paxos-crash-recovery" {
-    // Simulate proposer 1 crashed after v1 was accepted by some acceptors.
-    // New proposer 2 starts ballot 2 and must recover/adopt v1.
-    for node in &mut self.nodes {
-        if node.id == 2 || node.id == 3 {
-            node.promised_ballot = 1;
-            node.accepted_ballot = Some(1);
-            node.accepted_value = Some("v1".to_string());
-        }
-    }
-
-    self.broadcast(Message {
-        from: 2,
-        to: 0,
-        round: 0,
-        msg_type: MessageType::Prepare { ballot: 2 },
-        payload: String::from("prepare"),
-        value: VoteValue::Yes,
-        delay_count: 0,
-    });
-} else if self.protocol_name == "paxos-race" {
-    // Two proposers race:
-    // proposer 1 starts ballot 1 with v1
-    // proposer 2 starts ballot 2 with v2
-    self.broadcast(Message {
-        from: 1,
-        to: 0,
-        round: 0,
-        msg_type: MessageType::Prepare { ballot: 1 },
-        payload: String::from("prepare"),
-        value: VoteValue::Yes,
-        delay_count: 0,
-    });
-
-    self.broadcast(Message {
-        from: 2,
-        to: 0,
-        round: 0,
-        msg_type: MessageType::Prepare { ballot: 2 },
-        payload: String::from("prepare"),
-        value: VoteValue::Yes,
-        delay_count: 0,
-    });
-} else if self.protocol_name == "paxos-leader-handoff" {
-    // Old leader/proposer partially progressed with v1.
-    for node in &mut self.nodes {
-        if node.id == 2 {
-            node.promised_ballot = 1;
-            node.accepted_ballot = Some(1);
-            node.accepted_value = Some("v1".to_string());
-        }
-    }
-
-    // New leader/proposer takes over with higher ballot.
-    self.broadcast(Message {
-        from: 2,
-        to: 0,
-        round: 0,
-        msg_type: MessageType::Prepare { ballot: 2 },
-        payload: String::from("prepare"),
-        value: VoteValue::Yes,
-        delay_count: 0,
-    });
-} else if self.protocol_name == "paxos-partition-heal-adopt" {
-    // During partition, v1 was accepted by a subset.
-    for node in &mut self.nodes {
-        if node.id == 2 || node.id == 3 {
-            node.promised_ballot = 1;
-            node.accepted_ballot = Some(1);
-            node.accepted_value = Some("v1".to_string());
-        }
-    }
-
-    // Partition heals. New proposer/leader tries v2 at higher ballot,
-    // but must adopt v1 from acceptor promises.
-    self.broadcast(Message {
-        from: 2,
-        to: 0,
-        round: 0,
-        msg_type: MessageType::Prepare { ballot: 2 },
-        payload: String::from("prepare"),
-        value: VoteValue::Yes,
-        delay_count: 0,
-    });
-} else if self.protocol_name == "paxos-membership-change" {
-    self.broadcast(Message {
-        from: 1,
-        to: 0,
-        round: 0,
-        msg_type: MessageType::MembershipChange { new_node_count: self.node_count + 2 },
-        payload: String::from("membership-change"),
-        value: VoteValue::Yes,
-        delay_count: 0,
-    });
-}else {
-            let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
-
-            for &from_node in &node_ids {
-                if !self
-                    .protocol
-                    .should_send_initial_proposal(from_node as usize)
-                {
-                    continue;
+                if actions.is_empty() {
+                    self.metrics.paxos_retry_exhausted = true;
                 }
 
-                self.broadcast(Message {
-                    from: from_node,
-                    to: 0,
-                    round: 0,
-                    msg_type: MessageType::Proposal,
-                    payload: String::from("proposal"),
-                    value: VoteValue::Yes,
-                    delay_count: 0,
-                });
+                for action in actions {
+                    match action {
+                        NodeAction::BroadcastPrepare { ballot } => {
+                            self.metrics.paxos_retries += 1;
+                            self.metrics.max_ballot_seen =
+                                self.metrics.max_ballot_seen.max(ballot);
+                        }
+                        _ => {}
+                    }
+                }
             }
-        }
+        } else if self.protocol_name == "paxos-partial-timeout" {
+            // Send Prepare(1) only to 2 nodes, not quorum.
+            self.network.send(Message {
+                from: 1,
+                to: 2,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 1 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
 
-        self.deliver_all_messages();
+            self.network.send(Message {
+                from: 1,
+                to: 3,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 1 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
 
-        self.metrics.decisions = self
-            .nodes
-            .iter()
-            .filter(|node| node.decided.is_some())
-            .count() as u64;
+            self.metrics.timeouts_triggered += 1;
 
-        self.metrics.print();
-    }
+            let actions = self.protocol.on_timeout();
 
-    fn deliver_all_messages(&mut self) {
-        loop {
-            match self.network.deliver_next() {
-                SchedulerOutcome::Deliver(msg) => {
-                    self.metrics.scheduler_steps += 1;
-                    self.metrics.messages_delivered += 1;
+            for action in actions {
+                match action {
+                    NodeAction::BroadcastPrepare { ballot } => {
+                        self.metrics.paxos_retries += 1;
+                        self.metrics.max_ballot_seen =
+                            self.metrics.max_ballot_seen.max(ballot);
 
-                    if self.protocol.uses_timeout()
-                        && !self.timeout_injected
-                        && self.metrics.scheduler_steps >= self.timeout_threshold
-                    {
-                        self.inject_timeouts();
-                        self.timeout_injected = true;
+                        self.broadcast(Message {
+                            from: 1,
+                            to: 0,
+                            round: 1,
+                            msg_type: MessageType::Prepare { ballot },
+                            payload: String::from("prepare"),
+                            value: VoteValue::Yes,
+                            delay_count: 0,
+                        });
                     }
+                    _ => {}
+                }
+            }
+        } else if self.protocol_name == "paxos-missed-accept-recovery" {
+            // Simulate partial Phase-2 progress:
+            // two acceptors already accepted v1 at ballot 1,
+            // but not enough Accepted messages reached proposer to decide.
+            for node in &mut self.nodes {
+                if node.id == 2 || node.id == 3 {
+                    node.promised_ballot = 1;
+                    node.accepted_ballot = Some(1);
+                    node.accepted_value = Some("v1".to_string());
+                }
+            }
 
-                    if msg.msg_type == MessageType::Timeout {
-                        self.metrics.timeouts_triggered += 1;
-                        self.metrics.view_changes += 1;
+            self.metrics.timeouts_triggered += 1;
+
+            let actions = self.protocol.on_timeout();
+
+            for action in actions {
+                match action {
+                    NodeAction::BroadcastPrepare { ballot } => {
+                        self.metrics.paxos_retries += 1;
+                        self.metrics.max_ballot_seen =
+                            self.metrics.max_ballot_seen.max(ballot);
+
+                        self.broadcast(Message {
+                            from: 1,
+                            to: 0,
+                            round: 1,
+                            msg_type: MessageType::Prepare { ballot },
+                            payload: String::from("prepare"),
+                            value: VoteValue::Yes,
+                            delay_count: 0,
+                        });
                     }
+                    _ => {}
+                }
+            }
+        } else if self.protocol_name == "paxos-partition-heal" {
+            // Partition-like phase:
+            // proposer can reach only 2 acceptors, not enough for full progress.
+            self.network.send(Message {
+                from: 1,
+                to: 2,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 1 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
 
-                    
+            self.network.send(Message {
+                from: 1,
+                to: 3,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 1 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
 
-                    trace(
-                        &self.config,
-                        TraceEvent::Deliver,
-                        &format!("{} -> {}", msg.from, msg.to),
-                    );
+            // Heal/retry phase.
+            self.metrics.timeouts_triggered += 1;
 
-                    for node in &mut self.nodes {
-                        if node.id == msg.to {
-                            match &msg.msg_type {
-                                MessageType::Prepare { .. } => {
-                                    self.metrics.prepare_messages += 1;
-                                }
-                                MessageType::Promise { .. } => {
-                                    self.metrics.promise_messages += 1;
-                                }
-                                MessageType::AcceptRequest { .. } => {
-                                    self.metrics.accept_requests += 1;
-                                }
-                                MessageType::Accepted { .. } => {
-                                    self.metrics.accepted_messages += 1;
-                                }
+            let actions = self.protocol.on_timeout();
 
-                                MessageType::Nack { promised_ballot, .. } => {
-                                    self.metrics.nack_messages += 1;
-                                    self.metrics.max_ballot_seen =
-                                        self.metrics.max_ballot_seen.max(*promised_ballot);
-                                }
+            for action in actions {
+                match action {
+                    NodeAction::BroadcastPrepare { ballot } => {
+                        self.metrics.paxos_retries += 1;
+                        self.metrics.max_ballot_seen =
+                            self.metrics.max_ballot_seen.max(ballot);
 
-                                 MessageType::MembershipChange { .. } => {
-                                     self.metrics.membership_changes += 1;
-                                }
+                        self.broadcast(Message {
+                            from: 1,
+                            to: 0,
+                            round: 1,
+                            msg_type: MessageType::Prepare { ballot },
+                            payload: String::from("prepare"),
+                            value: VoteValue::Yes,
+                            delay_count: 0,
+                        });
+                    }
+                    _ => {}
+                }
+            }
+        } else if self.protocol_name == "paxos-crash-recovery" {
+            // Simulate proposer 1 crashed after v1 was accepted by some acceptors.
+            // New proposer 2 starts ballot 2 and must recover/adopt v1.
+            for node in &mut self.nodes {
+                if node.id == 2 || node.id == 3 {
+                    node.promised_ballot = 1;
+                    node.accepted_ballot = Some(1);
+                    node.accepted_value = Some("v1".to_string());
+                }
+            }
 
-                                MessageType::MembershipAck { .. } =>  {
-                                   self.metrics.membership_acks += 1;
-                                }
+            self.broadcast(Message {
+                from: 2,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 2 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+        } else if self.protocol_name == "paxos-race" {
+            // Two proposers race:
+            // proposer 1 starts ballot 1 with v1
+            // proposer 2 starts ballot 2 with v2
+            self.broadcast(Message {
+                from: 1,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 1 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
 
-                                _ => {}
+            self.broadcast(Message {
+                from: 2,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 2 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+        } else if self.protocol_name == "paxos-leader-handoff" {
+            // Old leader/proposer partially progressed with v1.
+            for node in &mut self.nodes {
+                if node.id == 2 {
+                    node.promised_ballot = 1;
+                    node.accepted_ballot = Some(1);
+                    node.accepted_value = Some("v1".to_string());
+                }
+            }
+
+            // New leader/proposer takes over with higher ballot.
+            self.broadcast(Message {
+                from: 2,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 2 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+        } else if self.protocol_name == "paxos-partition-heal-adopt" {
+            // During partition, v1 was accepted by a subset.
+            for node in &mut self.nodes {
+                if node.id == 2 || node.id == 3 {
+                    node.promised_ballot = 1;
+                    node.accepted_ballot = Some(1);
+                    node.accepted_value = Some("v1".to_string());
+                }
+            }
+
+            // Partition heals. New proposer/leader tries v2 at higher ballot,
+            // but must adopt v1 from acceptor promises.
+            self.broadcast(Message {
+                from: 2,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 2 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+        } else if self.protocol_name == "paxos-membership-change" {
+            self.broadcast(Message {
+                from: 1,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::MembershipChange { new_node_count: self.node_count + 2 },
+                payload: String::from("membership-change"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+        } else if self.protocol_name == "raft-election" {
+            self.broadcast(Message {
+                from: 1,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::RequestVote {
+                    term: 1,
+                    candidate_id: 1,
+                },
+                payload: String::from("request-vote"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+        }else {
+                    let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
+
+                    for &from_node in &node_ids {
+                        if !self
+                            .protocol
+                            .should_send_initial_proposal(from_node as usize)
+                        {
+                            continue;
+                        }
+
+                        self.broadcast(Message {
+                            from: from_node,
+                            to: 0,
+                            round: 0,
+                            msg_type: MessageType::Proposal,
+                            payload: String::from("proposal"),
+                            value: VoteValue::Yes,
+                            delay_count: 0,
+                        });
+                    }
+                }
+
+                self.deliver_all_messages();
+
+                self.metrics.decisions = self
+                    .nodes
+                    .iter()
+                    .filter(|node| node.decided.is_some())
+                    .count() as u64;
+
+                self.metrics.print();
+            }
+
+            fn deliver_all_messages(&mut self) {
+                loop {
+                    match self.network.deliver_next() {
+                        SchedulerOutcome::Deliver(msg) => {
+                            self.metrics.scheduler_steps += 1;
+                            self.metrics.messages_delivered += 1;
+
+                            if self.protocol.uses_timeout()
+                                && !self.timeout_injected
+                                && self.metrics.scheduler_steps >= self.timeout_threshold
+                            {
+                                self.inject_timeouts();
+                                self.timeout_injected = true;
                             }
-                            let actions = self.protocol.handle_message(node, &msg);
 
-                            for action in actions {
-                                match action {
+                            if msg.msg_type == MessageType::Timeout {
+                                self.metrics.timeouts_triggered += 1;
+                                self.metrics.view_changes += 1;
+                            }
 
+                            
 
-                                    NodeAction::BroadcastPrepare { ballot } => {
+                            trace(
+                                &self.config,
+                                TraceEvent::Deliver,
+                                &format!("{} -> {}", msg.from, msg.to),
+                            );
 
-                                        self.metrics.paxos_retries += 1;
-                                        self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+                            for node in &mut self.nodes {
+                                if node.id == msg.to {
+                                    match &msg.msg_type {
+                                        MessageType::Prepare { .. } => {
+                                            self.metrics.prepare_messages += 1;
+                                        }
+                                        MessageType::Promise { .. } => {
+                                            self.metrics.promise_messages += 1;
+                                        }
+                                        MessageType::AcceptRequest { .. } => {
+                                            self.metrics.accept_requests += 1;
+                                        }
+                                        MessageType::Accepted { .. } => {
+                                            self.metrics.accepted_messages += 1;
+                                        }
 
-                                        self.broadcast(Message {
-                                            from: msg.to,
-                                            to: 0,
-                                            round: msg.round + 1,
-                                            msg_type: MessageType::Prepare { ballot },
-                                            payload: String::from("prepare"),
-                                            value: VoteValue::Yes,
-                                            delay_count: msg.delay_count,
-                                        });
+                                        MessageType::Nack { promised_ballot, .. } => {
+                                            self.metrics.nack_messages += 1;
+                                            self.metrics.max_ballot_seen =
+                                                self.metrics.max_ballot_seen.max(*promised_ballot);
+                                        }
+
+                                        MessageType::MembershipChange { .. } => {
+                                            self.metrics.membership_changes += 1;
+                                        }
+
+                                        MessageType::MembershipAck { .. } =>  {
+                                        self.metrics.membership_acks += 1;
+                                        }
+
+                                        _ => {}
                                     }
+                                    match &msg.msg_type {
+                                        MessageType::RequestVote { .. } => {
+                                            self.metrics.request_vote_messages += 1;
+                                        }
 
-                                    NodeAction::BroadcastProposal => {
-                                            self.broadcast(Message {
-                                                from: msg.to,
-                                                to: 0,
-                                                round: msg.round + 1,
-                                                msg_type: MessageType::Proposal,
-                                                payload: String::from("proposal"),
-                                                value: VoteValue::Yes,
-                                                delay_count: msg.delay_count,
-                                            });
-                                        
+                                        MessageType::VoteResponse { vote_granted, .. } => {
+                                            self.metrics.vote_response_messages += 1;
+
+                                            if *vote_granted {
+                                                self.metrics.votes_granted += 1;
+                                            } else {
+                                                self.metrics.votes_rejected += 1;
+                                            }
+                                        }
+
+                                        _ => {}
                                     }
+                                    let actions = self.protocol.handle_message(node, &msg);
 
-                                    NodeAction::BroadcastVote(value) => {
-                                        self.broadcast(Message {
-                                            from: msg.to,
-                                            to: 0,
-                                            round: msg.round + 1,
-                                            msg_type: MessageType::Vote,
-                                            payload: String::from("vote"),
-                                            value,
-                                            delay_count: msg.delay_count,
-                                        });
-                                    }
+                                    for action in actions {
+                                        match action {
 
-                                    NodeAction::BroadcastCommit(value) => {
-                                        self.broadcast(Message {
-                                            from: msg.to,
-                                            to: 0,
-                                            round: msg.round + 1,
-                                            msg_type: MessageType::Commit,
-                                            payload: String::from("commit"),
-                                            value,
-                                            delay_count: msg.delay_count,
-                                        });
-                                    }
 
-                                    NodeAction::BroadcastTimeout => {
-                                        // TODO: create timeout messages
-                                    }
+                                            NodeAction::BroadcastPrepare { ballot } => {
 
-                                    NodeAction::StaleMessageIgnored => {
-                                        self.metrics.stale_messages_ignored += 1;
-                                    }
+                                                self.metrics.paxos_retries += 1;
+                                                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
 
-                                    NodeAction::SendPromise {
-                                        to,
-                                        ballot,
-                                        accepted_ballot,
-                                        accepted_value,
-                                    } => {
-                                        self.send_to(Message {
-                                            from: msg.to,
-                                            to,
-                                            round: msg.round + 1,
-                                            msg_type: MessageType::Promise {
+                                                self.broadcast(Message {
+                                                    from: msg.to,
+                                                    to: 0,
+                                                    round: msg.round + 1,
+                                                    msg_type: MessageType::Prepare { ballot },
+                                                    payload: String::from("prepare"),
+                                                    value: VoteValue::Yes,
+                                                    delay_count: msg.delay_count,
+                                                });
+                                            }
+
+                                            NodeAction::BroadcastProposal => {
+                                                    self.broadcast(Message {
+                                                        from: msg.to,
+                                                        to: 0,
+                                                        round: msg.round + 1,
+                                                        msg_type: MessageType::Proposal,
+                                                        payload: String::from("proposal"),
+                                                        value: VoteValue::Yes,
+                                                        delay_count: msg.delay_count,
+                                                    });
+                                                
+                                            }
+
+                                            NodeAction::BroadcastVote(value) => {
+                                                self.broadcast(Message {
+                                                    from: msg.to,
+                                                    to: 0,
+                                                    round: msg.round + 1,
+                                                    msg_type: MessageType::Vote,
+                                                    payload: String::from("vote"),
+                                                    value,
+                                                    delay_count: msg.delay_count,
+                                                });
+                                            }
+
+                                            NodeAction::BroadcastCommit(value) => {
+                                                self.broadcast(Message {
+                                                    from: msg.to,
+                                                    to: 0,
+                                                    round: msg.round + 1,
+                                                    msg_type: MessageType::Commit,
+                                                    payload: String::from("commit"),
+                                                    value,
+                                                    delay_count: msg.delay_count,
+                                                });
+                                            }
+
+                                            NodeAction::BroadcastTimeout => {
+                                                // TODO: create timeout messages
+                                            }
+
+                                            NodeAction::StaleMessageIgnored => {
+                                                self.metrics.stale_messages_ignored += 1;
+                                            }
+
+                                            NodeAction::SendPromise {
+                                                to,
                                                 ballot,
                                                 accepted_ballot,
                                                 accepted_value,
-                                            },
-                                            payload: String::from("promise"),
-                                            value: msg.value.clone(),
-                                            delay_count: msg.delay_count,
-                                        });
-                                    }
+                                            } => {
+                                                self.send_to(Message {
+                                                    from: msg.to,
+                                                    to,
+                                                    round: msg.round + 1,
+                                                    msg_type: MessageType::Promise {
+                                                        ballot,
+                                                        accepted_ballot,
+                                                        accepted_value,
+                                                    },
+                                                    payload: String::from("promise"),
+                                                    value: msg.value.clone(),
+                                                    delay_count: msg.delay_count,
+                                                });
+                                            }
 
-                                    NodeAction::SendNack {
-                                        to,
-                                        ballot,
-                                        promised_ballot,
-                                    } => {
-                                        self.send_to(Message {
-                                            from: msg.to,
-                                            to,
-                                            round: msg.round + 1,
-                                            msg_type: MessageType::Nack {
+                                            NodeAction::SendNack {
+                                                to,
                                                 ballot,
                                                 promised_ballot,
-                                            },
-                                            payload: String::from("nack"),
-                                            value: msg.value.clone(),
-                                            delay_count: msg.delay_count,
-                                        });
-                                    }
+                                            } => {
+                                                self.send_to(Message {
+                                                    from: msg.to,
+                                                    to,
+                                                    round: msg.round + 1,
+                                                    msg_type: MessageType::Nack {
+                                                        ballot,
+                                                        promised_ballot,
+                                                    },
+                                                    payload: String::from("nack"),
+                                                    value: msg.value.clone(),
+                                                    delay_count: msg.delay_count,
+                                                });
+                                            }
 
-                                    NodeAction::BroadcastAcceptRequest { ballot, value } => {
-                                        self.broadcast(Message {
-                                            from: msg.to,
-                                            to: 0,
-                                            round: msg.round + 1,
-                                            msg_type: MessageType::AcceptRequest {
-                                                ballot,
-                                                value: value.clone(),
-                                            },
-                                            payload: String::from("accept_request"),
-                                            value: msg.value.clone(),
-                                            delay_count: msg.delay_count,
-                                        });
-                                    }
+                                            NodeAction::BroadcastAcceptRequest { ballot, value } => {
+                                                self.broadcast(Message {
+                                                    from: msg.to,
+                                                    to: 0,
+                                                    round: msg.round + 1,
+                                                    msg_type: MessageType::AcceptRequest {
+                                                        ballot,
+                                                        value: value.clone(),
+                                                    },
+                                                    payload: String::from("accept_request"),
+                                                    value: msg.value.clone(),
+                                                    delay_count: msg.delay_count,
+                                                });
+                                            }
 
-                                    NodeAction::SendAccepted { to, ballot, value } => {
-                                        self.send_to(Message {
-                                            from: msg.to,
-                                            to,
-                                            round: msg.round + 1,
-                                            msg_type: MessageType::Accepted {
-                                                ballot,
-                                                value: value.clone(),
-                                            },
-                                            payload: String::from("accepted"),
-                                            value: msg.value.clone(),
-                                            delay_count: msg.delay_count,
-                                        });
-                                    }
+                                            NodeAction::SendAccepted { to, ballot, value } => {
+                                                self.send_to(Message {
+                                                    from: msg.to,
+                                                    to,
+                                                    round: msg.round + 1,
+                                                    msg_type: MessageType::Accepted {
+                                                        ballot,
+                                                        value: value.clone(),
+                                                    },
+                                                    payload: String::from("accepted"),
+                                                    value: msg.value.clone(),
+                                                    delay_count: msg.delay_count,
+                                                });
+                                            }
 
-                                    NodeAction::RecordChosen { value } => {
-                                        self.metrics.chosen_values.insert(value);
-                                    
-                                        if self.metrics.chosen_values.len() > 1 {
-                                            self.metrics.safety_violation = true;
+                                            NodeAction::RecordChosen { value } => {
+                                                self.metrics.chosen_values.insert(value);
+                                            
+                                                if self.metrics.chosen_values.len() > 1 {
+                                                    self.metrics.safety_violation = true;
+                                                }
+                                            }
+
+                                            NodeAction::SendMembershipAck { to, new_node_count } => {
+                                                self.metrics.messages_sent += 1;
+                                                self.network.send(Message {
+                                                    from: msg.to,
+                                                    to,
+                                                    round: msg.round + 1,
+                                                    msg_type: MessageType::MembershipAck { new_node_count },
+                                                    payload: String::from("membership-ack"),
+                                                    value: VoteValue::Yes,
+                                                    delay_count: msg.delay_count,
+                                                    });
                                         }
+
+                                            NodeAction::BroadcastMembershipChange { new_node_count } => {
+                                                self.broadcast(Message {
+                                                    from: msg.to,
+                                                    to: 0,
+                                                    round: msg.round + 1,
+                                                    msg_type: MessageType::MembershipChange { new_node_count },
+                                                    payload: String::from("membership-change"),
+                                                    value: VoteValue::Yes,
+                                                    delay_count: msg.delay_count,
+                                                    });
+                                            }
+
+                                            NodeAction::BroadcastRequestVote { term, candidate_id } => {
+                                            self.broadcast(Message {
+                                                from: candidate_id,
+                                                to: 0,
+                                                round: 0,
+                                                msg_type: MessageType::RequestVote {
+                                                    term,
+                                                    candidate_id,
+                                                },
+                                                payload: String::from("request-vote"),
+                                                value: VoteValue::Yes,
+                                                delay_count: 0,
+                                            });
+                                        }
+
+                                        NodeAction::SendVoteResponse {
+                                            to,
+                                            term,
+                                            vote_granted,
+                                        } => {
+                                            self.metrics.messages_sent += 1;
+                                            self.network.send(Message {
+                                                from: msg.to,
+                                                to,
+                                                round: msg.round + 1,
+                                                msg_type: MessageType::VoteResponse {
+                                                    term,
+                                                    vote_granted,
+                                                },
+                                                payload: String::from("vote-response"),
+                                                value: VoteValue::Yes,
+                                                delay_count: msg.delay_count,
+                                            });
+                                        }
+                                        }
+
+                                        
                                     }
 
-                                    NodeAction::SendMembershipAck { to, new_node_count } => {
-                                        self.metrics.messages_sent += 1;
-                                        self.network.send(Message {
-                                              from: msg.to,
-                                              to,
-                                              round: msg.round + 1,
-                                              msg_type: MessageType::MembershipAck { new_node_count },
-                                              payload: String::from("membership-ack"),
-                                              value: VoteValue::Yes,
-                                              delay_count: msg.delay_count,
-                                            });
-                                   }
-
-                                     NodeAction::BroadcastMembershipChange { new_node_count } => {
-                                        self.broadcast(Message {
-                                              from: msg.to,
-                                              to: 0,
-                                              round: msg.round + 1,
-                                              msg_type: MessageType::MembershipChange { new_node_count },
-                                              payload: String::from("membership-change"),
-                                              value: VoteValue::Yes,
-                                              delay_count: msg.delay_count,
-                                            });
-                                    }
+                                    break;
                                 }
                             }
 
+                            if self.nodes.iter().all(|node| node.decided.is_some()) {
+                                self.metrics.messages_delivered_until_decision =
+                                    self.metrics.messages_delivered;
+                                self.metrics.messages_sent_until_decision = self.metrics.messages_sent;
+                                break;
+                            }
+                        }
+
+                        SchedulerOutcome::Delay => {
+                            self.metrics.scheduler_steps += 1;
+
+                            if self.protocol.uses_timeout()
+                                && !self.timeout_injected
+                                && self.metrics.scheduler_steps >= self.timeout_threshold
+                            {
+                                self.inject_timeouts();
+                                self.timeout_injected = true;
+                            }
+                        }
+
+                        SchedulerOutcome::Empty => {
                             break;
                         }
                     }
-
-                    if self.nodes.iter().all(|node| node.decided.is_some()) {
-                        self.metrics.messages_delivered_until_decision =
-                            self.metrics.messages_delivered;
-                        self.metrics.messages_sent_until_decision = self.metrics.messages_sent;
-                        break;
-                    }
-                }
-
-                SchedulerOutcome::Delay => {
-                    self.metrics.scheduler_steps += 1;
-
-                    if self.protocol.uses_timeout()
-                        && !self.timeout_injected
-                        && self.metrics.scheduler_steps >= self.timeout_threshold
-                    {
-                        self.inject_timeouts();
-                        self.timeout_injected = true;
-                    }
-                }
-
-                SchedulerOutcome::Empty => {
-                    break;
                 }
             }
-        }
-    }
 
-    fn broadcast(&mut self, template: Message) {
-        for node in &self.nodes {
-            let mut msg = template.clone();
-            msg.to = node.id;
-            self.metrics.messages_sent += 1;
-            self.network.send(msg);
-        }
-    }
+            fn broadcast(&mut self, template: Message) {
+                for node in &self.nodes {
+                    let mut msg = template.clone();
+                    msg.to = node.id;
+                    self.metrics.messages_sent += 1;
+                    self.network.send(msg);
+                }
+            }
 
-    fn send_to(&mut self, msg: Message) {
-        self.metrics.messages_sent += 1;
-        self.network.send(msg);
-    }
+            fn send_to(&mut self, msg: Message) {
+                self.metrics.messages_sent += 1;
+                self.network.send(msg);
+            }
 
-    fn inject_timeouts(&mut self) {
-        let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
+            fn inject_timeouts(&mut self) {
+                let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
-        for node_id in node_ids {
-            let timeout = Message {
-                from: 0,
-                to: node_id,
-                round: 0,
-                msg_type: MessageType::Timeout,
-                payload: String::from("timeout"),
-                value: VoteValue::Yes,
-                delay_count: 0,
-            };
+                for node_id in node_ids {
+                    let timeout = Message {
+                        from: 0,
+                        to: node_id,
+                        round: 0,
+                        msg_type: MessageType::Timeout,
+                        payload: String::from("timeout"),
+                        value: VoteValue::Yes,
+                        delay_count: 0,
+                    };
 
-            self.metrics.messages_sent += 1;
-            self.network.send(timeout);
-        }
-    }
+                    self.metrics.messages_sent += 1;
+                    self.network.send(timeout);
+                }
+            }
 }

@@ -72,6 +72,17 @@ pub enum NodeAction {
        to: u64,
        new_node_count: usize,
     },
+
+    BroadcastRequestVote {
+    term: u64,
+    candidate_id: u64,
+    },
+
+    SendVoteResponse {
+        to: u64,
+        term: u64,
+        vote_granted: bool,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

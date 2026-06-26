@@ -28,6 +28,12 @@ pub struct Metrics {
 
     pub membership_changes: u64,
     pub membership_acks: u64,
+
+    pub request_vote_messages: u64,
+    pub vote_response_messages: u64,
+    pub votes_granted: u64,
+    pub votes_rejected: u64,
+
 }
 
 impl Metrics {
@@ -58,6 +64,12 @@ impl Metrics {
 
             membership_changes: 0,
             membership_acks:0,
+
+            request_vote_messages: 0,
+            vote_response_messages: 0,
+            votes_granted: 0,
+            votes_rejected: 0,
+
         }
     }
 }
