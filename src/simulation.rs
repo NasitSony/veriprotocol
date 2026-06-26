@@ -126,6 +126,8 @@ impl Simulation {
 
             "raft-partition-heal" => Box::new(RaftProtocol::new(quorum_size)),
 
+            "raft-membership-change" => Box::new(RaftProtocol::new(quorum_size)),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
 
@@ -598,6 +600,20 @@ impl Simulation {
                     value: VoteValue::Yes,
                     delay_count: 0,
                 });
+            } else if self.protocol_name == "raft-membership-change" {
+                self.broadcast(Message {
+                    from: 1,
+                    to: 0,
+                    round: 0,
+                    msg_type: MessageType::RaftConfigChange {
+                        term: 1,
+                        leader_id: 1,
+                        new_node_count: self.node_count + 2,
+                    },
+                    payload: String::from("raft-config-change"),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
             }else {
                     let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
@@ -1005,6 +1021,33 @@ impl Simulation {
                             delay_count: msg.delay_count,
                         });
                     }
+
+                    NodeAction::SendRaftConfigAck {
+                            to,
+                            term,
+                            success,
+                            new_node_count,
+                        } => {
+                            self.metrics.messages_sent += 1;
+
+                            self.network.send(Message {
+                                from: msg.to,
+                                to,
+                                round: msg.round + 1,
+                                msg_type: MessageType::RaftConfigAck {
+                                    term,
+                                    success,
+                                    new_node_count,
+                                },
+                                payload: String::from("raft-config-ack"),
+                                value: VoteValue::Yes,
+                                delay_count: msg.delay_count,
+                            });
+                        }
+
+                    NodeAction::ActivateRaftConfig { new_node_count: _ } => {
+                        self.metrics.raft_config_activated = true;
+                    }    
                }
         
             }
@@ -1069,6 +1112,14 @@ impl Simulation {
                         } else {
                             self.metrics.heartbeat_rejections += 1;
                         }
+                    }
+
+                    MessageType::RaftConfigChange { .. } => {
+                        self.metrics.raft_config_changes += 1;
+                    }
+
+                    MessageType::RaftConfigAck { .. } => {
+                        self.metrics.raft_config_acks += 1;
                     }
 
                     _ => {}

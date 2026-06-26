@@ -43,6 +43,10 @@ pub struct Metrics {
     pub heartbeat_successes: u64,
     pub heartbeat_rejections: u64,
 
+    pub raft_config_changes: u64,
+    pub raft_config_acks: u64,
+    pub raft_config_activated: bool,
+
 }
 
 impl Metrics {
@@ -88,6 +92,9 @@ impl Metrics {
             heartbeat_successes: 0,
             heartbeat_rejections: 0,
 
+            raft_config_changes: 0,
+            raft_config_acks: 0,
+            raft_config_activated: false,
 
         }
     }
@@ -126,6 +133,10 @@ impl Metrics {
         println!("AppendResponse Messages: {}", self.append_response_messages);
         println!("Heartbeat Successes: {}", self.heartbeat_successes);
         println!("Heartbeat Rejections: {}", self.heartbeat_rejections);
+
+        println!("Raft Config Changes: {}", self.raft_config_changes);
+        println!("Raft Config Acks: {}", self.raft_config_acks);
+        println!("Raft Config Activated: {}", self.raft_config_activated);
 
         println!("Nack Messages: {}", self.nack_messages);
         println!("Paxos Retries: {}", self.paxos_retries);

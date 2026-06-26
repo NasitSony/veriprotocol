@@ -55,6 +55,18 @@ pub enum MessageType {
         term: u64,
         success: bool,
     },
+
+    RaftConfigChange {
+        term: u64,
+        leader_id: u64,
+        new_node_count: usize,
+    },
+
+    RaftConfigAck {
+        term: u64,
+        success: bool,
+        new_node_count: usize,
+    },
     
 }
 

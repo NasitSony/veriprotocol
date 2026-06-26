@@ -99,6 +99,23 @@ pub enum NodeAction {
         term: u64,
         success: bool,
     },
+
+    /*BroadcastRaftConfigChange {
+        term: u64,
+        leader_id: u64,
+        new_node_count: usize,
+    },*/
+
+    SendRaftConfigAck {
+        to: u64,
+        term: u64,
+        success: bool,
+        new_node_count: usize,
+    },
+
+    ActivateRaftConfig {
+        new_node_count: usize,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

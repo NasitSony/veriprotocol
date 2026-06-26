@@ -2,7 +2,7 @@ use crate::message::{Message, MessageType};
 use crate::node::{Node, NodeAction, RaftRole};
 use crate::protocol::Protocol;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub struct RaftProtocol {
     pub leader_id: Option<u64>,
@@ -10,6 +10,7 @@ pub struct RaftProtocol {
     pub quorum_size: usize,
     pub votes_by_term: std::collections::HashMap<u64, HashSet<u64>>,
     pub leader_term: u64,
+    pub config_acks_by_term: HashMap<u64, HashSet<u64>>,
 }
 
 impl RaftProtocol {
@@ -20,6 +21,7 @@ impl RaftProtocol {
             quorum_size,
             votes_by_term: std::collections::HashMap::new(),
             leader_term: 0,
+            config_acks_by_term: HashMap::new(),
         }
     }
 }
@@ -133,6 +135,57 @@ impl Protocol for RaftProtocol {
                     success: false,
                 }]
             }
+
+            MessageType::RaftConfigChange {
+                    term,
+                    leader_id,
+                    new_node_count,
+                } => {
+                    if *term >= node.raft_current_term {
+                        node.raft_current_term = *term;
+                        node.raft_role = RaftRole::Follower;
+                        self.leader_id = Some(*leader_id);
+
+                        return vec![NodeAction::SendRaftConfigAck {
+                            to: *leader_id,
+                            term: *term,
+                            success: true,
+                            new_node_count: *new_node_count,
+                        }];
+                    }
+
+                    vec![NodeAction::SendRaftConfigAck {
+                        to: *leader_id,
+                        term: node.raft_current_term,
+                        success: false,
+                        new_node_count: *new_node_count,
+                    }]
+                }
+
+             MessageType::RaftConfigAck {
+                    term,
+                    success,
+                    new_node_count,
+                } => {
+                    if !*success {
+                        return vec![];
+                    }
+
+                    let acks = self
+                        .config_acks_by_term
+                        .entry(*term)
+                        .or_insert_with(HashSet::new);
+
+                    acks.insert(msg.from);
+
+                    if acks.len() >= self.quorum_size {
+                        return vec![NodeAction::ActivateRaftConfig {
+                            new_node_count: *new_node_count,
+                        }];
+                    }
+
+                    vec![]
+                }   
 
             _ => vec![],
         }
