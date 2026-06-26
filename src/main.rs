@@ -8,6 +8,8 @@ mod scheduler;
 mod simulation;
 mod state;
 mod trace;
+mod raft;
+
 
 use simulation::Simulation;
 //use std::env;

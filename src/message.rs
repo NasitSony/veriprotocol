@@ -35,6 +35,27 @@ pub enum MessageType {
     MembershipAck {
        new_node_count: usize,
     },
+
+    RequestVote {
+    term: u64,
+    candidate_id: u64,
+    },
+
+    VoteResponse {
+        term: u64,
+        vote_granted: bool,
+    },
+
+    AppendEntries {
+        term: u64,
+        leader_id: u64,
+    },
+
+    AppendResponse {
+        term: u64,
+        success: bool,
+    },
+    
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

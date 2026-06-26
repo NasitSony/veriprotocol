@@ -6,6 +6,7 @@ use crate::node::{Node, NodeAction};
 use crate::protocol::{Protocol, SimpleConsensusProtocol, TimeoutProtocol, TwoPhaseProtocol};
 use crate::scheduler::SchedulerOutcome;
 use crate::trace::{Config, TraceEvent, trace};
+use crate::raft::RaftProtocol;
 
 pub struct Simulation {
     pub network: Network,
@@ -120,6 +121,8 @@ impl Simulation {
 
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
+
+            "raft" => Box::new(RaftProtocol::new(quorum_size)),
         };
 
         Self {

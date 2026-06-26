@@ -19,6 +19,10 @@ pub struct Node {
     pub(crate) promised_ballot: u64,
     pub(crate) accepted_ballot: Option<u64>,
     pub(crate) accepted_value: Option<String>,
+
+    pub raft_role: RaftRole,
+    pub raft_current_term: u64,
+    pub raft_voted_for: Option<u64>,
 }
 
 #[derive(Debug)]
@@ -70,6 +74,13 @@ pub enum NodeAction {
     },
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RaftRole {
+    Follower,
+    Candidate,
+    Leader,
+}
+
 impl Node {
     pub fn new(id: u64) -> Self {
         Self {
@@ -84,6 +95,9 @@ impl Node {
             promised_ballot: 0,
             accepted_ballot: None,
             accepted_value: None,
+            raft_role: RaftRole::Follower,
+            raft_current_term: 0,
+            raft_voted_for: None,
         }
     }
 }
