@@ -9,6 +9,7 @@ pub struct RaftProtocol {
     pub election_count: u64,
     pub quorum_size: usize,
     pub votes_by_term: std::collections::HashMap<u64, HashSet<u64>>,
+    pub leader_term: u64,
 }
 
 impl RaftProtocol {
@@ -18,6 +19,7 @@ impl RaftProtocol {
             election_count: 0,
             quorum_size,
             votes_by_term: std::collections::HashMap::new(),
+            leader_term: 0,
         }
     }
 }
@@ -60,8 +62,9 @@ impl Protocol for RaftProtocol {
 
                 votes.insert(msg.from);
 
-                if votes.len() >= self.quorum_size && self.leader_id.is_none() {
+                if votes.len() >= self.quorum_size && *term > self.leader_term {
                     self.leader_id = Some(msg.to);
+                    self.leader_term = *term;
                     self.election_count += 1;
 
                     return vec![NodeAction::BecomeRaftLeader {

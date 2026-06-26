@@ -122,6 +122,8 @@ impl Simulation {
 
             "raft-election" => Box::new(RaftProtocol::new(quorum_size)),
 
+            "raft-leader-crash" => Box::new(RaftProtocol::new(quorum_size)),
+
             "timeout" => Box::new(TimeoutProtocol::new(4)),
             _ => Box::new(SimpleConsensusProtocol::new()),
 
@@ -517,7 +519,36 @@ impl Simulation {
                 value: VoteValue::Yes,
                 delay_count: 0,
             });
-        }else {
+        } else if self.protocol_name == "raft-leader-crash" {
+                // First election: node 1 becomes leader in term 1.
+                self.broadcast(Message {
+                    from: 1,
+                    to: 0,
+                    round: 0,
+                    msg_type: MessageType::RequestVote {
+                        term: 1,
+                        candidate_id: 1,
+                    },
+                    payload: String::from("request-vote"),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+
+                // Simulate crash/re-election trigger:
+                // node 2 starts a new election in term 2.
+                self.broadcast(Message {
+                    from: 2,
+                    to: 0,
+                    round: 10,
+                    msg_type: MessageType::RequestVote {
+                        term: 2,
+                        candidate_id: 2,
+                    },
+                    payload: String::from("request-vote"),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }else {
                     let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
                     for &from_node in &node_ids {
