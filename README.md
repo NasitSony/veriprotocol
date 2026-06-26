@@ -23,6 +23,15 @@ VeriProtocol is a scheduler-aware consensus simulation framework for studying ho
 - ProbabilisticDelay
 - QuorumBlocking
 
+## Supported Protocols
+
+- Simple Consensus
+- Two-Phase Consensus
+- Timeout Consensus
+- Basic Paxos
+- Raft (scheduler-oriented)
+  
+
 ## Example
 
 ```bash
