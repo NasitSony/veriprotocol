@@ -15,6 +15,7 @@ pub struct BasicPaxosProtocol {
     pub max_retries: u64,
     pub proposed_values_by_ballot: HashMap<u64, String>,
     pub quorum_size: usize,
+    pub highest_nack_seen: u64,
 }
 
 impl BasicPaxosProtocol {
@@ -38,6 +39,7 @@ impl BasicPaxosProtocol {
 
             proposed_values_by_ballot,
             quorum_size: 3,
+            highest_nack_seen: 0,
         }
     }
 
@@ -68,6 +70,7 @@ impl BasicPaxosProtocol {
 
             proposed_values_by_ballot,
             quorum_size: 3,
+            highest_nack_seen: 0,
         }
     }
 }
@@ -174,6 +177,10 @@ impl Protocol for BasicPaxosProtocol {
             } => {
                 //let proposer_id = 1; //*ballot;
                
+                if *ballot != self.current_ballot {
+                    return vec![];
+                }
+
                 let proposer_id = self.proposer_id;
             
                 if node.id != proposer_id {
@@ -221,6 +228,10 @@ impl Protocol for BasicPaxosProtocol {
             MessageType::Accepted { ballot, value } => {
                 //let proposer_id = 1;//*ballot;
 
+                if *ballot != self.current_ballot {
+                    return vec![];
+                }
+
                 let proposer_id = self.proposer_id;
             
                 if node.id != proposer_id {
@@ -253,16 +264,26 @@ impl Protocol for BasicPaxosProtocol {
                 promised_ballot,
             } => {
 
-               
+               println!(
+                    "NACK: promised={}, current={}",
+                    promised_ballot,
+                    self.current_ballot
+                );
 
                 if node.id != self.proposer_id {
                     return vec![];
                 }
             
-                if *promised_ballot >= self.current_ballot {
+                if *promised_ballot > self.highest_nack_seen && *promised_ballot >= self.current_ballot {
+                    self.highest_nack_seen = *promised_ballot;
                     self.current_ballot = promised_ballot + 1;
-            
-                    return vec![NodeAction::BroadcastPrepare {
+
+                    println!(
+                                "Retrying with ballot {}",
+                                self.current_ballot + 1
+                            );
+
+                    return vec![NodeAction::BroadcastPrepare { 
                         ballot: self.current_ballot,
                     }];
                 }
