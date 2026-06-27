@@ -64,6 +64,7 @@ pub struct CriticalMessageDelayScheduler {
     pub max_delay: usize,
     pub delayed: Vec<Message>,
     pub delays_used: usize,
+
 }
 
 impl CommitDelayScheduler {
@@ -409,7 +410,9 @@ impl Scheduler for BoundedDelayLeaderScheduler {
 impl Scheduler for CriticalMessageDelayScheduler {
     fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
-            if let Some(msg) = self.delayed.pop() {
+            if !self.delayed.is_empty() {
+                let msg = self.delayed.remove(0);
+                println!("Releasing delayed message: {:?}", msg.msg_type);
                 return SchedulerOutcome::Deliver(msg);
             }
             return SchedulerOutcome::Empty;
@@ -418,6 +421,7 @@ impl Scheduler for CriticalMessageDelayScheduler {
         if self.delays_used < self.max_delay {
             if let Some(pos) = queue.iter().position(is_critical_message) {
                 let msg = queue.remove(pos);
+                println!("Delaying critical message: {:?}", msg.msg_type);
                 self.delayed.push(msg);
                 self.delays_used += 1;
 
@@ -431,7 +435,9 @@ impl Scheduler for CriticalMessageDelayScheduler {
             return SchedulerOutcome::Deliver(queue.remove(0));
         }
 
-        if let Some(msg) = self.delayed.pop() {
+        if !self.delayed.is_empty() {
+            let msg = self.delayed.remove(0);
+            println!("Releasing delayed message: {:?}", msg.msg_type);
             return SchedulerOutcome::Deliver(msg);
         }
 

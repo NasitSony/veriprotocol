@@ -47,6 +47,9 @@ pub struct Metrics {
     pub raft_config_acks: u64,
     pub raft_config_activated: bool,
 
+    pub critical_messages_delayed: u64,
+    pub delayed_messages_released: u64,
+
 }
 
 impl Metrics {
@@ -95,7 +98,9 @@ impl Metrics {
             raft_config_changes: 0,
             raft_config_acks: 0,
             raft_config_activated: false,
-
+     
+            critical_messages_delayed: 0,
+            delayed_messages_released: 0,
         }
     }
 }
@@ -138,6 +143,8 @@ impl Metrics {
         println!("Raft Config Acks: {}", self.raft_config_acks);
         println!("Raft Config Activated: {}", self.raft_config_activated);
 
+
+
         println!("Nack Messages: {}", self.nack_messages);
         println!("Paxos Retries: {}", self.paxos_retries);
         println!("Max Ballot Seen: {}", self.max_ballot_seen);
@@ -149,6 +156,9 @@ impl Metrics {
         println!("Safety Violation: {}", self.safety_violation);
 
         println!("Paxos Retry Exhausted: {}", self.paxos_retry_exhausted);
+
+        println!("Critical Messages Delayed: {}", self.critical_messages_delayed);
+        println!("Delayed Messages Released: {}", self.delayed_messages_released);
 
 
     }

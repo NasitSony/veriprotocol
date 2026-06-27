@@ -78,38 +78,7 @@ impl Protocol for RaftProtocol {
                 vec![]
             }
 
-            MessageType::VoteResponse { term, vote_granted } => {
-                if !*vote_granted {
-                    return vec![];
-                }
-
-                self.votes_by_term
-                    .entry(*term)
-                    .or_insert_with(HashSet::new)
-                    .insert(msg.from);
-
-                vec![]
-            }
-
-            MessageType::AppendEntries { term, leader_id } => {
-                if *term >= node.raft_current_term {
-                    node.raft_current_term = *term;
-                    node.raft_role = RaftRole::Follower;
-                    self.leader_id = Some(*leader_id);
-
-                    return vec![NodeAction::SendAppendResponse {
-                        to: *leader_id,
-                        term: *term,
-                        success: true,
-                    }];
-                }
-
-                vec![NodeAction::SendAppendResponse {
-                    to: *leader_id,
-                    term: node.raft_current_term,
-                    success: false,
-                }]
-            }
+        
 
             MessageType::AppendResponse { term: _, success: _ } => {
                 vec![]
