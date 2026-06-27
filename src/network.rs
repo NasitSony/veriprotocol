@@ -3,7 +3,7 @@ use crate::scheduler::{
     BoundedDelayLeaderScheduler, BoundedDelayScheduler, CommitDelayScheduler, DelayLeaderScheduler,
     DelayScheduler, FifoScheduler, ProbabilisticDelayScheduler, ProposalDelayScheduler,
     QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome, TimeoutFirstScheduler,
-    VoteDelayScheduler,
+    VoteDelayScheduler,CriticalMessageDelayScheduler,
 };
 
 //pub scheduler: FifoScheduler,
@@ -28,6 +28,11 @@ impl Network {
             "timeout-first" => Box::new(TimeoutFirstScheduler),
             "delay-leader" => Box::new(DelayLeaderScheduler::new()),
             "bounded-delay-leader" => Box::new(BoundedDelayLeaderScheduler::new(max_delay)),
+            "critical-delay" => Box::new(CriticalMessageDelayScheduler {
+                max_delay: max_delay as usize,
+                delayed: Vec::new(),
+                delays_used: 0,
+            }),
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);
                 Box::new(FifoScheduler::new())

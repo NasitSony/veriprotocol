@@ -14,6 +14,18 @@ pub trait Scheduler {
     fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome;
 }
 
+fn is_critical_message(msg: &Message) -> bool {
+    matches!(
+        msg.msg_type,
+        MessageType::Promise { .. }
+            | MessageType::Accepted { .. }
+            | MessageType::MembershipAck { .. }
+            | MessageType::VoteResponse { .. }
+            | MessageType::AppendResponse { .. }
+            | MessageType::RaftConfigAck { .. }
+    )
+}
+
 pub struct FifoScheduler;
 
 pub struct TimeoutFirstScheduler;
@@ -46,6 +58,12 @@ pub struct ProbabilisticDelayScheduler {
 
 pub struct QuorumBlockingScheduler {
     delivered_counts: HashMap<(u64, MessageType, VoteValue), usize>,
+}
+
+pub struct CriticalMessageDelayScheduler {
+    pub max_delay: usize,
+    pub delayed: Vec<Message>,
+    pub delays_used: usize,
 }
 
 impl CommitDelayScheduler {
@@ -387,3 +405,38 @@ impl Scheduler for BoundedDelayLeaderScheduler {
         SchedulerOutcome::Deliver(queue.remove(i))
     }
 }
+
+impl Scheduler for CriticalMessageDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            if let Some(msg) = self.delayed.pop() {
+                return SchedulerOutcome::Deliver(msg);
+            }
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.delays_used < self.max_delay {
+            if let Some(pos) = queue.iter().position(is_critical_message) {
+                let msg = queue.remove(pos);
+                self.delayed.push(msg);
+                self.delays_used += 1;
+
+                if !queue.is_empty() {
+                    return SchedulerOutcome::Deliver(queue.remove(0));
+                }
+            }
+        }
+
+        if !queue.is_empty() {
+            return SchedulerOutcome::Deliver(queue.remove(0));
+        }
+
+        if let Some(msg) = self.delayed.pop() {
+            return SchedulerOutcome::Deliver(msg);
+        }
+
+        SchedulerOutcome::Empty
+    }
+}
+
+
