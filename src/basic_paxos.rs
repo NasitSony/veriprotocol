@@ -280,7 +280,7 @@ impl Protocol for BasicPaxosProtocol {
 
                     println!(
                                 "Retrying with ballot {}",
-                                self.current_ballot + 1
+                                self.current_ballot
                             );
 
                     return vec![NodeAction::BroadcastPrepare { 
