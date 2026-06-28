@@ -649,7 +649,11 @@ impl Simulation {
             }
 
             fn deliver_all_messages(&mut self) {
-                loop {
+
+                let max_steps: u64 = 1000;
+                self.metrics.max_steps = max_steps;
+                
+                while self.metrics.scheduler_steps < max_steps {
                     match self.network.deliver_next() {
                         SchedulerOutcome::Deliver(msg) => {
 
@@ -661,7 +665,7 @@ impl Simulation {
                                 msg.msg_type,
                                 self.network.queue.len()
                             );
-                            
+
                             self.metrics.scheduler_steps += 1;
                             self.metrics.messages_delivered += 1;
 
@@ -729,6 +733,15 @@ impl Simulation {
                         SchedulerOutcome::Empty => {
                             break;
                         }
+                    }
+
+                    if self.metrics.scheduler_steps >= max_steps {
+                        self.metrics.reached_step_cap = true;
+
+                        println!(
+                            "[SIM] Reached step cap: {}. Treating as non-terminating within measurement bound.",
+                            max_steps
+                        );
                     }
                 }
             }
@@ -853,11 +866,19 @@ impl Simulation {
                         });
                     }
 
-                    NodeAction::SendNack {
+                   NodeAction::SendNack {
                         to,
                         ballot,
                         promised_ballot,
                     } => {
+                        println!(
+                            "[NACK-SEND] from={} to={} ballot={} promised_ballot={}",
+                            msg.to,
+                            to,
+                            ballot,
+                            promised_ballot
+                        );
+
                         self.send_to(Message {
                             from: msg.to,
                             to,

@@ -36,18 +36,29 @@ fn highest_ballot(queue: &[Message]) -> Option<u64> {
     queue.iter().filter_map(paxos_ballot).max()
 }
 
-fn deliver(
-    queue: &mut Vec<Message>,
-    index: usize,
-) -> SchedulerOutcome {
+fn distinct_ballots(queue: &[Message]) -> Vec<u64> {
+    let mut ballots = queue
+        .iter()
+        .filter_map(paxos_ballot)
+        .collect::<Vec<u64>>();
+
+    ballots.sort();
+    ballots.dedup();
+    ballots
+}
+
+fn deliver(queue: &mut Vec<Message>, index: usize) -> SchedulerOutcome {
     let msg = queue.remove(index);
+    let ballots = distinct_ballots(queue);
 
     println!(
-        "[SCHED] Deliver {:?} ballot={:?} highest={:?} queue={}",
+        "[SCHED] Deliver {:?} ballot={:?} highest={:?} queue={} distinct_ballots={:?} count={}",
         msg.msg_type,
         paxos_ballot(&msg),
         highest_ballot(queue),
         queue.len(),
+        ballots,
+        ballots.len(),
     );
 
     SchedulerOutcome::Deliver(msg)
@@ -207,8 +218,21 @@ impl Scheduler for RandomScheduler {
         }
 
         let index = self.rng.random_range(0..queue.len());
+        let msg = queue.remove(index);
 
-        SchedulerOutcome::Deliver(queue.remove(index))
+        let ballots = distinct_ballots(queue);
+
+        println!(
+            "[RANDOM-SCHED] Deliver {:?} ballot={:?} highest={:?} queue={} distinct_ballots={:?} count={}",
+            msg.msg_type,
+            paxos_ballot(&msg),
+            highest_ballot(queue),
+            queue.len(),
+            ballots,
+            ballots.len(),
+        );
+
+        SchedulerOutcome::Deliver(msg)
     }
 }
 
@@ -1030,3 +1054,322 @@ impl Scheduler for PaxosBallotOverlapScheduler {
 
 
 
+pub struct PaxosGapOneScheduler {
+    pub max_delay: usize,
+    pub delays_used: usize,
+    pub held_by_ballot: HashMap<u64, Vec<Message>>,
+    pub prepare_seen: HashMap<u64, usize>,
+    pub quorum_size: usize,
+
+    pub max_held_backlog: usize,
+    pub held_inserts: usize,
+    pub held_releases: usize,
+}
+
+fn is_gap1_stale_candidate(msg: &Message, queue: &[Message]) -> bool {
+    if let Some(b) = paxos_ballot(msg) {
+        matches!(
+            msg.msg_type,
+            MessageType::Prepare { .. }
+                | MessageType::Promise { .. }
+                | MessageType::AcceptRequest { .. }
+        ) && queue.iter().any(|m| paxos_ballot(m) == Some(b + 1))
+    } else {
+        false
+    }
+}
+
+impl Scheduler for PaxosGapOneScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+
+        println!(
+            "[GAP1-STATS] max_backlog={} inserts={} releases={}",
+            self.max_held_backlog,
+            self.held_inserts,
+            self.held_releases
+        );
+        
+        if queue.is_empty() {
+            let ballots = self.held_by_ballot.keys().cloned().collect::<Vec<_>>();
+
+            for ballot in ballots {
+                if let Some(vec) = self.held_by_ballot.get_mut(&ballot) {
+                    if !vec.is_empty() {
+                        let msg = vec.remove(0);
+
+                        println!(
+                            "[GAP1] Release at empty {:?} ballot={:?}",
+                            msg.msg_type,
+                            paxos_ballot(&msg)
+                        );
+
+                        return SchedulerOutcome::Deliver(msg);
+                    }
+                }
+            }
+
+            return SchedulerOutcome::Empty;
+        }
+
+        // 1. Hold stale b messages when b+1 exists.
+        if self.delays_used < self.max_delay {
+            if let Some(pos) = queue
+                .iter()
+                .position(|m| is_gap1_stale_candidate(m, queue))
+            {
+                let msg = queue.remove(pos);
+                let b = paxos_ballot(&msg).unwrap();
+
+                println!(
+                    "[GAP1] Hold stale {:?} ballot={} waiting_for_prepare_quorum={}",
+                    msg.msg_type,
+                    b,
+                    b + 1
+                );
+
+                self.held_by_ballot.entry(b).or_default().push(msg);
+                self.delays_used += 1;
+
+                self.held_inserts += 1;
+                self.max_held_backlog =
+                    self.max_held_backlog.max(total_held(&self.held_by_ballot));
+
+                if !queue.is_empty() {
+                    return deliver(queue, 0);
+                }
+            }
+        }
+
+        // 2. Prefer Prepare messages; they advance promised_ballot.
+        if let Some(pos) = queue
+            .iter()
+            .position(|m| matches!(m.msg_type, MessageType::Prepare { .. }))
+        {
+            let msg = queue.remove(pos);
+
+            let ballot = match &msg.msg_type {
+                MessageType::Prepare { ballot } => *ballot,
+                _ => unreachable!(),
+            };
+
+            let count = self.prepare_seen.entry(ballot).or_insert(0);
+            *count += 1;
+
+            println!(
+                "[GAP1] Deliver Prepare ballot={} count={} quorum={}",
+                ballot,
+                count,
+                self.quorum_size
+            );
+
+            let stale_ballot = ballot.saturating_sub(1);
+
+            if *count >= self.quorum_size {
+                if let Some(held_vec) = self.held_by_ballot.get_mut(&stale_ballot) {
+                    if !held_vec.is_empty() {
+                        queue.insert(0, msg);
+
+                        let held = held_vec.remove(0);
+
+                        println!(
+                            "[GAP1] Release stale after Prepare quorum {:?} stale_ballot={} newer_ballot={}",
+                            held.msg_type,
+                            stale_ballot,
+                            ballot
+                        );
+
+                        return SchedulerOutcome::Deliver(held);
+                    }
+                }
+            }
+
+            return SchedulerOutcome::Deliver(msg);
+        }
+
+        // 3. If no Prepare exists, release any held message whose b+1 already reached quorum.
+        let ballots = self.held_by_ballot.keys().cloned().collect::<Vec<_>>();
+
+        for b in ballots {
+            let newer = b + 1;
+
+            let ready = self
+                .prepare_seen
+                .get(&newer)
+                .map(|c| *c >= self.quorum_size)
+                .unwrap_or(false);
+
+            if ready {
+                if let Some(vec) = self.held_by_ballot.get_mut(&b) {
+                    if !vec.is_empty() {
+                        let msg = vec.remove(0);
+
+                        println!(
+                            "[GAP1] Release stale fallback {:?} stale_ballot={} newer_ballot={}",
+                            msg.msg_type,
+                            b,
+                            newer
+                        );
+
+                        return SchedulerOutcome::Deliver(msg);
+                    }
+                }
+            }
+        }
+
+        if !self.held_by_ballot.is_empty() && queue.len() <= 1 {
+            let ballots = self.held_by_ballot.keys().cloned().collect::<Vec<_>>();
+            self.held_releases += 1;
+
+
+            for b in ballots {
+                if let Some(vec) = self.held_by_ballot.get_mut(&b) {
+                    if !vec.is_empty() {
+                        let msg = vec.remove(0);
+
+                        println!(
+                            "[GAP1] Deadlock fallback release {:?} ballot={:?}",
+                            msg.msg_type,
+                            paxos_ballot(&msg)
+                        );
+
+                        return SchedulerOutcome::Deliver(msg);
+                    }
+                }
+            }
+        }
+
+        deliver(queue, 0)
+    }
+}
+
+pub struct PaxosGapOneBacklogScheduler {
+    pub max_delay: usize,
+    pub delays_used: usize,
+    pub held_by_ballot: HashMap<u64, Vec<Message>>,
+    pub prepare_seen: HashMap<u64, usize>,
+    pub quorum_size: usize,
+    pub release_after_held: usize,
+}
+
+
+
+
+
+
+
+fn total_held(held: &HashMap<u64, Vec<Message>>) -> usize {
+    held.values().map(|v| v.len()).sum()
+}
+
+impl Scheduler for PaxosGapOneBacklogScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            let ballots = self.held_by_ballot.keys().cloned().collect::<Vec<_>>();
+
+            for b in ballots {
+                if let Some(vec) = self.held_by_ballot.get_mut(&b) {
+                    if !vec.is_empty() {
+                        let msg = vec.remove(0);
+
+                        println!(
+                            "[GAP1-BACKLOG] Release at empty {:?} ballot={:?}",
+                            msg.msg_type,
+                            paxos_ballot(&msg)
+                        );
+
+                        return SchedulerOutcome::Deliver(msg);
+                    }
+                }
+            }
+
+            return SchedulerOutcome::Empty;
+        }
+
+        // 1. Hold stale b messages when b+1 exists.
+        if self.delays_used < self.max_delay {
+            if let Some(pos) = queue
+                .iter()
+                .position(|m| is_gap1_stale_candidate(m, queue))
+            {
+                let msg = queue.remove(pos);
+                let b = paxos_ballot(&msg).unwrap();
+
+                println!(
+                    "[GAP1-BACKLOG] Hold stale {:?} ballot={} total_held={}",
+                    msg.msg_type,
+                    b,
+                    total_held(&self.held_by_ballot) + 1
+                );
+
+                self.held_by_ballot.entry(b).or_default().push(msg);
+                self.delays_used += 1;
+
+                if !queue.is_empty() {
+                    return deliver(queue, 0);
+                }
+            }
+        }
+
+        // 2. Prefer Prepare messages to keep generating newer ballots.
+        if let Some(pos) = queue
+            .iter()
+            .position(|m| matches!(m.msg_type, MessageType::Prepare { .. }))
+        {
+            let msg = queue.remove(pos);
+
+            let ballot = match &msg.msg_type {
+                MessageType::Prepare { ballot } => *ballot,
+                _ => unreachable!(),
+            };
+
+            let count = self.prepare_seen.entry(ballot).or_insert(0);
+            *count += 1;
+
+            println!(
+                "[GAP1-BACKLOG] Deliver Prepare ballot={} count={} quorum={} total_held={}",
+                ballot,
+                count,
+                self.quorum_size,
+                total_held(&self.held_by_ballot)
+            );
+
+            return SchedulerOutcome::Deliver(msg);
+        }
+
+        // 3. Release only after enough stale backlog has accumulated.
+        if total_held(&self.held_by_ballot) >= self.release_after_held {
+            let mut ballots = self.held_by_ballot.keys().cloned().collect::<Vec<_>>();
+            ballots.sort();
+
+            for b in ballots {
+                let newer = b + 1;
+                let ready = self
+                    .prepare_seen
+                    .get(&newer)
+                    .map(|c| *c >= self.quorum_size)
+                    .unwrap_or(false);
+
+                if ready {
+                    if let Some(vec) = self.held_by_ballot.get_mut(&b) {
+                        if !vec.is_empty() {
+                            let msg = vec.remove(0);
+
+                            println!(
+                                "[GAP1-BACKLOG] Release stale {:?} stale_ballot={} newer_ballot={} total_held={}",
+                                msg.msg_type,
+                                b,
+                                newer,
+                                total_held(&self.held_by_ballot)
+                            );
+
+                            return SchedulerOutcome::Deliver(msg);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. Otherwise deliver normally.
+        deliver(queue, 0)
+    }
+}

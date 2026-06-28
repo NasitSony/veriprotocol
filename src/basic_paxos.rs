@@ -129,7 +129,7 @@ impl Protocol for BasicPaxosProtocol {
     fn handle_message(&mut self, node: &mut Node, msg: &Message) -> Vec<NodeAction> {
         match &msg.msg_type {
             MessageType::Prepare { ballot } => {
-                if *ballot > node.promised_ballot {
+                if *ballot >= node.promised_ballot {
                     node.promised_ballot = *ballot;
             
                     vec![NodeAction::SendPromise {
@@ -139,6 +139,21 @@ impl Protocol for BasicPaxosProtocol {
                         accepted_value: node.accepted_value.clone(),
                     }]
                 } else {
+                    println!(
+                        "[NACK-CAUSE] node={} incoming={:?} incoming_ballot={} promised_ballot={}",
+                        node.id,
+                        msg.msg_type,
+                        ballot,
+                        node.promised_ballot
+                    );
+
+                    println!(
+                        "[RETRY-MOTIF] cause=stale_prepare node={} incoming_ballot={} promised_ballot={} gap={}",
+                        node.id,
+                        ballot,
+                        node.promised_ballot,
+                        node.promised_ballot.saturating_sub(*ballot),
+                    );
                     vec![NodeAction::SendNack {
                         to: msg.from,
                         ballot: *ballot,
@@ -162,6 +177,21 @@ impl Protocol for BasicPaxosProtocol {
                         value: value.clone(),
                     }]
                 } else {
+                    println!(
+                        "[NACK-CAUSE] node={} incoming={:?} incoming_ballot={} promised_ballot={}",
+                        node.id,
+                        msg.msg_type,
+                        ballot,
+                        node.promised_ballot
+                    );
+
+                    println!(
+                        "[RETRY-MOTIF] cause=stale_accept_request node={} incoming_ballot={} promised_ballot={} gap={}",
+                        node.id,
+                        ballot,
+                        node.promised_ballot,
+                        node.promised_ballot.saturating_sub(*ballot),
+                    );
                     vec![NodeAction::SendNack {
                         to: msg.from,
                         ballot: *ballot,
@@ -207,7 +237,7 @@ impl Protocol for BasicPaxosProtocol {
                     .map(|s| s.len())
                     .unwrap_or(0);
             
-                if promise_count >= self.quorum_size && !self.accept_request_sent_by_ballot.contains(ballot) {
+                if promise_count >= self.quorum_size && !self.accept_request_sent_by_ballot.contains(ballot) && *ballot == self.current_ballot {
                     self.accept_request_sent_by_ballot.insert(*ballot);
                     
                     let proposed_value = if self.highest_accepted_ballot.is_some() {
@@ -266,7 +296,7 @@ impl Protocol for BasicPaxosProtocol {
                         self.quorum_size,
                         self.current_ballot
                     );
-                    
+
                     return vec![NodeAction::RecordChosen {
                         value: value.clone(),
                     }];

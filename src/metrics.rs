@@ -50,6 +50,10 @@ pub struct Metrics {
     pub critical_messages_delayed: u64,
     pub delayed_messages_released: u64,
 
+
+    pub reached_step_cap: bool,
+    pub max_steps: u64,
+
 }
 
 impl Metrics {
@@ -101,6 +105,9 @@ impl Metrics {
      
             critical_messages_delayed: 0,
             delayed_messages_released: 0,
+
+            reached_step_cap: false,
+            max_steps: 0,
         }
     }
 }
@@ -148,6 +155,9 @@ impl Metrics {
         println!("Nack Messages: {}", self.nack_messages);
         println!("Paxos Retries: {}", self.paxos_retries);
         println!("Max Ballot Seen: {}", self.max_ballot_seen);
+
+        println!("Reached Step Cap: {}", self.reached_step_cap);
+        println!("Max Steps: {}", self.max_steps);
 
         println!("Membership Changes: {}", self.membership_changes);
         println!("Membership Acks: {}", self.membership_acks);

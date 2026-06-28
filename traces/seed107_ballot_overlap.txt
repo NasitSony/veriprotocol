@@ -1,0 +1,649 @@
+
+=== Run 1 ===
+Nodes: 5
+Quorum: 3
+Simulation starting
+[RANDOM-SCHED] Deliver Prepare { ballot: 1 } ballot=Some(1) highest=Some(2) queue=6 distinct_ballots=[1, 2] count=2
+[step=0] DELIVER from=1 to=3 type=Prepare { ballot: 1 } queue_len=6
+[RANDOM-SCHED] Deliver Prepare { ballot: 2 } ballot=Some(2) highest=Some(2) queue=6 distinct_ballots=[1, 2] count=2
+[step=1] DELIVER from=1 to=4 type=Prepare { ballot: 2 } queue_len=6
+[RANDOM-SCHED] Deliver Prepare { ballot: 2 } ballot=Some(2) highest=Some(2) queue=6 distinct_ballots=[1, 2] count=2
+[step=2] DELIVER from=1 to=2 type=Prepare { ballot: 2 } queue_len=6
+[RANDOM-SCHED] Deliver Prepare { ballot: 1 } ballot=Some(1) highest=Some(2) queue=6 distinct_ballots=[1, 2] count=2
+[step=3] DELIVER from=1 to=2 type=Prepare { ballot: 1 } queue_len=6
+[RANDOM-SCHED] Deliver Promise { ballot: 1, accepted_ballot: None, accepted_value: None } ballot=Some(1) highest=Some(2) queue=6 distinct_ballots=[1, 2] count=2
+[step=4] DELIVER from=3 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=6
+[RANDOM-SCHED] Deliver Prepare { ballot: 2 } ballot=Some(2) highest=Some(2) queue=5 distinct_ballots=[1, 2] count=2
+[step=5] DELIVER from=1 to=1 type=Prepare { ballot: 2 } queue_len=5
+[RANDOM-SCHED] Deliver Prepare { ballot: 2 } ballot=Some(2) highest=Some(2) queue=5 distinct_ballots=[1, 2] count=2
+[step=6] DELIVER from=1 to=3 type=Prepare { ballot: 2 } queue_len=5
+[RANDOM-SCHED] Deliver Promise { ballot: 2, accepted_ballot: None, accepted_value: None } ballot=Some(2) highest=Some(2) queue=5 distinct_ballots=[1, 2] count=2
+[step=7] DELIVER from=2 to=1 type=Promise { ballot: 2, accepted_ballot: None, accepted_value: None } queue_len=5
+[RANDOM-SCHED] Deliver Prepare { ballot: 2 } ballot=Some(2) highest=Some(2) queue=4 distinct_ballots=[1, 2] count=2
+[step=8] DELIVER from=1 to=5 type=Prepare { ballot: 2 } queue_len=4
+[RANDOM-SCHED] Deliver Promise { ballot: 2, accepted_ballot: None, accepted_value: None } ballot=Some(2) highest=Some(2) queue=4 distinct_ballots=[1, 2] count=2
+[step=9] DELIVER from=5 to=1 type=Promise { ballot: 2, accepted_ballot: None, accepted_value: None } queue_len=4
+[RANDOM-SCHED] Deliver Promise { ballot: 2, accepted_ballot: None, accepted_value: None } ballot=Some(2) highest=Some(2) queue=3 distinct_ballots=[1, 2] count=2
+[step=10] DELIVER from=3 to=1 type=Promise { ballot: 2, accepted_ballot: None, accepted_value: None } queue_len=3
+[PAXOS-QUORUM-PROMISE] ballot=2 count=3 quorum=3 current=2
+[RANDOM-SCHED] Deliver Nack { ballot: 1, promised_ballot: 2 } ballot=Some(1) highest=Some(2) queue=7 distinct_ballots=[2] count=1
+[step=11] DELIVER from=2 to=1 type=Nack { ballot: 1, promised_ballot: 2 } queue_len=7
+[PAXOS-NACK] from=2 to=1 promised=2 current=2
+[PAXOS-RETRY] new_ballot=3
+[RANDOM-SCHED] Deliver Promise { ballot: 2, accepted_ballot: None, accepted_value: None } ballot=Some(2) highest=Some(3) queue=11 distinct_ballots=[2, 3] count=2
+[step=12] DELIVER from=4 to=1 type=Promise { ballot: 2, accepted_ballot: None, accepted_value: None } queue_len=11
+[RANDOM-SCHED] Deliver Promise { ballot: 2, accepted_ballot: None, accepted_value: None } ballot=Some(2) highest=Some(3) queue=10 distinct_ballots=[2, 3] count=2
+[step=13] DELIVER from=1 to=1 type=Promise { ballot: 2, accepted_ballot: None, accepted_value: None } queue_len=10
+[RANDOM-SCHED] Deliver Prepare { ballot: 3 } ballot=Some(3) highest=Some(3) queue=9 distinct_ballots=[2, 3] count=2
+[step=14] DELIVER from=1 to=3 type=Prepare { ballot: 3 } queue_len=9
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 2, value: "v1" } ballot=Some(2) highest=Some(3) queue=9 distinct_ballots=[2, 3] count=2
+[step=15] DELIVER from=1 to=4 type=AcceptRequest { ballot: 2, value: "v1" } queue_len=9
+Broadcasting AcceptRequest(2, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 3 } ballot=Some(3) highest=Some(3) queue=9 distinct_ballots=[2, 3] count=2
+[step=16] DELIVER from=1 to=2 type=Prepare { ballot: 3 } queue_len=9
+[RANDOM-SCHED] Deliver Prepare { ballot: 3 } ballot=Some(3) highest=Some(3) queue=9 distinct_ballots=[2, 3] count=2
+[step=17] DELIVER from=1 to=5 type=Prepare { ballot: 3 } queue_len=9
+[RANDOM-SCHED] Deliver Promise { ballot: 3, accepted_ballot: None, accepted_value: None } ballot=Some(3) highest=Some(3) queue=9 distinct_ballots=[2, 3] count=2
+[step=18] DELIVER from=3 to=1 type=Promise { ballot: 3, accepted_ballot: None, accepted_value: None } queue_len=9
+[RANDOM-SCHED] Deliver Prepare { ballot: 3 } ballot=Some(3) highest=Some(3) queue=8 distinct_ballots=[2, 3] count=2
+[step=19] DELIVER from=1 to=1 type=Prepare { ballot: 3 } queue_len=8
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 2, value: "v1" } ballot=Some(2) highest=Some(3) queue=8 distinct_ballots=[2, 3] count=2
+[step=20] DELIVER from=1 to=1 type=AcceptRequest { ballot: 2, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(2, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 2, value: "v1" } ballot=Some(2) highest=Some(3) queue=8 distinct_ballots=[2, 3] count=2
+[step=21] DELIVER from=1 to=3 type=AcceptRequest { ballot: 2, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(2, v1)
+[RANDOM-SCHED] Deliver Nack { ballot: 2, promised_ballot: 3 } ballot=Some(2) highest=Some(3) queue=8 distinct_ballots=[2, 3] count=2
+[step=22] DELIVER from=3 to=1 type=Nack { ballot: 2, promised_ballot: 3 } queue_len=8
+[PAXOS-NACK] from=3 to=1 promised=3 current=3
+[PAXOS-RETRY] new_ballot=4
+[RANDOM-SCHED] Deliver Prepare { ballot: 4 } ballot=Some(4) highest=Some(4) queue=12 distinct_ballots=[2, 3, 4] count=3
+[step=23] DELIVER from=1 to=1 type=Prepare { ballot: 4 } queue_len=12
+[RANDOM-SCHED] Deliver Prepare { ballot: 4 } ballot=Some(4) highest=Some(4) queue=12 distinct_ballots=[2, 3, 4] count=3
+[step=24] DELIVER from=1 to=2 type=Prepare { ballot: 4 } queue_len=12
+[RANDOM-SCHED] Deliver Prepare { ballot: 4 } ballot=Some(4) highest=Some(4) queue=12 distinct_ballots=[2, 3, 4] count=3
+[step=25] DELIVER from=1 to=3 type=Prepare { ballot: 4 } queue_len=12
+[RANDOM-SCHED] Deliver Promise { ballot: 4, accepted_ballot: None, accepted_value: None } ballot=Some(4) highest=Some(4) queue=12 distinct_ballots=[2, 3, 4] count=3
+[step=26] DELIVER from=1 to=1 type=Promise { ballot: 4, accepted_ballot: None, accepted_value: None } queue_len=12
+[RANDOM-SCHED] Deliver Promise { ballot: 3, accepted_ballot: None, accepted_value: None } ballot=Some(3) highest=Some(4) queue=11 distinct_ballots=[2, 3, 4] count=3
+[step=27] DELIVER from=2 to=1 type=Promise { ballot: 3, accepted_ballot: None, accepted_value: None } queue_len=11
+[RANDOM-SCHED] Deliver Promise { ballot: 4, accepted_ballot: None, accepted_value: None } ballot=Some(4) highest=Some(4) queue=10 distinct_ballots=[2, 3, 4] count=3
+[step=28] DELIVER from=2 to=1 type=Promise { ballot: 4, accepted_ballot: None, accepted_value: None } queue_len=10
+[RANDOM-SCHED] Deliver Promise { ballot: 3, accepted_ballot: None, accepted_value: None } ballot=Some(3) highest=Some(4) queue=9 distinct_ballots=[2, 3, 4] count=3
+[step=29] DELIVER from=5 to=1 type=Promise { ballot: 3, accepted_ballot: None, accepted_value: None } queue_len=9
+[RANDOM-SCHED] Deliver Prepare { ballot: 3 } ballot=Some(3) highest=Some(4) queue=8 distinct_ballots=[2, 3, 4] count=3
+[step=30] DELIVER from=1 to=4 type=Prepare { ballot: 3 } queue_len=8
+[RANDOM-SCHED] Deliver Prepare { ballot: 4 } ballot=Some(4) highest=Some(4) queue=8 distinct_ballots=[2, 3, 4] count=3
+[step=31] DELIVER from=1 to=5 type=Prepare { ballot: 4 } queue_len=8
+[RANDOM-SCHED] Deliver Promise { ballot: 4, accepted_ballot: None, accepted_value: None } ballot=Some(4) highest=Some(4) queue=8 distinct_ballots=[2, 3, 4] count=3
+[step=32] DELIVER from=5 to=1 type=Promise { ballot: 4, accepted_ballot: None, accepted_value: None } queue_len=8
+[PAXOS-QUORUM-PROMISE] ballot=4 count=3 quorum=3 current=4
+[RANDOM-SCHED] Deliver Nack { ballot: 2, promised_ballot: 3 } ballot=Some(2) highest=Some(4) queue=12 distinct_ballots=[2, 3, 4] count=3
+[step=33] DELIVER from=1 to=1 type=Nack { ballot: 2, promised_ballot: 3 } queue_len=12
+[PAXOS-NACK] from=1 to=1 promised=3 current=4
+[RANDOM-SCHED] Deliver Prepare { ballot: 4 } ballot=Some(4) highest=Some(4) queue=11 distinct_ballots=[2, 3, 4] count=3
+[step=34] DELIVER from=1 to=4 type=Prepare { ballot: 4 } queue_len=11
+[RANDOM-SCHED] Deliver Accepted { ballot: 2, value: "v1" } ballot=Some(2) highest=Some(4) queue=11 distinct_ballots=[2, 3, 4] count=3
+[step=35] DELIVER from=4 to=1 type=Accepted { ballot: 2, value: "v1" } queue_len=11
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(4) queue=10 distinct_ballots=[2, 3, 4] count=3
+[step=36] DELIVER from=1 to=2 type=AcceptRequest { ballot: 4, value: "v1" } queue_len=10
+Broadcasting AcceptRequest(4, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(4) queue=10 distinct_ballots=[2, 3, 4] count=3
+[step=37] DELIVER from=1 to=5 type=AcceptRequest { ballot: 4, value: "v1" } queue_len=10
+Broadcasting AcceptRequest(4, v1)
+[RANDOM-SCHED] Deliver Promise { ballot: 3, accepted_ballot: None, accepted_value: None } ballot=Some(3) highest=Some(4) queue=10 distinct_ballots=[2, 3, 4] count=3
+[step=38] DELIVER from=1 to=1 type=Promise { ballot: 3, accepted_ballot: None, accepted_value: None } queue_len=10
+[RANDOM-SCHED] Deliver Promise { ballot: 4, accepted_ballot: Some(2), accepted_value: Some("v1") } ballot=Some(4) highest=Some(4) queue=9 distinct_ballots=[2, 3, 4] count=3
+[step=39] DELIVER from=4 to=1 type=Promise { ballot: 4, accepted_ballot: Some(2), accepted_value: Some("v1") } queue_len=9
+[RANDOM-SCHED] Deliver Accepted { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(4) queue=8 distinct_ballots=[2, 3, 4] count=3
+[step=40] DELIVER from=2 to=1 type=Accepted { ballot: 4, value: "v1" } queue_len=8
+[RANDOM-SCHED] Deliver Promise { ballot: 3, accepted_ballot: Some(2), accepted_value: Some("v1") } ballot=Some(3) highest=Some(4) queue=7 distinct_ballots=[2, 4] count=2
+[step=41] DELIVER from=4 to=1 type=Promise { ballot: 3, accepted_ballot: Some(2), accepted_value: Some("v1") } queue_len=7
+[RANDOM-SCHED] Deliver Promise { ballot: 4, accepted_ballot: None, accepted_value: None } ballot=Some(4) highest=Some(4) queue=6 distinct_ballots=[2, 4] count=2
+[step=42] DELIVER from=3 to=1 type=Promise { ballot: 4, accepted_ballot: None, accepted_value: None } queue_len=6
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 2, value: "v1" } ballot=Some(2) highest=Some(4) queue=5 distinct_ballots=[2, 4] count=2
+[step=43] DELIVER from=1 to=2 type=AcceptRequest { ballot: 2, value: "v1" } queue_len=5
+Broadcasting AcceptRequest(2, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 2, value: "v1" } ballot=Some(2) highest=Some(4) queue=5 distinct_ballots=[2, 4] count=2
+[step=44] DELIVER from=1 to=5 type=AcceptRequest { ballot: 2, value: "v1" } queue_len=5
+Broadcasting AcceptRequest(2, v1)
+[RANDOM-SCHED] Deliver Nack { ballot: 2, promised_ballot: 4 } ballot=Some(2) highest=Some(4) queue=5 distinct_ballots=[2, 4] count=2
+[step=45] DELIVER from=2 to=1 type=Nack { ballot: 2, promised_ballot: 4 } queue_len=5
+[PAXOS-NACK] from=2 to=1 promised=4 current=4
+[PAXOS-RETRY] new_ballot=5
+[RANDOM-SCHED] Deliver Prepare { ballot: 5 } ballot=Some(5) highest=Some(5) queue=9 distinct_ballots=[2, 4, 5] count=3
+[step=46] DELIVER from=1 to=5 type=Prepare { ballot: 5 } queue_len=9
+[RANDOM-SCHED] Deliver Accepted { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(5) queue=9 distinct_ballots=[2, 4, 5] count=3
+[step=47] DELIVER from=5 to=1 type=Accepted { ballot: 4, value: "v1" } queue_len=9
+[RANDOM-SCHED] Deliver Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } ballot=Some(5) highest=Some(5) queue=8 distinct_ballots=[2, 4, 5] count=3
+[step=48] DELIVER from=5 to=1 type=Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } queue_len=8
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(5) queue=7 distinct_ballots=[2, 4, 5] count=3
+[step=49] DELIVER from=1 to=4 type=AcceptRequest { ballot: 4, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(4, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 5 } ballot=Some(5) highest=Some(5) queue=7 distinct_ballots=[2, 4, 5] count=3
+[step=50] DELIVER from=1 to=4 type=Prepare { ballot: 5 } queue_len=7
+[RANDOM-SCHED] Deliver Prepare { ballot: 5 } ballot=Some(5) highest=Some(5) queue=7 distinct_ballots=[2, 4, 5] count=3
+[step=51] DELIVER from=1 to=1 type=Prepare { ballot: 5 } queue_len=7
+[RANDOM-SCHED] Deliver Promise { ballot: 5, accepted_ballot: None, accepted_value: None } ballot=Some(5) highest=Some(5) queue=7 distinct_ballots=[2, 4, 5] count=3
+[step=52] DELIVER from=1 to=1 type=Promise { ballot: 5, accepted_ballot: None, accepted_value: None } queue_len=7
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(5) queue=6 distinct_ballots=[2, 4, 5] count=3
+[step=53] DELIVER from=1 to=1 type=AcceptRequest { ballot: 4, value: "v1" } queue_len=6
+Broadcasting AcceptRequest(4, v1)
+[RANDOM-SCHED] Deliver Nack { ballot: 2, promised_ballot: 4 } ballot=Some(2) highest=Some(5) queue=6 distinct_ballots=[4, 5] count=2
+[step=54] DELIVER from=5 to=1 type=Nack { ballot: 2, promised_ballot: 4 } queue_len=6
+[PAXOS-NACK] from=5 to=1 promised=4 current=5
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(5) queue=5 distinct_ballots=[4, 5] count=2
+[step=55] DELIVER from=1 to=3 type=AcceptRequest { ballot: 4, value: "v1" } queue_len=5
+Broadcasting AcceptRequest(4, v1)
+[RANDOM-SCHED] Deliver Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } ballot=Some(5) highest=Some(5) queue=5 distinct_ballots=[4, 5] count=2
+[step=56] DELIVER from=4 to=1 type=Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } queue_len=5
+[PAXOS-QUORUM-PROMISE] ballot=5 count=3 quorum=3 current=5
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(5) queue=9 distinct_ballots=[4, 5] count=2
+[step=57] DELIVER from=1 to=5 type=AcceptRequest { ballot: 5, value: "v1" } queue_len=9
+Broadcasting AcceptRequest(5, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(5) queue=9 distinct_ballots=[4, 5] count=2
+[step=58] DELIVER from=1 to=3 type=AcceptRequest { ballot: 5, value: "v1" } queue_len=9
+Broadcasting AcceptRequest(5, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(5) queue=9 distinct_ballots=[4, 5] count=2
+[step=59] DELIVER from=1 to=4 type=AcceptRequest { ballot: 5, value: "v1" } queue_len=9
+Broadcasting AcceptRequest(5, v1)
+[RANDOM-SCHED] Deliver Nack { ballot: 4, promised_ballot: 5 } ballot=Some(4) highest=Some(5) queue=9 distinct_ballots=[4, 5] count=2
+[step=60] DELIVER from=1 to=1 type=Nack { ballot: 4, promised_ballot: 5 } queue_len=9
+[PAXOS-NACK] from=1 to=1 promised=5 current=5
+[PAXOS-RETRY] new_ballot=6
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(6) queue=13 distinct_ballots=[4, 5, 6] count=3
+[step=61] DELIVER from=1 to=1 type=AcceptRequest { ballot: 5, value: "v1" } queue_len=13
+Broadcasting AcceptRequest(5, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(6) queue=13 distinct_ballots=[4, 5, 6] count=3
+[step=62] DELIVER from=1 to=2 type=AcceptRequest { ballot: 5, value: "v1" } queue_len=13
+Broadcasting AcceptRequest(5, v1)
+[RANDOM-SCHED] Deliver Accepted { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(6) queue=13 distinct_ballots=[4, 5, 6] count=3
+[step=63] DELIVER from=4 to=1 type=Accepted { ballot: 4, value: "v1" } queue_len=13
+[RANDOM-SCHED] Deliver Prepare { ballot: 6 } ballot=Some(6) highest=Some(6) queue=12 distinct_ballots=[4, 5, 6] count=3
+[step=64] DELIVER from=1 to=1 type=Prepare { ballot: 6 } queue_len=12
+[RANDOM-SCHED] Deliver Prepare { ballot: 6 } ballot=Some(6) highest=Some(6) queue=12 distinct_ballots=[4, 5, 6] count=3
+[step=65] DELIVER from=1 to=4 type=Prepare { ballot: 6 } queue_len=12
+[RANDOM-SCHED] Deliver Accepted { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(6) queue=12 distinct_ballots=[5, 6] count=2
+[step=66] DELIVER from=3 to=1 type=Accepted { ballot: 4, value: "v1" } queue_len=12
+[RANDOM-SCHED] Deliver Accepted { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(6) queue=11 distinct_ballots=[5, 6] count=2
+[step=67] DELIVER from=1 to=1 type=Accepted { ballot: 5, value: "v1" } queue_len=11
+[RANDOM-SCHED] Deliver Accepted { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(6) queue=10 distinct_ballots=[5, 6] count=2
+[step=68] DELIVER from=5 to=1 type=Accepted { ballot: 5, value: "v1" } queue_len=10
+[RANDOM-SCHED] Deliver Promise { ballot: 6, accepted_ballot: Some(5), accepted_value: Some("v1") } ballot=Some(6) highest=Some(6) queue=9 distinct_ballots=[5, 6] count=2
+[step=69] DELIVER from=4 to=1 type=Promise { ballot: 6, accepted_ballot: Some(5), accepted_value: Some("v1") } queue_len=9
+[RANDOM-SCHED] Deliver Accepted { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(6) queue=8 distinct_ballots=[5, 6] count=2
+[step=70] DELIVER from=4 to=1 type=Accepted { ballot: 5, value: "v1" } queue_len=8
+[RANDOM-SCHED] Deliver Prepare { ballot: 5 } ballot=Some(5) highest=Some(6) queue=7 distinct_ballots=[5, 6] count=2
+[step=71] DELIVER from=1 to=2 type=Prepare { ballot: 5 } queue_len=7
+[RANDOM-SCHED] Deliver Prepare { ballot: 5 } ballot=Some(5) highest=Some(6) queue=7 distinct_ballots=[5, 6] count=2
+[step=72] DELIVER from=1 to=3 type=Prepare { ballot: 5 } queue_len=7
+[RANDOM-SCHED] Deliver Prepare { ballot: 6 } ballot=Some(6) highest=Some(6) queue=7 distinct_ballots=[5, 6] count=2
+[step=73] DELIVER from=1 to=3 type=Prepare { ballot: 6 } queue_len=7
+[RANDOM-SCHED] Deliver Nack { ballot: 5, promised_ballot: 5 } ballot=Some(5) highest=Some(6) queue=7 distinct_ballots=[5, 6] count=2
+[step=74] DELIVER from=3 to=1 type=Nack { ballot: 5, promised_ballot: 5 } queue_len=7
+[PAXOS-NACK] from=3 to=1 promised=5 current=6
+[RANDOM-SCHED] Deliver Accepted { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(6) queue=6 distinct_ballots=[5, 6] count=2
+[step=75] DELIVER from=3 to=1 type=Accepted { ballot: 5, value: "v1" } queue_len=6
+[RANDOM-SCHED] Deliver Promise { ballot: 6, accepted_ballot: Some(5), accepted_value: Some("v1") } ballot=Some(6) highest=Some(6) queue=5 distinct_ballots=[5, 6] count=2
+[step=76] DELIVER from=1 to=1 type=Promise { ballot: 6, accepted_ballot: Some(5), accepted_value: Some("v1") } queue_len=5
+[RANDOM-SCHED] Deliver Nack { ballot: 5, promised_ballot: 5 } ballot=Some(5) highest=Some(6) queue=4 distinct_ballots=[5, 6] count=2
+[step=77] DELIVER from=2 to=1 type=Nack { ballot: 5, promised_ballot: 5 } queue_len=4
+[PAXOS-NACK] from=2 to=1 promised=5 current=6
+[RANDOM-SCHED] Deliver Promise { ballot: 6, accepted_ballot: Some(5), accepted_value: Some("v1") } ballot=Some(6) highest=Some(6) queue=3 distinct_ballots=[5, 6] count=2
+[step=78] DELIVER from=3 to=1 type=Promise { ballot: 6, accepted_ballot: Some(5), accepted_value: Some("v1") } queue_len=3
+[PAXOS-QUORUM-PROMISE] ballot=6 count=3 quorum=3 current=6
+[RANDOM-SCHED] Deliver Prepare { ballot: 6 } ballot=Some(6) highest=Some(6) queue=7 distinct_ballots=[5, 6] count=2
+[step=79] DELIVER from=1 to=2 type=Prepare { ballot: 6 } queue_len=7
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 6, value: "v1" } ballot=Some(6) highest=Some(6) queue=7 distinct_ballots=[5, 6] count=2
+[step=80] DELIVER from=1 to=3 type=AcceptRequest { ballot: 6, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(6, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 6, value: "v1" } ballot=Some(6) highest=Some(6) queue=7 distinct_ballots=[5, 6] count=2
+[step=81] DELIVER from=1 to=1 type=AcceptRequest { ballot: 6, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(6, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 6, value: "v1" } ballot=Some(6) highest=Some(6) queue=7 distinct_ballots=[5, 6] count=2
+[step=82] DELIVER from=1 to=5 type=AcceptRequest { ballot: 6, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(6, v1)
+[RANDOM-SCHED] Deliver Promise { ballot: 6, accepted_ballot: Some(5), accepted_value: Some("v1") } ballot=Some(6) highest=Some(6) queue=7 distinct_ballots=[5, 6] count=2
+[step=83] DELIVER from=2 to=1 type=Promise { ballot: 6, accepted_ballot: Some(5), accepted_value: Some("v1") } queue_len=7
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 6, value: "v1" } ballot=Some(6) highest=Some(6) queue=6 distinct_ballots=[5, 6] count=2
+[step=84] DELIVER from=1 to=4 type=AcceptRequest { ballot: 6, value: "v1" } queue_len=6
+Broadcasting AcceptRequest(6, v1)
+[RANDOM-SCHED] Deliver Accepted { ballot: 6, value: "v1" } ballot=Some(6) highest=Some(6) queue=6 distinct_ballots=[5, 6] count=2
+[step=85] DELIVER from=1 to=1 type=Accepted { ballot: 6, value: "v1" } queue_len=6
+[RANDOM-SCHED] Deliver Accepted { ballot: 6, value: "v1" } ballot=Some(6) highest=Some(6) queue=5 distinct_ballots=[5, 6] count=2
+[step=86] DELIVER from=5 to=1 type=Accepted { ballot: 6, value: "v1" } queue_len=5
+[RANDOM-SCHED] Deliver Accepted { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(6) queue=4 distinct_ballots=[6] count=1
+[step=87] DELIVER from=2 to=1 type=Accepted { ballot: 5, value: "v1" } queue_len=4
+[RANDOM-SCHED] Deliver Prepare { ballot: 6 } ballot=Some(6) highest=Some(6) queue=3 distinct_ballots=[6] count=1
+[step=88] DELIVER from=1 to=5 type=Prepare { ballot: 6 } queue_len=3
+[RANDOM-SCHED] Deliver Accepted { ballot: 6, value: "v1" } ballot=Some(6) highest=Some(6) queue=3 distinct_ballots=[6] count=1
+[step=89] DELIVER from=3 to=1 type=Accepted { ballot: 6, value: "v1" } queue_len=3
+[PAXOS-QUORUM-ACCEPTED] ballot=6 count=3 quorum=3 current=6
+[RANDOM-SCHED] Deliver Accepted { ballot: 6, value: "v1" } ballot=Some(6) highest=Some(6) queue=2 distinct_ballots=[6] count=1
+[step=90] DELIVER from=4 to=1 type=Accepted { ballot: 6, value: "v1" } queue_len=2
+[RANDOM-SCHED] Deliver Nack { ballot: 6, promised_ballot: 6 } ballot=Some(6) highest=Some(6) queue=1 distinct_ballots=[6] count=1
+[step=91] DELIVER from=5 to=1 type=Nack { ballot: 6, promised_ballot: 6 } queue_len=1
+[PAXOS-NACK] from=5 to=1 promised=6 current=6
+[PAXOS-RETRY] new_ballot=7
+[RANDOM-SCHED] Deliver Prepare { ballot: 7 } ballot=Some(7) highest=Some(7) queue=5 distinct_ballots=[6, 7] count=2
+[step=92] DELIVER from=1 to=1 type=Prepare { ballot: 7 } queue_len=5
+[RANDOM-SCHED] Deliver Prepare { ballot: 7 } ballot=Some(7) highest=Some(7) queue=5 distinct_ballots=[6, 7] count=2
+[step=93] DELIVER from=1 to=4 type=Prepare { ballot: 7 } queue_len=5
+[RANDOM-SCHED] Deliver Promise { ballot: 7, accepted_ballot: Some(6), accepted_value: Some("v1") } ballot=Some(7) highest=Some(7) queue=5 distinct_ballots=[6, 7] count=2
+[step=94] DELIVER from=1 to=1 type=Promise { ballot: 7, accepted_ballot: Some(6), accepted_value: Some("v1") } queue_len=5
+[RANDOM-SCHED] Deliver Promise { ballot: 7, accepted_ballot: Some(6), accepted_value: Some("v1") } ballot=Some(7) highest=Some(7) queue=4 distinct_ballots=[6, 7] count=2
+[step=95] DELIVER from=4 to=1 type=Promise { ballot: 7, accepted_ballot: Some(6), accepted_value: Some("v1") } queue_len=4
+[RANDOM-SCHED] Deliver Prepare { ballot: 7 } ballot=Some(7) highest=Some(7) queue=3 distinct_ballots=[6, 7] count=2
+[step=96] DELIVER from=1 to=3 type=Prepare { ballot: 7 } queue_len=3
+[RANDOM-SCHED] Deliver Prepare { ballot: 7 } ballot=Some(7) highest=Some(7) queue=3 distinct_ballots=[6, 7] count=2
+[step=97] DELIVER from=1 to=2 type=Prepare { ballot: 7 } queue_len=3
+[RANDOM-SCHED] Deliver Promise { ballot: 7, accepted_ballot: Some(6), accepted_value: Some("v1") } ballot=Some(7) highest=Some(7) queue=3 distinct_ballots=[6, 7] count=2
+[step=98] DELIVER from=3 to=1 type=Promise { ballot: 7, accepted_ballot: Some(6), accepted_value: Some("v1") } queue_len=3
+[PAXOS-QUORUM-PROMISE] ballot=7 count=3 quorum=3 current=7
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 7, value: "v1" } ballot=Some(7) highest=Some(7) queue=7 distinct_ballots=[6, 7] count=2
+[step=99] DELIVER from=1 to=3 type=AcceptRequest { ballot: 7, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(7, v1)
+[RANDOM-SCHED] Deliver Accepted { ballot: 7, value: "v1" } ballot=Some(7) highest=Some(7) queue=7 distinct_ballots=[6, 7] count=2
+[step=100] DELIVER from=3 to=1 type=Accepted { ballot: 7, value: "v1" } queue_len=7
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 7, value: "v1" } ballot=Some(7) highest=Some(7) queue=6 distinct_ballots=[6, 7] count=2
+[step=101] DELIVER from=1 to=4 type=AcceptRequest { ballot: 7, value: "v1" } queue_len=6
+Broadcasting AcceptRequest(7, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 7, value: "v1" } ballot=Some(7) highest=Some(7) queue=6 distinct_ballots=[6, 7] count=2
+[step=102] DELIVER from=1 to=2 type=AcceptRequest { ballot: 7, value: "v1" } queue_len=6
+Broadcasting AcceptRequest(7, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 6, value: "v1" } ballot=Some(6) highest=Some(7) queue=6 distinct_ballots=[7] count=1
+[step=103] DELIVER from=1 to=2 type=AcceptRequest { ballot: 6, value: "v1" } queue_len=6
+Broadcasting AcceptRequest(6, v1)
+[RANDOM-SCHED] Deliver Promise { ballot: 7, accepted_ballot: Some(5), accepted_value: Some("v1") } ballot=Some(7) highest=Some(7) queue=6 distinct_ballots=[6, 7] count=2
+[step=104] DELIVER from=2 to=1 type=Promise { ballot: 7, accepted_ballot: Some(5), accepted_value: Some("v1") } queue_len=6
+[RANDOM-SCHED] Deliver Nack { ballot: 6, promised_ballot: 7 } ballot=Some(6) highest=Some(7) queue=5 distinct_ballots=[7] count=1
+[step=105] DELIVER from=2 to=1 type=Nack { ballot: 6, promised_ballot: 7 } queue_len=5
+[PAXOS-NACK] from=2 to=1 promised=7 current=7
+[PAXOS-RETRY] new_ballot=8
+[RANDOM-SCHED] Deliver Accepted { ballot: 7, value: "v1" } ballot=Some(7) highest=Some(8) queue=9 distinct_ballots=[7, 8] count=2
+[step=106] DELIVER from=4 to=1 type=Accepted { ballot: 7, value: "v1" } queue_len=9
+[RANDOM-SCHED] Deliver Prepare { ballot: 8 } ballot=Some(8) highest=Some(8) queue=8 distinct_ballots=[7, 8] count=2
+[step=107] DELIVER from=1 to=4 type=Prepare { ballot: 8 } queue_len=8
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 7, value: "v1" } ballot=Some(7) highest=Some(8) queue=8 distinct_ballots=[7, 8] count=2
+[step=108] DELIVER from=1 to=1 type=AcceptRequest { ballot: 7, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(7, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 8 } ballot=Some(8) highest=Some(8) queue=8 distinct_ballots=[7, 8] count=2
+[step=109] DELIVER from=1 to=5 type=Prepare { ballot: 8 } queue_len=8
+[RANDOM-SCHED] Deliver Prepare { ballot: 8 } ballot=Some(8) highest=Some(8) queue=8 distinct_ballots=[7, 8] count=2
+[step=110] DELIVER from=1 to=2 type=Prepare { ballot: 8 } queue_len=8
+[RANDOM-SCHED] Deliver Prepare { ballot: 7 } ballot=Some(7) highest=Some(8) queue=8 distinct_ballots=[7, 8] count=2
+[step=111] DELIVER from=1 to=5 type=Prepare { ballot: 7 } queue_len=8
+[RANDOM-SCHED] Deliver Promise { ballot: 8, accepted_ballot: Some(6), accepted_value: Some("v1") } ballot=Some(8) highest=Some(8) queue=8 distinct_ballots=[7, 8] count=2
+[step=112] DELIVER from=5 to=1 type=Promise { ballot: 8, accepted_ballot: Some(6), accepted_value: Some("v1") } queue_len=8
+[RANDOM-SCHED] Deliver Accepted { ballot: 7, value: "v1" } ballot=Some(7) highest=Some(8) queue=7 distinct_ballots=[7, 8] count=2
+[step=113] DELIVER from=2 to=1 type=Accepted { ballot: 7, value: "v1" } queue_len=7
+[RANDOM-SCHED] Deliver Accepted { ballot: 7, value: "v1" } ballot=Some(7) highest=Some(8) queue=6 distinct_ballots=[7, 8] count=2
+[step=114] DELIVER from=1 to=1 type=Accepted { ballot: 7, value: "v1" } queue_len=6
+[RANDOM-SCHED] Deliver Prepare { ballot: 8 } ballot=Some(8) highest=Some(8) queue=5 distinct_ballots=[7, 8] count=2
+[step=115] DELIVER from=1 to=1 type=Prepare { ballot: 8 } queue_len=5
+[RANDOM-SCHED] Deliver Promise { ballot: 8, accepted_ballot: Some(7), accepted_value: Some("v1") } ballot=Some(8) highest=Some(8) queue=5 distinct_ballots=[7, 8] count=2
+[step=116] DELIVER from=2 to=1 type=Promise { ballot: 8, accepted_ballot: Some(7), accepted_value: Some("v1") } queue_len=5
+[RANDOM-SCHED] Deliver Prepare { ballot: 8 } ballot=Some(8) highest=Some(8) queue=4 distinct_ballots=[7, 8] count=2
+[step=117] DELIVER from=1 to=3 type=Prepare { ballot: 8 } queue_len=4
+[RANDOM-SCHED] Deliver Promise { ballot: 8, accepted_ballot: Some(7), accepted_value: Some("v1") } ballot=Some(8) highest=Some(8) queue=4 distinct_ballots=[7, 8] count=2
+[step=118] DELIVER from=3 to=1 type=Promise { ballot: 8, accepted_ballot: Some(7), accepted_value: Some("v1") } queue_len=4
+[PAXOS-QUORUM-PROMISE] ballot=8 count=3 quorum=3 current=8
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 8, value: "v1" } ballot=Some(8) highest=Some(8) queue=8 distinct_ballots=[7, 8] count=2
+[step=119] DELIVER from=1 to=4 type=AcceptRequest { ballot: 8, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(8, v1)
+[RANDOM-SCHED] Deliver Promise { ballot: 8, accepted_ballot: Some(7), accepted_value: Some("v1") } ballot=Some(8) highest=Some(8) queue=8 distinct_ballots=[7, 8] count=2
+[step=120] DELIVER from=1 to=1 type=Promise { ballot: 8, accepted_ballot: Some(7), accepted_value: Some("v1") } queue_len=8
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 8, value: "v1" } ballot=Some(8) highest=Some(8) queue=7 distinct_ballots=[7, 8] count=2
+[step=121] DELIVER from=1 to=1 type=AcceptRequest { ballot: 8, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(8, v1)
+[RANDOM-SCHED] Deliver Promise { ballot: 8, accepted_ballot: Some(7), accepted_value: Some("v1") } ballot=Some(8) highest=Some(8) queue=7 distinct_ballots=[7, 8] count=2
+[step=122] DELIVER from=4 to=1 type=Promise { ballot: 8, accepted_ballot: Some(7), accepted_value: Some("v1") } queue_len=7
+[RANDOM-SCHED] Deliver Accepted { ballot: 8, value: "v1" } ballot=Some(8) highest=Some(8) queue=6 distinct_ballots=[7, 8] count=2
+[step=123] DELIVER from=1 to=1 type=Accepted { ballot: 8, value: "v1" } queue_len=6
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 8, value: "v1" } ballot=Some(8) highest=Some(8) queue=5 distinct_ballots=[7, 8] count=2
+[step=124] DELIVER from=1 to=3 type=AcceptRequest { ballot: 8, value: "v1" } queue_len=5
+Broadcasting AcceptRequest(8, v1)
+[RANDOM-SCHED] Deliver Accepted { ballot: 8, value: "v1" } ballot=Some(8) highest=Some(8) queue=5 distinct_ballots=[7, 8] count=2
+[step=125] DELIVER from=3 to=1 type=Accepted { ballot: 8, value: "v1" } queue_len=5
+[RANDOM-SCHED] Deliver Nack { ballot: 7, promised_ballot: 8 } ballot=Some(7) highest=Some(8) queue=4 distinct_ballots=[7, 8] count=2
+[step=126] DELIVER from=5 to=1 type=Nack { ballot: 7, promised_ballot: 8 } queue_len=4
+[PAXOS-NACK] from=5 to=1 promised=8 current=8
+[PAXOS-RETRY] new_ballot=9
+[RANDOM-SCHED] Deliver Prepare { ballot: 9 } ballot=Some(9) highest=Some(9) queue=8 distinct_ballots=[7, 8, 9] count=3
+[step=127] DELIVER from=1 to=5 type=Prepare { ballot: 9 } queue_len=8
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 8, value: "v1" } ballot=Some(8) highest=Some(9) queue=8 distinct_ballots=[7, 8, 9] count=3
+[step=128] DELIVER from=1 to=2 type=AcceptRequest { ballot: 8, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(8, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 9 } ballot=Some(9) highest=Some(9) queue=8 distinct_ballots=[7, 8, 9] count=3
+[step=129] DELIVER from=1 to=1 type=Prepare { ballot: 9 } queue_len=8
+[RANDOM-SCHED] Deliver Accepted { ballot: 8, value: "v1" } ballot=Some(8) highest=Some(9) queue=8 distinct_ballots=[7, 8, 9] count=3
+[step=130] DELIVER from=2 to=1 type=Accepted { ballot: 8, value: "v1" } queue_len=8
+[RANDOM-SCHED] Deliver Prepare { ballot: 9 } ballot=Some(9) highest=Some(9) queue=7 distinct_ballots=[7, 8, 9] count=3
+[step=131] DELIVER from=1 to=4 type=Prepare { ballot: 9 } queue_len=7
+[RANDOM-SCHED] Deliver Accepted { ballot: 8, value: "v1" } ballot=Some(8) highest=Some(9) queue=7 distinct_ballots=[7, 8, 9] count=3
+[step=132] DELIVER from=4 to=1 type=Accepted { ballot: 8, value: "v1" } queue_len=7
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 8, value: "v1" } ballot=Some(8) highest=Some(9) queue=6 distinct_ballots=[7, 9] count=2
+[step=133] DELIVER from=1 to=5 type=AcceptRequest { ballot: 8, value: "v1" } queue_len=6
+Broadcasting AcceptRequest(8, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 9 } ballot=Some(9) highest=Some(9) queue=6 distinct_ballots=[7, 8, 9] count=3
+[step=134] DELIVER from=1 to=2 type=Prepare { ballot: 9 } queue_len=6
+[RANDOM-SCHED] Deliver Promise { ballot: 9, accepted_ballot: Some(8), accepted_value: Some("v1") } ballot=Some(9) highest=Some(9) queue=6 distinct_ballots=[7, 8, 9] count=3
+[step=135] DELIVER from=4 to=1 type=Promise { ballot: 9, accepted_ballot: Some(8), accepted_value: Some("v1") } queue_len=6
+[RANDOM-SCHED] Deliver Promise { ballot: 9, accepted_ballot: Some(8), accepted_value: Some("v1") } ballot=Some(9) highest=Some(9) queue=5 distinct_ballots=[7, 8, 9] count=3
+[step=136] DELIVER from=2 to=1 type=Promise { ballot: 9, accepted_ballot: Some(8), accepted_value: Some("v1") } queue_len=5
+[RANDOM-SCHED] Deliver Promise { ballot: 9, accepted_ballot: Some(6), accepted_value: Some("v1") } ballot=Some(9) highest=Some(9) queue=4 distinct_ballots=[7, 8, 9] count=3
+[step=137] DELIVER from=5 to=1 type=Promise { ballot: 9, accepted_ballot: Some(6), accepted_value: Some("v1") } queue_len=4
+[PAXOS-QUORUM-PROMISE] ballot=9 count=3 quorum=3 current=9
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 9, value: "v1" } ballot=Some(9) highest=Some(9) queue=8 distinct_ballots=[7, 8, 9] count=3
+[step=138] DELIVER from=1 to=3 type=AcceptRequest { ballot: 9, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(9, v1)
+[RANDOM-SCHED] Deliver Promise { ballot: 9, accepted_ballot: Some(8), accepted_value: Some("v1") } ballot=Some(9) highest=Some(9) queue=8 distinct_ballots=[7, 8, 9] count=3
+[step=139] DELIVER from=1 to=1 type=Promise { ballot: 9, accepted_ballot: Some(8), accepted_value: Some("v1") } queue_len=8
+[RANDOM-SCHED] Deliver Nack { ballot: 8, promised_ballot: 9 } ballot=Some(8) highest=Some(9) queue=7 distinct_ballots=[7, 9] count=2
+[step=140] DELIVER from=5 to=1 type=Nack { ballot: 8, promised_ballot: 9 } queue_len=7
+[PAXOS-NACK] from=5 to=1 promised=9 current=9
+[PAXOS-RETRY] new_ballot=10
+[RANDOM-SCHED] Deliver Accepted { ballot: 9, value: "v1" } ballot=Some(9) highest=Some(10) queue=11 distinct_ballots=[7, 9, 10] count=3
+[step=141] DELIVER from=3 to=1 type=Accepted { ballot: 9, value: "v1" } queue_len=11
+[RANDOM-SCHED] Deliver Prepare { ballot: 10 } ballot=Some(10) highest=Some(10) queue=10 distinct_ballots=[7, 9, 10] count=3
+[step=142] DELIVER from=1 to=3 type=Prepare { ballot: 10 } queue_len=10
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 9, value: "v1" } ballot=Some(9) highest=Some(10) queue=10 distinct_ballots=[7, 9, 10] count=3
+[step=143] DELIVER from=1 to=5 type=AcceptRequest { ballot: 9, value: "v1" } queue_len=10
+Broadcasting AcceptRequest(9, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 10 } ballot=Some(10) highest=Some(10) queue=10 distinct_ballots=[7, 9, 10] count=3
+[step=144] DELIVER from=1 to=5 type=Prepare { ballot: 10 } queue_len=10
+[RANDOM-SCHED] Deliver Prepare { ballot: 9 } ballot=Some(9) highest=Some(10) queue=10 distinct_ballots=[7, 9, 10] count=3
+[step=145] DELIVER from=1 to=3 type=Prepare { ballot: 9 } queue_len=10
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 9, value: "v1" } ballot=Some(9) highest=Some(10) queue=10 distinct_ballots=[7, 9, 10] count=3
+[step=146] DELIVER from=1 to=2 type=AcceptRequest { ballot: 9, value: "v1" } queue_len=10
+Broadcasting AcceptRequest(9, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 10 } ballot=Some(10) highest=Some(10) queue=10 distinct_ballots=[7, 9, 10] count=3
+[step=147] DELIVER from=1 to=4 type=Prepare { ballot: 10 } queue_len=10
+[RANDOM-SCHED] Deliver Prepare { ballot: 10 } ballot=Some(10) highest=Some(10) queue=10 distinct_ballots=[7, 9, 10] count=3
+[step=148] DELIVER from=1 to=2 type=Prepare { ballot: 10 } queue_len=10
+[RANDOM-SCHED] Deliver Promise { ballot: 10, accepted_ballot: Some(9), accepted_value: Some("v1") } ballot=Some(10) highest=Some(10) queue=10 distinct_ballots=[7, 9, 10] count=3
+[step=149] DELIVER from=5 to=1 type=Promise { ballot: 10, accepted_ballot: Some(9), accepted_value: Some("v1") } queue_len=10
+[RANDOM-SCHED] Deliver Accepted { ballot: 9, value: "v1" } ballot=Some(9) highest=Some(10) queue=9 distinct_ballots=[7, 9, 10] count=3
+[step=150] DELIVER from=5 to=1 type=Accepted { ballot: 9, value: "v1" } queue_len=9
+[RANDOM-SCHED] Deliver Promise { ballot: 10, accepted_ballot: Some(9), accepted_value: Some("v1") } ballot=Some(10) highest=Some(10) queue=8 distinct_ballots=[7, 9, 10] count=3
+[step=151] DELIVER from=3 to=1 type=Promise { ballot: 10, accepted_ballot: Some(9), accepted_value: Some("v1") } queue_len=8
+[RANDOM-SCHED] Deliver Accepted { ballot: 9, value: "v1" } ballot=Some(9) highest=Some(10) queue=7 distinct_ballots=[7, 9, 10] count=3
+[step=152] DELIVER from=2 to=1 type=Accepted { ballot: 9, value: "v1" } queue_len=7
+[RANDOM-SCHED] Deliver Nack { ballot: 9, promised_ballot: 10 } ballot=Some(9) highest=Some(10) queue=6 distinct_ballots=[7, 9, 10] count=3
+[step=153] DELIVER from=3 to=1 type=Nack { ballot: 9, promised_ballot: 10 } queue_len=6
+[PAXOS-NACK] from=3 to=1 promised=10 current=10
+[PAXOS-RETRY] new_ballot=11
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 9, value: "v1" } ballot=Some(9) highest=Some(11) queue=10 distinct_ballots=[7, 9, 10, 11] count=4
+[step=154] DELIVER from=1 to=4 type=AcceptRequest { ballot: 9, value: "v1" } queue_len=10
+Broadcasting AcceptRequest(9, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 11 } ballot=Some(11) highest=Some(11) queue=10 distinct_ballots=[7, 9, 10, 11] count=4
+[step=155] DELIVER from=1 to=3 type=Prepare { ballot: 11 } queue_len=10
+[RANDOM-SCHED] Deliver Prepare { ballot: 11 } ballot=Some(11) highest=Some(11) queue=10 distinct_ballots=[7, 9, 10, 11] count=4
+[step=156] DELIVER from=1 to=5 type=Prepare { ballot: 11 } queue_len=10
+[RANDOM-SCHED] Deliver Promise { ballot: 11, accepted_ballot: Some(9), accepted_value: Some("v1") } ballot=Some(11) highest=Some(11) queue=10 distinct_ballots=[7, 9, 10, 11] count=4
+[step=157] DELIVER from=3 to=1 type=Promise { ballot: 11, accepted_ballot: Some(9), accepted_value: Some("v1") } queue_len=10
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 9, value: "v1" } ballot=Some(9) highest=Some(11) queue=9 distinct_ballots=[7, 9, 10, 11] count=4
+[step=158] DELIVER from=1 to=1 type=AcceptRequest { ballot: 9, value: "v1" } queue_len=9
+Broadcasting AcceptRequest(9, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 11 } ballot=Some(11) highest=Some(11) queue=9 distinct_ballots=[7, 9, 10, 11] count=4
+[step=159] DELIVER from=1 to=4 type=Prepare { ballot: 11 } queue_len=9
+[RANDOM-SCHED] Deliver Promise { ballot: 11, accepted_ballot: Some(9), accepted_value: Some("v1") } ballot=Some(11) highest=Some(11) queue=9 distinct_ballots=[7, 9, 10, 11] count=4
+[step=160] DELIVER from=5 to=1 type=Promise { ballot: 11, accepted_ballot: Some(9), accepted_value: Some("v1") } queue_len=9
+[RANDOM-SCHED] Deliver Prepare { ballot: 11 } ballot=Some(11) highest=Some(11) queue=8 distinct_ballots=[7, 9, 10, 11] count=4
+[step=161] DELIVER from=1 to=2 type=Prepare { ballot: 11 } queue_len=8
+[RANDOM-SCHED] Deliver Nack { ballot: 9, promised_ballot: 10 } ballot=Some(9) highest=Some(11) queue=8 distinct_ballots=[7, 9, 10, 11] count=4
+[step=162] DELIVER from=4 to=1 type=Nack { ballot: 9, promised_ballot: 10 } queue_len=8
+[PAXOS-NACK] from=4 to=1 promised=10 current=11
+[RANDOM-SCHED] Deliver Promise { ballot: 10, accepted_ballot: Some(9), accepted_value: Some("v1") } ballot=Some(10) highest=Some(11) queue=7 distinct_ballots=[7, 9, 10, 11] count=4
+[step=163] DELIVER from=2 to=1 type=Promise { ballot: 10, accepted_ballot: Some(9), accepted_value: Some("v1") } queue_len=7
+[RANDOM-SCHED] Deliver Promise { ballot: 10, accepted_ballot: Some(8), accepted_value: Some("v1") } ballot=Some(10) highest=Some(11) queue=6 distinct_ballots=[7, 9, 10, 11] count=4
+[step=164] DELIVER from=4 to=1 type=Promise { ballot: 10, accepted_ballot: Some(8), accepted_value: Some("v1") } queue_len=6
+[RANDOM-SCHED] Deliver Accepted { ballot: 9, value: "v1" } ballot=Some(9) highest=Some(11) queue=5 distinct_ballots=[7, 10, 11] count=3
+[step=165] DELIVER from=1 to=1 type=Accepted { ballot: 9, value: "v1" } queue_len=5
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 7, value: "v1" } ballot=Some(7) highest=Some(11) queue=4 distinct_ballots=[10, 11] count=2
+[step=166] DELIVER from=1 to=5 type=AcceptRequest { ballot: 7, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(7, v1)
+[RANDOM-SCHED] Deliver Promise { ballot: 11, accepted_ballot: Some(8), accepted_value: Some("v1") } ballot=Some(11) highest=Some(11) queue=4 distinct_ballots=[7, 10, 11] count=3
+[step=167] DELIVER from=4 to=1 type=Promise { ballot: 11, accepted_ballot: Some(8), accepted_value: Some("v1") } queue_len=4
+[PAXOS-QUORUM-PROMISE] ballot=11 count=3 quorum=3 current=11
+[RANDOM-SCHED] Deliver Nack { ballot: 7, promised_ballot: 11 } ballot=Some(7) highest=Some(11) queue=8 distinct_ballots=[10, 11] count=2
+[step=168] DELIVER from=5 to=1 type=Nack { ballot: 7, promised_ballot: 11 } queue_len=8
+[PAXOS-NACK] from=5 to=1 promised=11 current=11
+[PAXOS-RETRY] new_ballot=12
+[RANDOM-SCHED] Deliver Prepare { ballot: 10 } ballot=Some(10) highest=Some(12) queue=12 distinct_ballots=[11, 12] count=2
+[step=169] DELIVER from=1 to=1 type=Prepare { ballot: 10 } queue_len=12
+[RANDOM-SCHED] Deliver Prepare { ballot: 12 } ballot=Some(12) highest=Some(12) queue=12 distinct_ballots=[10, 11, 12] count=3
+[step=170] DELIVER from=1 to=2 type=Prepare { ballot: 12 } queue_len=12
+[RANDOM-SCHED] Deliver Prepare { ballot: 12 } ballot=Some(12) highest=Some(12) queue=12 distinct_ballots=[10, 11, 12] count=3
+[step=171] DELIVER from=1 to=1 type=Prepare { ballot: 12 } queue_len=12
+[RANDOM-SCHED] Deliver Prepare { ballot: 12 } ballot=Some(12) highest=Some(12) queue=12 distinct_ballots=[10, 11, 12] count=3
+[step=172] DELIVER from=1 to=3 type=Prepare { ballot: 12 } queue_len=12
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 11, value: "v1" } ballot=Some(11) highest=Some(12) queue=12 distinct_ballots=[10, 11, 12] count=3
+[step=173] DELIVER from=1 to=3 type=AcceptRequest { ballot: 11, value: "v1" } queue_len=12
+Broadcasting AcceptRequest(11, v1)
+[RANDOM-SCHED] Deliver Promise { ballot: 12, accepted_ballot: Some(9), accepted_value: Some("v1") } ballot=Some(12) highest=Some(12) queue=12 distinct_ballots=[10, 11, 12] count=3
+[step=174] DELIVER from=2 to=1 type=Promise { ballot: 12, accepted_ballot: Some(9), accepted_value: Some("v1") } queue_len=12
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 11, value: "v1" } ballot=Some(11) highest=Some(12) queue=11 distinct_ballots=[10, 11, 12] count=3
+[step=175] DELIVER from=1 to=5 type=AcceptRequest { ballot: 11, value: "v1" } queue_len=11
+Broadcasting AcceptRequest(11, v1)
+[RANDOM-SCHED] Deliver Accepted { ballot: 11, value: "v1" } ballot=Some(11) highest=Some(12) queue=11 distinct_ballots=[10, 11, 12] count=3
+[step=176] DELIVER from=5 to=1 type=Accepted { ballot: 11, value: "v1" } queue_len=11
+[RANDOM-SCHED] Deliver Nack { ballot: 11, promised_ballot: 12 } ballot=Some(11) highest=Some(12) queue=10 distinct_ballots=[10, 11, 12] count=3
+[step=177] DELIVER from=3 to=1 type=Nack { ballot: 11, promised_ballot: 12 } queue_len=10
+[PAXOS-NACK] from=3 to=1 promised=12 current=12
+[PAXOS-RETRY] new_ballot=13
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 11, value: "v1" } ballot=Some(11) highest=Some(13) queue=14 distinct_ballots=[10, 11, 12, 13] count=4
+[step=178] DELIVER from=1 to=4 type=AcceptRequest { ballot: 11, value: "v1" } queue_len=14
+Broadcasting AcceptRequest(11, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 12 } ballot=Some(12) highest=Some(13) queue=14 distinct_ballots=[10, 11, 12, 13] count=4
+[step=179] DELIVER from=1 to=5 type=Prepare { ballot: 12 } queue_len=14
+[RANDOM-SCHED] Deliver Prepare { ballot: 11 } ballot=Some(11) highest=Some(13) queue=14 distinct_ballots=[10, 11, 12, 13] count=4
+[step=180] DELIVER from=1 to=1 type=Prepare { ballot: 11 } queue_len=14
+[RANDOM-SCHED] Deliver Nack { ballot: 11, promised_ballot: 12 } ballot=Some(11) highest=Some(13) queue=14 distinct_ballots=[10, 11, 12, 13] count=4
+[step=181] DELIVER from=1 to=1 type=Nack { ballot: 11, promised_ballot: 12 } queue_len=14
+[PAXOS-NACK] from=1 to=1 promised=12 current=13
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 11, value: "v1" } ballot=Some(11) highest=Some(13) queue=13 distinct_ballots=[10, 11, 12, 13] count=4
+[step=182] DELIVER from=1 to=1 type=AcceptRequest { ballot: 11, value: "v1" } queue_len=13
+Broadcasting AcceptRequest(11, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 13 } ballot=Some(13) highest=Some(13) queue=13 distinct_ballots=[10, 11, 12, 13] count=4
+[step=183] DELIVER from=1 to=3 type=Prepare { ballot: 13 } queue_len=13
+[RANDOM-SCHED] Deliver Prepare { ballot: 12 } ballot=Some(12) highest=Some(13) queue=13 distinct_ballots=[10, 11, 12, 13] count=4
+[step=184] DELIVER from=1 to=4 type=Prepare { ballot: 12 } queue_len=13
+[RANDOM-SCHED] Deliver Accepted { ballot: 11, value: "v1" } ballot=Some(11) highest=Some(13) queue=13 distinct_ballots=[10, 11, 12, 13] count=4
+[step=185] DELIVER from=4 to=1 type=Accepted { ballot: 11, value: "v1" } queue_len=13
+[RANDOM-SCHED] Deliver Promise { ballot: 13, accepted_ballot: Some(9), accepted_value: Some("v1") } ballot=Some(13) highest=Some(13) queue=12 distinct_ballots=[10, 11, 12, 13] count=4
+[step=186] DELIVER from=3 to=1 type=Promise { ballot: 13, accepted_ballot: Some(9), accepted_value: Some("v1") } queue_len=12
+[RANDOM-SCHED] Deliver Promise { ballot: 11, accepted_ballot: Some(9), accepted_value: Some("v1") } ballot=Some(11) highest=Some(13) queue=11 distinct_ballots=[10, 11, 12, 13] count=4
+[step=187] DELIVER from=2 to=1 type=Promise { ballot: 11, accepted_ballot: Some(9), accepted_value: Some("v1") } queue_len=11
+[RANDOM-SCHED] Deliver Nack { ballot: 11, promised_ballot: 12 } ballot=Some(11) highest=Some(13) queue=10 distinct_ballots=[10, 11, 12, 13] count=4
+[step=188] DELIVER from=1 to=1 type=Nack { ballot: 11, promised_ballot: 12 } queue_len=10
+[PAXOS-NACK] from=1 to=1 promised=12 current=13
+[RANDOM-SCHED] Deliver Prepare { ballot: 13 } ballot=Some(13) highest=Some(13) queue=9 distinct_ballots=[10, 11, 12, 13] count=4
+[step=189] DELIVER from=1 to=4 type=Prepare { ballot: 13 } queue_len=9
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 11, value: "v1" } ballot=Some(11) highest=Some(13) queue=9 distinct_ballots=[10, 12, 13] count=3
+[step=190] DELIVER from=1 to=2 type=AcceptRequest { ballot: 11, value: "v1" } queue_len=9
+Broadcasting AcceptRequest(11, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 13 } ballot=Some(13) highest=Some(13) queue=9 distinct_ballots=[10, 11, 12, 13] count=4
+[step=191] DELIVER from=1 to=5 type=Prepare { ballot: 13 } queue_len=9
+[RANDOM-SCHED] Deliver Promise { ballot: 12, accepted_ballot: Some(9), accepted_value: Some("v1") } ballot=Some(12) highest=Some(13) queue=9 distinct_ballots=[10, 11, 12, 13] count=4
+[step=192] DELIVER from=3 to=1 type=Promise { ballot: 12, accepted_ballot: Some(9), accepted_value: Some("v1") } queue_len=9
+[RANDOM-SCHED] Deliver Promise { ballot: 12, accepted_ballot: Some(11), accepted_value: Some("v1") } ballot=Some(12) highest=Some(13) queue=8 distinct_ballots=[10, 11, 12, 13] count=4
+[step=193] DELIVER from=4 to=1 type=Promise { ballot: 12, accepted_ballot: Some(11), accepted_value: Some("v1") } queue_len=8
+[RANDOM-SCHED] Deliver Promise { ballot: 12, accepted_ballot: Some(11), accepted_value: Some("v1") } ballot=Some(12) highest=Some(13) queue=7 distinct_ballots=[10, 11, 12, 13] count=4
+[step=194] DELIVER from=5 to=1 type=Promise { ballot: 12, accepted_ballot: Some(11), accepted_value: Some("v1") } queue_len=7
+[RANDOM-SCHED] Deliver Prepare { ballot: 13 } ballot=Some(13) highest=Some(13) queue=6 distinct_ballots=[10, 11, 12, 13] count=4
+[step=195] DELIVER from=1 to=2 type=Prepare { ballot: 13 } queue_len=6
+[RANDOM-SCHED] Deliver Nack { ballot: 11, promised_ballot: 12 } ballot=Some(11) highest=Some(13) queue=6 distinct_ballots=[10, 12, 13] count=3
+[step=196] DELIVER from=2 to=1 type=Nack { ballot: 11, promised_ballot: 12 } queue_len=6
+[PAXOS-NACK] from=2 to=1 promised=12 current=13
+[RANDOM-SCHED] Deliver Promise { ballot: 13, accepted_ballot: Some(9), accepted_value: Some("v1") } ballot=Some(13) highest=Some(13) queue=5 distinct_ballots=[10, 12, 13] count=3
+[step=197] DELIVER from=2 to=1 type=Promise { ballot: 13, accepted_ballot: Some(9), accepted_value: Some("v1") } queue_len=5
+[RANDOM-SCHED] Deliver Promise { ballot: 13, accepted_ballot: Some(11), accepted_value: Some("v1") } ballot=Some(13) highest=Some(13) queue=4 distinct_ballots=[10, 12, 13] count=3
+[step=198] DELIVER from=4 to=1 type=Promise { ballot: 13, accepted_ballot: Some(11), accepted_value: Some("v1") } queue_len=4
+[PAXOS-QUORUM-PROMISE] ballot=13 count=3 quorum=3 current=13
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 13, value: "v1" } ballot=Some(13) highest=Some(13) queue=8 distinct_ballots=[10, 12, 13] count=3
+[step=199] DELIVER from=1 to=4 type=AcceptRequest { ballot: 13, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(13, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 13, value: "v1" } ballot=Some(13) highest=Some(13) queue=8 distinct_ballots=[10, 12, 13] count=3
+[step=200] DELIVER from=1 to=1 type=AcceptRequest { ballot: 13, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(13, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 13, value: "v1" } ballot=Some(13) highest=Some(13) queue=8 distinct_ballots=[10, 12, 13] count=3
+[step=201] DELIVER from=1 to=2 type=AcceptRequest { ballot: 13, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(13, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 13, value: "v1" } ballot=Some(13) highest=Some(13) queue=8 distinct_ballots=[10, 12, 13] count=3
+[step=202] DELIVER from=1 to=5 type=AcceptRequest { ballot: 13, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(13, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 13 } ballot=Some(13) highest=Some(13) queue=8 distinct_ballots=[10, 12, 13] count=3
+[step=203] DELIVER from=1 to=1 type=Prepare { ballot: 13 } queue_len=8
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 13, value: "v1" } ballot=Some(13) highest=Some(13) queue=8 distinct_ballots=[10, 12, 13] count=3
+[step=204] DELIVER from=1 to=3 type=AcceptRequest { ballot: 13, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(13, v1)
+[RANDOM-SCHED] Deliver Nack { ballot: 13, promised_ballot: 13 } ballot=Some(13) highest=Some(13) queue=8 distinct_ballots=[10, 12, 13] count=3
+[step=205] DELIVER from=1 to=1 type=Nack { ballot: 13, promised_ballot: 13 } queue_len=8
+[PAXOS-NACK] from=1 to=1 promised=13 current=13
+[PAXOS-RETRY] new_ballot=14
+[RANDOM-SCHED] Deliver Accepted { ballot: 13, value: "v1" } ballot=Some(13) highest=Some(14) queue=12 distinct_ballots=[10, 12, 13, 14] count=4
+[step=206] DELIVER from=2 to=1 type=Accepted { ballot: 13, value: "v1" } queue_len=12
+[RANDOM-SCHED] Deliver Prepare { ballot: 14 } ballot=Some(14) highest=Some(14) queue=11 distinct_ballots=[10, 12, 13, 14] count=4
+[step=207] DELIVER from=1 to=4 type=Prepare { ballot: 14 } queue_len=11
+[RANDOM-SCHED] Deliver Promise { ballot: 10, accepted_ballot: Some(9), accepted_value: Some("v1") } ballot=Some(10) highest=Some(14) queue=11 distinct_ballots=[12, 13, 14] count=3
+[step=208] DELIVER from=1 to=1 type=Promise { ballot: 10, accepted_ballot: Some(9), accepted_value: Some("v1") } queue_len=11
+[RANDOM-SCHED] Deliver Accepted { ballot: 13, value: "v1" } ballot=Some(13) highest=Some(14) queue=10 distinct_ballots=[12, 13, 14] count=3
+[step=209] DELIVER from=3 to=1 type=Accepted { ballot: 13, value: "v1" } queue_len=10
+[RANDOM-SCHED] Deliver Promise { ballot: 14, accepted_ballot: Some(13), accepted_value: Some("v1") } ballot=Some(14) highest=Some(14) queue=9 distinct_ballots=[12, 13, 14] count=3
+[step=210] DELIVER from=4 to=1 type=Promise { ballot: 14, accepted_ballot: Some(13), accepted_value: Some("v1") } queue_len=9
+[RANDOM-SCHED] Deliver Prepare { ballot: 14 } ballot=Some(14) highest=Some(14) queue=8 distinct_ballots=[12, 13, 14] count=3
+[step=211] DELIVER from=1 to=2 type=Prepare { ballot: 14 } queue_len=8
+[RANDOM-SCHED] Deliver Promise { ballot: 14, accepted_ballot: Some(13), accepted_value: Some("v1") } ballot=Some(14) highest=Some(14) queue=8 distinct_ballots=[12, 13, 14] count=3
+[step=212] DELIVER from=2 to=1 type=Promise { ballot: 14, accepted_ballot: Some(13), accepted_value: Some("v1") } queue_len=8
+[RANDOM-SCHED] Deliver Accepted { ballot: 13, value: "v1" } ballot=Some(13) highest=Some(14) queue=7 distinct_ballots=[12, 13, 14] count=3
+[step=213] DELIVER from=1 to=1 type=Accepted { ballot: 13, value: "v1" } queue_len=7
+[RANDOM-SCHED] Deliver Prepare { ballot: 14 } ballot=Some(14) highest=Some(14) queue=6 distinct_ballots=[12, 13, 14] count=3
+[step=214] DELIVER from=1 to=3 type=Prepare { ballot: 14 } queue_len=6
+[RANDOM-SCHED] Deliver Promise { ballot: 14, accepted_ballot: Some(13), accepted_value: Some("v1") } ballot=Some(14) highest=Some(14) queue=6 distinct_ballots=[12, 13, 14] count=3
+[step=215] DELIVER from=3 to=1 type=Promise { ballot: 14, accepted_ballot: Some(13), accepted_value: Some("v1") } queue_len=6
+[PAXOS-QUORUM-PROMISE] ballot=14 count=3 quorum=3 current=14
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 14, value: "v1" } ballot=Some(14) highest=Some(14) queue=10 distinct_ballots=[12, 13, 14] count=3
+[step=216] DELIVER from=1 to=5 type=AcceptRequest { ballot: 14, value: "v1" } queue_len=10
+Broadcasting AcceptRequest(14, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 14, value: "v1" } ballot=Some(14) highest=Some(14) queue=10 distinct_ballots=[12, 13, 14] count=3
+[step=217] DELIVER from=1 to=3 type=AcceptRequest { ballot: 14, value: "v1" } queue_len=10
+Broadcasting AcceptRequest(14, v1)
+[RANDOM-SCHED] Deliver Promise { ballot: 13, accepted_ballot: Some(11), accepted_value: Some("v1") } ballot=Some(13) highest=Some(14) queue=10 distinct_ballots=[12, 13, 14] count=3
+[step=218] DELIVER from=5 to=1 type=Promise { ballot: 13, accepted_ballot: Some(11), accepted_value: Some("v1") } queue_len=10
+[RANDOM-SCHED] Deliver Accepted { ballot: 13, value: "v1" } ballot=Some(13) highest=Some(14) queue=9 distinct_ballots=[12, 13, 14] count=3
+[step=219] DELIVER from=4 to=1 type=Accepted { ballot: 13, value: "v1" } queue_len=9
+[RANDOM-SCHED] Deliver Accepted { ballot: 14, value: "v1" } ballot=Some(14) highest=Some(14) queue=8 distinct_ballots=[12, 13, 14] count=3
+[step=220] DELIVER from=3 to=1 type=Accepted { ballot: 14, value: "v1" } queue_len=8
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 14, value: "v1" } ballot=Some(14) highest=Some(14) queue=7 distinct_ballots=[12, 13, 14] count=3
+[step=221] DELIVER from=1 to=4 type=AcceptRequest { ballot: 14, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(14, v1)
+[RANDOM-SCHED] Deliver Accepted { ballot: 14, value: "v1" } ballot=Some(14) highest=Some(14) queue=7 distinct_ballots=[12, 13, 14] count=3
+[step=222] DELIVER from=5 to=1 type=Accepted { ballot: 14, value: "v1" } queue_len=7
+[RANDOM-SCHED] Deliver Prepare { ballot: 14 } ballot=Some(14) highest=Some(14) queue=6 distinct_ballots=[12, 13, 14] count=3
+[step=223] DELIVER from=1 to=5 type=Prepare { ballot: 14 } queue_len=6
+[RANDOM-SCHED] Deliver Prepare { ballot: 14 } ballot=Some(14) highest=Some(14) queue=6 distinct_ballots=[12, 13, 14] count=3
+[step=224] DELIVER from=1 to=1 type=Prepare { ballot: 14 } queue_len=6
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 14, value: "v1" } ballot=Some(14) highest=Some(14) queue=6 distinct_ballots=[12, 13, 14] count=3
+[step=225] DELIVER from=1 to=1 type=AcceptRequest { ballot: 14, value: "v1" } queue_len=6
+Broadcasting AcceptRequest(14, v1)
+[RANDOM-SCHED] Deliver Accepted { ballot: 13, value: "v1" } ballot=Some(13) highest=Some(14) queue=6 distinct_ballots=[12, 14] count=2
+[step=226] DELIVER from=5 to=1 type=Accepted { ballot: 13, value: "v1" } queue_len=6
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 14, value: "v1" } ballot=Some(14) highest=Some(14) queue=5 distinct_ballots=[12, 14] count=2
+[step=227] DELIVER from=1 to=2 type=AcceptRequest { ballot: 14, value: "v1" } queue_len=5
+Broadcasting AcceptRequest(14, v1)
+[RANDOM-SCHED] Deliver Promise { ballot: 14, accepted_ballot: Some(13), accepted_value: Some("v1") } ballot=Some(14) highest=Some(14) queue=5 distinct_ballots=[12, 14] count=2
+[step=228] DELIVER from=1 to=1 type=Promise { ballot: 14, accepted_ballot: Some(13), accepted_value: Some("v1") } queue_len=5
+[RANDOM-SCHED] Deliver Accepted { ballot: 14, value: "v1" } ballot=Some(14) highest=Some(14) queue=4 distinct_ballots=[12, 14] count=2
+[step=229] DELIVER from=4 to=1 type=Accepted { ballot: 14, value: "v1" } queue_len=4
+[RANDOM-SCHED] Deliver Nack { ballot: 14, promised_ballot: 14 } ballot=Some(14) highest=Some(14) queue=3 distinct_ballots=[12, 14] count=2
+[step=230] DELIVER from=5 to=1 type=Nack { ballot: 14, promised_ballot: 14 } queue_len=3
+[PAXOS-NACK] from=5 to=1 promised=14 current=14
+[PAXOS-RETRY] new_ballot=15
+[RANDOM-SCHED] Deliver Prepare { ballot: 15 } ballot=Some(15) highest=Some(15) queue=7 distinct_ballots=[12, 14, 15] count=3
+[step=231] DELIVER from=1 to=2 type=Prepare { ballot: 15 } queue_len=7
+[RANDOM-SCHED] Deliver Prepare { ballot: 15 } ballot=Some(15) highest=Some(15) queue=7 distinct_ballots=[12, 14, 15] count=3
+[step=232] DELIVER from=1 to=5 type=Prepare { ballot: 15 } queue_len=7
+[RANDOM-SCHED] Deliver Accepted { ballot: 14, value: "v1" } ballot=Some(14) highest=Some(15) queue=7 distinct_ballots=[12, 14, 15] count=3
+[step=233] DELIVER from=2 to=1 type=Accepted { ballot: 14, value: "v1" } queue_len=7
+[RANDOM-SCHED] Deliver Promise { ballot: 15, accepted_ballot: Some(14), accepted_value: Some("v1") } ballot=Some(15) highest=Some(15) queue=6 distinct_ballots=[12, 14, 15] count=3
+[step=234] DELIVER from=2 to=1 type=Promise { ballot: 15, accepted_ballot: Some(14), accepted_value: Some("v1") } queue_len=6
+[RANDOM-SCHED] Deliver Prepare { ballot: 15 } ballot=Some(15) highest=Some(15) queue=5 distinct_ballots=[12, 14, 15] count=3
+[step=235] DELIVER from=1 to=1 type=Prepare { ballot: 15 } queue_len=5
+[RANDOM-SCHED] Deliver Prepare { ballot: 15 } ballot=Some(15) highest=Some(15) queue=5 distinct_ballots=[12, 14, 15] count=3
+[step=236] DELIVER from=1 to=4 type=Prepare { ballot: 15 } queue_len=5
+[RANDOM-SCHED] Deliver Promise { ballot: 15, accepted_ballot: Some(14), accepted_value: Some("v1") } ballot=Some(15) highest=Some(15) queue=5 distinct_ballots=[12, 14, 15] count=3
+[step=237] DELIVER from=1 to=1 type=Promise { ballot: 15, accepted_ballot: Some(14), accepted_value: Some("v1") } queue_len=5
+[RANDOM-SCHED] Deliver Promise { ballot: 12, accepted_ballot: Some(9), accepted_value: Some("v1") } ballot=Some(12) highest=Some(15) queue=4 distinct_ballots=[14, 15] count=2
+[step=238] DELIVER from=1 to=1 type=Promise { ballot: 12, accepted_ballot: Some(9), accepted_value: Some("v1") } queue_len=4
+[RANDOM-SCHED] Deliver Promise { ballot: 15, accepted_ballot: Some(14), accepted_value: Some("v1") } ballot=Some(15) highest=Some(15) queue=3 distinct_ballots=[14, 15] count=2
+[step=239] DELIVER from=4 to=1 type=Promise { ballot: 15, accepted_ballot: Some(14), accepted_value: Some("v1") } queue_len=3
+[PAXOS-QUORUM-PROMISE] ballot=15 count=3 quorum=3 current=15
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 15, value: "v1" } ballot=Some(15) highest=Some(15) queue=7 distinct_ballots=[14, 15] count=2
+[step=240] DELIVER from=1 to=1 type=AcceptRequest { ballot: 15, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(15, v1)
+[RANDOM-SCHED] Deliver Accepted { ballot: 15, value: "v1" } ballot=Some(15) highest=Some(15) queue=7 distinct_ballots=[14, 15] count=2
+[step=241] DELIVER from=1 to=1 type=Accepted { ballot: 15, value: "v1" } queue_len=7
+[RANDOM-SCHED] Deliver Accepted { ballot: 14, value: "v1" } ballot=Some(14) highest=Some(15) queue=6 distinct_ballots=[15] count=1
+[step=242] DELIVER from=1 to=1 type=Accepted { ballot: 14, value: "v1" } queue_len=6
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 15, value: "v1" } ballot=Some(15) highest=Some(15) queue=5 distinct_ballots=[15] count=1
+[step=243] DELIVER from=1 to=2 type=AcceptRequest { ballot: 15, value: "v1" } queue_len=5
+Broadcasting AcceptRequest(15, v1)
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 15, value: "v1" } ballot=Some(15) highest=Some(15) queue=5 distinct_ballots=[15] count=1
+[step=244] DELIVER from=1 to=5 type=AcceptRequest { ballot: 15, value: "v1" } queue_len=5
+Broadcasting AcceptRequest(15, v1)
+[RANDOM-SCHED] Deliver Promise { ballot: 15, accepted_ballot: Some(14), accepted_value: Some("v1") } ballot=Some(15) highest=Some(15) queue=5 distinct_ballots=[15] count=1
+[step=245] DELIVER from=5 to=1 type=Promise { ballot: 15, accepted_ballot: Some(14), accepted_value: Some("v1") } queue_len=5
+[RANDOM-SCHED] Deliver Accepted { ballot: 15, value: "v1" } ballot=Some(15) highest=Some(15) queue=4 distinct_ballots=[15] count=1
+[step=246] DELIVER from=2 to=1 type=Accepted { ballot: 15, value: "v1" } queue_len=4
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 15, value: "v1" } ballot=Some(15) highest=Some(15) queue=3 distinct_ballots=[15] count=1
+[step=247] DELIVER from=1 to=4 type=AcceptRequest { ballot: 15, value: "v1" } queue_len=3
+Broadcasting AcceptRequest(15, v1)
+[RANDOM-SCHED] Deliver Prepare { ballot: 15 } ballot=Some(15) highest=Some(15) queue=3 distinct_ballots=[15] count=1
+[step=248] DELIVER from=1 to=3 type=Prepare { ballot: 15 } queue_len=3
+[RANDOM-SCHED] Deliver Accepted { ballot: 15, value: "v1" } ballot=Some(15) highest=Some(15) queue=3 distinct_ballots=[15] count=1
+[step=249] DELIVER from=5 to=1 type=Accepted { ballot: 15, value: "v1" } queue_len=3
+[RANDOM-SCHED] Deliver Promise { ballot: 15, accepted_ballot: Some(14), accepted_value: Some("v1") } ballot=Some(15) highest=Some(15) queue=2 distinct_ballots=[15] count=1
+[step=250] DELIVER from=3 to=1 type=Promise { ballot: 15, accepted_ballot: Some(14), accepted_value: Some("v1") } queue_len=2
+[RANDOM-SCHED] Deliver Accepted { ballot: 15, value: "v1" } ballot=Some(15) highest=Some(15) queue=1 distinct_ballots=[15] count=1
+[step=251] DELIVER from=4 to=1 type=Accepted { ballot: 15, value: "v1" } queue_len=1
+[RANDOM-SCHED] Deliver AcceptRequest { ballot: 15, value: "v1" } ballot=Some(15) highest=None queue=0 distinct_ballots=[] count=0
+[step=252] DELIVER from=1 to=3 type=AcceptRequest { ballot: 15, value: "v1" } queue_len=0
+Broadcasting AcceptRequest(15, v1)
+[RANDOM-SCHED] Deliver Accepted { ballot: 15, value: "v1" } ballot=Some(15) highest=None queue=0 distinct_ballots=[] count=0
+[step=253] DELIVER from=3 to=1 type=Accepted { ballot: 15, value: "v1" } queue_len=0
+
+=== Metrics ===
+Messages Sent: 252
+Messages Delivered: 254
+Scheduler Steps: 254
+Stale Messages Ignored: 0
+Messages Sent Until Decision: 0
+Undelivered Messages At Decision: 0
+Timeout triggered: 1
+View changes: 0
+Decisions: 1
+Prepare Messages: 72
+Promise Messages: 63
+Accept Requests: 55
+Accepted Messages: 43
+Raft Leader Elected: false
+Raft Leader Id: None
+Raft Election Count: 0
+AppendEntries Messages: 0
+AppendResponse Messages: 0
+Heartbeat Successes: 0
+Heartbeat Rejections: 0
+Raft Config Changes: 0
+Raft Config Acks: 0
+Raft Config Activated: false
+Nack Messages: 21
+Paxos Retries: 14
+Max Ballot Seen: 15
+Membership Changes: 0
+Membership Acks: 0
+Chosen Values: {"v1"}
+Safety Violation: false
+Paxos Retry Exhausted: false
+Critical Messages Delayed: 0
+Delayed Messages Released: 0

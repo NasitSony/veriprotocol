@@ -4,7 +4,7 @@ use crate::scheduler::{
     DelayScheduler, FifoScheduler, ProbabilisticDelayScheduler, ProposalDelayScheduler,
     QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome, TimeoutFirstScheduler,
     VoteDelayScheduler,CriticalMessageDelayScheduler, PaxosRetryAdversaryScheduler, PaxosRetryScheduler, PaxosOverlapScheduler, 
-    PaxosProgressScheduler, PaxosBallotOverlapScheduler,
+    PaxosProgressScheduler, PaxosBallotOverlapScheduler, PaxosGapOneScheduler,PaxosGapOneBacklogScheduler,
 };
 
 use std::collections::HashMap;
@@ -69,6 +69,29 @@ impl Network {
                 delays_used: 0,
                 held: Vec::new(),
                 promise_seen: HashMap::new(),
+            }),
+
+            
+
+            "gap1" => Box::new(PaxosGapOneScheduler {
+                max_delay: max_delay as usize,
+                delays_used: 0,
+                held_by_ballot: HashMap::new(),
+                prepare_seen: HashMap::new(),
+                quorum_size: 3, // temporary for 5 nodes
+
+                max_held_backlog: 0,
+                held_inserts: 0,
+                held_releases: 0,
+            }),
+
+            "gap1-backlog" => Box::new(PaxosGapOneBacklogScheduler {
+                max_delay: max_delay as usize,
+                delays_used: 0,
+                held_by_ballot: HashMap::new(),
+                prepare_seen: HashMap::new(),
+                quorum_size: 3,
+                release_after_held: 4,
             }),
 
             _ => {

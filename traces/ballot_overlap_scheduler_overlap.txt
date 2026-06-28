@@ -1,0 +1,252 @@
+
+=== Run 1 ===
+Nodes: 5
+Quorum: 3
+Simulation starting
+[BALLOT-OVERLAP] Hold lower Prepare { ballot: 1 } ballot=Some(1) max=2
+[SCHED] Deliver Prepare { ballot: 1 } ballot=Some(1) highest=Some(2) queue=5 distinct_ballots=[2] count=1
+[step=0] DELIVER from=1 to=3 type=Prepare { ballot: 1 } queue_len=5
+[BALLOT-OVERLAP] Hold lower Promise { ballot: 1, accepted_ballot: None, accepted_value: None } ballot=Some(1) max=2
+[SCHED] Deliver Prepare { ballot: 2 } ballot=Some(2) highest=Some(2) queue=4 distinct_ballots=[2] count=1
+[step=1] DELIVER from=1 to=1 type=Prepare { ballot: 2 } queue_len=4
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 2 } ballot=Some(2) held=2
+[step=2] DELIVER from=1 to=2 type=Prepare { ballot: 2 } queue_len=4
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 2 } ballot=Some(2) held=2
+[step=3] DELIVER from=1 to=3 type=Prepare { ballot: 2 } queue_len=4
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 2 } ballot=Some(2) held=2
+[step=4] DELIVER from=1 to=4 type=Prepare { ballot: 2 } queue_len=4
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 2 } ballot=Some(2) held=2
+[step=5] DELIVER from=1 to=5 type=Prepare { ballot: 2 } queue_len=4
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 2, accepted_ballot: None, accepted_value: None } ballot=Some(2) held=2
+[step=6] DELIVER from=1 to=1 type=Promise { ballot: 2, accepted_ballot: None, accepted_value: None } queue_len=4
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 2, accepted_ballot: None, accepted_value: None } ballot=Some(2) held=2
+[step=7] DELIVER from=2 to=1 type=Promise { ballot: 2, accepted_ballot: None, accepted_value: None } queue_len=3
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 2, accepted_ballot: None, accepted_value: None } ballot=Some(2) held=2
+[step=8] DELIVER from=3 to=1 type=Promise { ballot: 2, accepted_ballot: None, accepted_value: None } queue_len=2
+[PAXOS-QUORUM-PROMISE] ballot=2 count=3 quorum=3 current=2
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 2, accepted_ballot: None, accepted_value: None } ballot=Some(2) held=2
+[step=9] DELIVER from=4 to=1 type=Promise { ballot: 2, accepted_ballot: None, accepted_value: None } queue_len=6
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 2, accepted_ballot: None, accepted_value: None } ballot=Some(2) held=2
+[step=10] DELIVER from=5 to=1 type=Promise { ballot: 2, accepted_ballot: None, accepted_value: None } queue_len=5
+[BALLOT-OVERLAP] Release collision Prepare { ballot: 1 } ballot=Some(1)
+[step=11] DELIVER from=1 to=2 type=Prepare { ballot: 1 } queue_len=5
+[BALLOT-OVERLAP] Hold lower Nack { ballot: 1, promised_ballot: 2 } ballot=Some(1) max=2
+[SCHED] Deliver AcceptRequest { ballot: 2, value: "v1" } ballot=Some(2) highest=Some(2) queue=4 distinct_ballots=[2] count=1
+[step=12] DELIVER from=1 to=1 type=AcceptRequest { ballot: 2, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(2, v1)
+[BALLOT-OVERLAP] Release collision Promise { ballot: 1, accepted_ballot: None, accepted_value: None } ballot=Some(1)
+[step=13] DELIVER from=3 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=5
+[BALLOT-OVERLAP] Release collision Nack { ballot: 1, promised_ballot: 2 } ballot=Some(1)
+[step=14] DELIVER from=2 to=1 type=Nack { ballot: 1, promised_ballot: 2 } queue_len=5
+[PAXOS-NACK] from=2 to=1 promised=2 current=2
+[PAXOS-RETRY] new_ballot=3
+[BALLOT-OVERLAP] Hold lower AcceptRequest { ballot: 2, value: "v1" } ballot=Some(2) max=3
+[SCHED] Deliver AcceptRequest { ballot: 2, value: "v1" } ballot=Some(2) highest=Some(3) queue=8 distinct_ballots=[2, 3] count=2
+[step=15] DELIVER from=1 to=3 type=AcceptRequest { ballot: 2, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(2, v1)
+[BALLOT-OVERLAP] Hold lower AcceptRequest { ballot: 2, value: "v1" } ballot=Some(2) max=3
+[SCHED] Deliver AcceptRequest { ballot: 2, value: "v1" } ballot=Some(2) highest=Some(3) queue=7 distinct_ballots=[2, 3] count=2
+[step=16] DELIVER from=1 to=5 type=AcceptRequest { ballot: 2, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(2, v1)
+[BALLOT-OVERLAP] Hold lower Accepted { ballot: 2, value: "v1" } ballot=Some(2) max=3
+[SCHED] Deliver Prepare { ballot: 3 } ballot=Some(3) highest=Some(3) queue=6 distinct_ballots=[2, 3] count=2
+[step=17] DELIVER from=1 to=1 type=Prepare { ballot: 3 } queue_len=6
+[BALLOT-OVERLAP] Hold lower Accepted { ballot: 2, value: "v1" } ballot=Some(2) max=3
+[SCHED] Deliver Prepare { ballot: 3 } ballot=Some(3) highest=Some(3) queue=5 distinct_ballots=[2, 3] count=2
+[step=18] DELIVER from=1 to=2 type=Prepare { ballot: 3 } queue_len=5
+[BALLOT-OVERLAP] Hold lower Accepted { ballot: 2, value: "v1" } ballot=Some(2) max=3
+[SCHED] Deliver Prepare { ballot: 3 } ballot=Some(3) highest=Some(3) queue=4 distinct_ballots=[3] count=1
+[step=19] DELIVER from=1 to=3 type=Prepare { ballot: 3 } queue_len=4
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 3 } ballot=Some(3) held=5
+[step=20] DELIVER from=1 to=4 type=Prepare { ballot: 3 } queue_len=4
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 3 } ballot=Some(3) held=5
+[step=21] DELIVER from=1 to=5 type=Prepare { ballot: 3 } queue_len=4
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 3, accepted_ballot: Some(2), accepted_value: Some("v1") } ballot=Some(3) held=5
+[step=22] DELIVER from=1 to=1 type=Promise { ballot: 3, accepted_ballot: Some(2), accepted_value: Some("v1") } queue_len=4
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 3, accepted_ballot: None, accepted_value: None } ballot=Some(3) held=5
+[step=23] DELIVER from=2 to=1 type=Promise { ballot: 3, accepted_ballot: None, accepted_value: None } queue_len=3
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 3, accepted_ballot: Some(2), accepted_value: Some("v1") } ballot=Some(3) held=5
+[step=24] DELIVER from=3 to=1 type=Promise { ballot: 3, accepted_ballot: Some(2), accepted_value: Some("v1") } queue_len=2
+[PAXOS-QUORUM-PROMISE] ballot=3 count=3 quorum=3 current=3
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 3, accepted_ballot: None, accepted_value: None } ballot=Some(3) held=5
+[step=25] DELIVER from=4 to=1 type=Promise { ballot: 3, accepted_ballot: None, accepted_value: None } queue_len=6
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 3, accepted_ballot: Some(2), accepted_value: Some("v1") } ballot=Some(3) held=5
+[step=26] DELIVER from=5 to=1 type=Promise { ballot: 3, accepted_ballot: Some(2), accepted_value: Some("v1") } queue_len=5
+[BALLOT-OVERLAP] Release collision AcceptRequest { ballot: 2, value: "v1" } ballot=Some(2)
+[step=27] DELIVER from=1 to=2 type=AcceptRequest { ballot: 2, value: "v1" } queue_len=5
+Broadcasting AcceptRequest(2, v1)
+[BALLOT-OVERLAP] Hold lower Nack { ballot: 2, promised_ballot: 3 } ballot=Some(2) max=3
+[SCHED] Deliver AcceptRequest { ballot: 3, value: "v1" } ballot=Some(3) highest=Some(3) queue=4 distinct_ballots=[3] count=1
+[step=28] DELIVER from=1 to=1 type=AcceptRequest { ballot: 3, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(3, v1)
+[BALLOT-OVERLAP] Release collision AcceptRequest { ballot: 2, value: "v1" } ballot=Some(2)
+[step=29] DELIVER from=1 to=4 type=AcceptRequest { ballot: 2, value: "v1" } queue_len=5
+Broadcasting AcceptRequest(2, v1)
+[BALLOT-OVERLAP] Hold lower Nack { ballot: 2, promised_ballot: 3 } ballot=Some(2) max=3
+[SCHED] Deliver AcceptRequest { ballot: 3, value: "v1" } ballot=Some(3) highest=Some(3) queue=4 distinct_ballots=[3] count=1
+[step=30] DELIVER from=1 to=2 type=AcceptRequest { ballot: 3, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(3, v1)
+[BALLOT-OVERLAP] Release collision Accepted { ballot: 2, value: "v1" } ballot=Some(2)
+[step=31] DELIVER from=1 to=1 type=Accepted { ballot: 2, value: "v1" } queue_len=5
+[BALLOT-OVERLAP] Release collision Accepted { ballot: 2, value: "v1" } ballot=Some(2)
+[step=32] DELIVER from=3 to=1 type=Accepted { ballot: 2, value: "v1" } queue_len=5
+[BALLOT-OVERLAP] Release collision Accepted { ballot: 2, value: "v1" } ballot=Some(2)
+[step=33] DELIVER from=5 to=1 type=Accepted { ballot: 2, value: "v1" } queue_len=5
+[BALLOT-OVERLAP] Release collision Nack { ballot: 2, promised_ballot: 3 } ballot=Some(2)
+[step=34] DELIVER from=2 to=1 type=Nack { ballot: 2, promised_ballot: 3 } queue_len=5
+[PAXOS-NACK] from=2 to=1 promised=3 current=3
+[PAXOS-RETRY] new_ballot=4
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 4 } ballot=Some(4) held=1
+[step=35] DELIVER from=1 to=1 type=Prepare { ballot: 4 } queue_len=9
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 4 } ballot=Some(4) held=1
+[step=36] DELIVER from=1 to=2 type=Prepare { ballot: 4 } queue_len=9
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 4 } ballot=Some(4) held=1
+[step=37] DELIVER from=1 to=3 type=Prepare { ballot: 4 } queue_len=9
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 4 } ballot=Some(4) held=1
+[step=38] DELIVER from=1 to=4 type=Prepare { ballot: 4 } queue_len=9
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 4 } ballot=Some(4) held=1
+[step=39] DELIVER from=1 to=5 type=Prepare { ballot: 4 } queue_len=9
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 4, accepted_ballot: Some(3), accepted_value: Some("v1") } ballot=Some(4) held=1
+[step=40] DELIVER from=1 to=1 type=Promise { ballot: 4, accepted_ballot: Some(3), accepted_value: Some("v1") } queue_len=9
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 4, accepted_ballot: Some(3), accepted_value: Some("v1") } ballot=Some(4) held=1
+[step=41] DELIVER from=2 to=1 type=Promise { ballot: 4, accepted_ballot: Some(3), accepted_value: Some("v1") } queue_len=8
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 4, accepted_ballot: Some(2), accepted_value: Some("v1") } ballot=Some(4) held=1
+[step=42] DELIVER from=3 to=1 type=Promise { ballot: 4, accepted_ballot: Some(2), accepted_value: Some("v1") } queue_len=7
+[PAXOS-QUORUM-PROMISE] ballot=4 count=3 quorum=3 current=4
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 4, accepted_ballot: None, accepted_value: None } ballot=Some(4) held=1
+[step=43] DELIVER from=4 to=1 type=Promise { ballot: 4, accepted_ballot: None, accepted_value: None } queue_len=11
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 4, accepted_ballot: Some(2), accepted_value: Some("v1") } ballot=Some(4) held=1
+[step=44] DELIVER from=5 to=1 type=Promise { ballot: 4, accepted_ballot: Some(2), accepted_value: Some("v1") } queue_len=10
+[BALLOT-OVERLAP] Release collision Nack { ballot: 2, promised_ballot: 3 } ballot=Some(2)
+[step=45] DELIVER from=4 to=1 type=Nack { ballot: 2, promised_ballot: 3 } queue_len=10
+[PAXOS-NACK] from=4 to=1 promised=3 current=4
+[SCHED] Deliver AcceptRequest { ballot: 3, value: "v1" } ballot=Some(3) highest=Some(4) queue=9 distinct_ballots=[3, 4] count=2
+[step=46] DELIVER from=1 to=3 type=AcceptRequest { ballot: 3, value: "v1" } queue_len=9
+Broadcasting AcceptRequest(3, v1)
+[SCHED] Deliver AcceptRequest { ballot: 3, value: "v1" } ballot=Some(3) highest=Some(4) queue=9 distinct_ballots=[3, 4] count=2
+[step=47] DELIVER from=1 to=4 type=AcceptRequest { ballot: 3, value: "v1" } queue_len=9
+Broadcasting AcceptRequest(3, v1)
+[SCHED] Deliver AcceptRequest { ballot: 3, value: "v1" } ballot=Some(3) highest=Some(4) queue=9 distinct_ballots=[3, 4] count=2
+[step=48] DELIVER from=1 to=5 type=AcceptRequest { ballot: 3, value: "v1" } queue_len=9
+Broadcasting AcceptRequest(3, v1)
+[SCHED] Deliver Accepted { ballot: 3, value: "v1" } ballot=Some(3) highest=Some(4) queue=9 distinct_ballots=[3, 4] count=2
+[step=49] DELIVER from=1 to=1 type=Accepted { ballot: 3, value: "v1" } queue_len=9
+[SCHED] Deliver Accepted { ballot: 3, value: "v1" } ballot=Some(3) highest=Some(4) queue=8 distinct_ballots=[3, 4] count=2
+[step=50] DELIVER from=2 to=1 type=Accepted { ballot: 3, value: "v1" } queue_len=8
+[SCHED] Deliver AcceptRequest { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(4) queue=7 distinct_ballots=[3, 4] count=2
+[step=51] DELIVER from=1 to=1 type=AcceptRequest { ballot: 4, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(4, v1)
+[SCHED] Deliver AcceptRequest { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(4) queue=7 distinct_ballots=[3, 4] count=2
+[step=52] DELIVER from=1 to=2 type=AcceptRequest { ballot: 4, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(4, v1)
+[SCHED] Deliver AcceptRequest { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(4) queue=7 distinct_ballots=[3, 4] count=2
+[step=53] DELIVER from=1 to=3 type=AcceptRequest { ballot: 4, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(4, v1)
+[SCHED] Deliver AcceptRequest { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(4) queue=7 distinct_ballots=[3, 4] count=2
+[step=54] DELIVER from=1 to=4 type=AcceptRequest { ballot: 4, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(4, v1)
+[SCHED] Deliver AcceptRequest { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(4) queue=7 distinct_ballots=[3, 4] count=2
+[step=55] DELIVER from=1 to=5 type=AcceptRequest { ballot: 4, value: "v1" } queue_len=7
+Broadcasting AcceptRequest(4, v1)
+[SCHED] Deliver Nack { ballot: 3, promised_ballot: 4 } ballot=Some(3) highest=Some(4) queue=7 distinct_ballots=[3, 4] count=2
+[step=56] DELIVER from=3 to=1 type=Nack { ballot: 3, promised_ballot: 4 } queue_len=7
+[PAXOS-NACK] from=3 to=1 promised=4 current=4
+[PAXOS-RETRY] new_ballot=5
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 5 } ballot=Some(5) held=0
+[step=57] DELIVER from=1 to=1 type=Prepare { ballot: 5 } queue_len=11
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 5 } ballot=Some(5) held=0
+[step=58] DELIVER from=1 to=2 type=Prepare { ballot: 5 } queue_len=11
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 5 } ballot=Some(5) held=0
+[step=59] DELIVER from=1 to=3 type=Prepare { ballot: 5 } queue_len=11
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 5 } ballot=Some(5) held=0
+[step=60] DELIVER from=1 to=4 type=Prepare { ballot: 5 } queue_len=11
+[BALLOT-OVERLAP] Deliver progress Prepare { ballot: 5 } ballot=Some(5) held=0
+[step=61] DELIVER from=1 to=5 type=Prepare { ballot: 5 } queue_len=11
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } ballot=Some(5) held=0
+[step=62] DELIVER from=1 to=1 type=Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } queue_len=11
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } ballot=Some(5) held=0
+[step=63] DELIVER from=2 to=1 type=Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } queue_len=10
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } ballot=Some(5) held=0
+[step=64] DELIVER from=3 to=1 type=Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } queue_len=9
+[PAXOS-QUORUM-PROMISE] ballot=5 count=3 quorum=3 current=5
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } ballot=Some(5) held=0
+[step=65] DELIVER from=4 to=1 type=Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } queue_len=13
+[BALLOT-OVERLAP] Deliver progress Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } ballot=Some(5) held=0
+[step=66] DELIVER from=5 to=1 type=Promise { ballot: 5, accepted_ballot: Some(4), accepted_value: Some("v1") } queue_len=12
+[SCHED] Deliver Nack { ballot: 3, promised_ballot: 4 } ballot=Some(3) highest=Some(5) queue=11 distinct_ballots=[3, 4, 5] count=3
+[step=67] DELIVER from=4 to=1 type=Nack { ballot: 3, promised_ballot: 4 } queue_len=11
+[PAXOS-NACK] from=4 to=1 promised=4 current=5
+[SCHED] Deliver Nack { ballot: 3, promised_ballot: 4 } ballot=Some(3) highest=Some(5) queue=10 distinct_ballots=[4, 5] count=2
+[step=68] DELIVER from=5 to=1 type=Nack { ballot: 3, promised_ballot: 4 } queue_len=10
+[PAXOS-NACK] from=5 to=1 promised=4 current=5
+[SCHED] Deliver Accepted { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(5) queue=9 distinct_ballots=[4, 5] count=2
+[step=69] DELIVER from=1 to=1 type=Accepted { ballot: 4, value: "v1" } queue_len=9
+[SCHED] Deliver Accepted { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(5) queue=8 distinct_ballots=[4, 5] count=2
+[step=70] DELIVER from=2 to=1 type=Accepted { ballot: 4, value: "v1" } queue_len=8
+[SCHED] Deliver Accepted { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(5) queue=7 distinct_ballots=[4, 5] count=2
+[step=71] DELIVER from=3 to=1 type=Accepted { ballot: 4, value: "v1" } queue_len=7
+[SCHED] Deliver Accepted { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(5) queue=6 distinct_ballots=[4, 5] count=2
+[step=72] DELIVER from=4 to=1 type=Accepted { ballot: 4, value: "v1" } queue_len=6
+[SCHED] Deliver Accepted { ballot: 4, value: "v1" } ballot=Some(4) highest=Some(5) queue=5 distinct_ballots=[5] count=1
+[step=73] DELIVER from=5 to=1 type=Accepted { ballot: 4, value: "v1" } queue_len=5
+[SCHED] Deliver AcceptRequest { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(5) queue=4 distinct_ballots=[5] count=1
+[step=74] DELIVER from=1 to=1 type=AcceptRequest { ballot: 5, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(5, v1)
+[SCHED] Deliver AcceptRequest { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(5) queue=4 distinct_ballots=[5] count=1
+[step=75] DELIVER from=1 to=2 type=AcceptRequest { ballot: 5, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(5, v1)
+[SCHED] Deliver AcceptRequest { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(5) queue=4 distinct_ballots=[5] count=1
+[step=76] DELIVER from=1 to=3 type=AcceptRequest { ballot: 5, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(5, v1)
+[SCHED] Deliver AcceptRequest { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(5) queue=4 distinct_ballots=[5] count=1
+[step=77] DELIVER from=1 to=4 type=AcceptRequest { ballot: 5, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(5, v1)
+[SCHED] Deliver AcceptRequest { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(5) queue=4 distinct_ballots=[5] count=1
+[step=78] DELIVER from=1 to=5 type=AcceptRequest { ballot: 5, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(5, v1)
+[SCHED] Deliver Accepted { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(5) queue=4 distinct_ballots=[5] count=1
+[step=79] DELIVER from=1 to=1 type=Accepted { ballot: 5, value: "v1" } queue_len=4
+[SCHED] Deliver Accepted { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(5) queue=3 distinct_ballots=[5] count=1
+[step=80] DELIVER from=2 to=1 type=Accepted { ballot: 5, value: "v1" } queue_len=3
+[SCHED] Deliver Accepted { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(5) queue=2 distinct_ballots=[5] count=1
+[step=81] DELIVER from=3 to=1 type=Accepted { ballot: 5, value: "v1" } queue_len=2
+[PAXOS-QUORUM-ACCEPTED] ballot=5 count=3 quorum=3 current=5
+[SCHED] Deliver Accepted { ballot: 5, value: "v1" } ballot=Some(5) highest=Some(5) queue=1 distinct_ballots=[5] count=1
+[step=82] DELIVER from=4 to=1 type=Accepted { ballot: 5, value: "v1" } queue_len=1
+[SCHED] Deliver Accepted { ballot: 5, value: "v1" } ballot=Some(5) highest=None queue=0 distinct_ballots=[] count=0
+[step=83] DELIVER from=5 to=1 type=Accepted { ballot: 5, value: "v1" } queue_len=0
+
+=== Metrics ===
+Messages Sent: 82
+Messages Delivered: 84
+Scheduler Steps: 84
+Stale Messages Ignored: 0
+Messages Sent Until Decision: 0
+Undelivered Messages At Decision: 0
+Timeout triggered: 1
+View changes: 0
+Decisions: 1
+Prepare Messages: 22
+Promise Messages: 21
+Accept Requests: 20
+Accepted Messages: 15
+Raft Leader Elected: false
+Raft Leader Id: None
+Raft Election Count: 0
+AppendEntries Messages: 0
+AppendResponse Messages: 0
+Heartbeat Successes: 0
+Heartbeat Rejections: 0
+Raft Config Changes: 0
+Raft Config Acks: 0
+Raft Config Activated: false
+Nack Messages: 6
+Paxos Retries: 4
+Max Ballot Seen: 5
+Membership Changes: 0
+Membership Acks: 0
+Chosen Values: {"v1"}
+Safety Violation: false
+Paxos Retry Exhausted: false
+Critical Messages Delayed: 0
+Delayed Messages Released: 0
