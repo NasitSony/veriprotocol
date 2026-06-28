@@ -652,6 +652,16 @@ impl Simulation {
                 loop {
                     match self.network.deliver_next() {
                         SchedulerOutcome::Deliver(msg) => {
+
+                            println!(
+                                "[step={}] DELIVER from={} to={} type={:?} queue_len={}",
+                                self.metrics.scheduler_steps,
+                                msg.from,
+                                msg.to,
+                                msg.msg_type,
+                                self.network.queue.len()
+                            );
+                            
                             self.metrics.scheduler_steps += 1;
                             self.metrics.messages_delivered += 1;
 

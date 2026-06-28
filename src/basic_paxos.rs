@@ -216,6 +216,14 @@ impl Protocol for BasicPaxosProtocol {
                         self.value_for_ballot(*ballot)
                     };
 
+                    println!(
+                        "[PAXOS-QUORUM-PROMISE] ballot={} count={} quorum={} current={}",
+                        ballot,
+                        promise_count,
+                        self.quorum_size,
+                        self.current_ballot
+                    );
+
                     return vec![NodeAction::BroadcastAcceptRequest {
                         ballot: *ballot,
                         value: proposed_value,
@@ -251,6 +259,14 @@ impl Protocol for BasicPaxosProtocol {
             
                 if accepted_count >= self.quorum_size && node.decided.is_none() {
                     node.decided = Some(VoteValue::Yes);
+                    println!(
+                        "[PAXOS-QUORUM-ACCEPTED] ballot={} count={} quorum={} current={}",
+                        ballot,
+                        accepted_count,
+                        self.quorum_size,
+                        self.current_ballot
+                    );
+                    
                     return vec![NodeAction::RecordChosen {
                         value: value.clone(),
                     }];
@@ -264,8 +280,16 @@ impl Protocol for BasicPaxosProtocol {
                 promised_ballot,
             } => {
 
-               println!(
+               /*println!(
                     "NACK: promised={}, current={}",
+                    promised_ballot,
+                    self.current_ballot
+                );*/
+
+                println!(
+                    "[PAXOS-NACK] from={} to={} promised={} current={}",
+                    msg.from,
+                    msg.to,
                     promised_ballot,
                     self.current_ballot
                 );
@@ -279,9 +303,9 @@ impl Protocol for BasicPaxosProtocol {
                     self.current_ballot = promised_ballot + 1;
 
                     println!(
-                                "Retrying with ballot {}",
-                                self.current_ballot
-                            );
+                        "[PAXOS-RETRY] new_ballot={}",
+                        self.current_ballot
+                    );
 
                     return vec![NodeAction::BroadcastPrepare { 
                         ballot: self.current_ballot,

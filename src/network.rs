@@ -3,9 +3,11 @@ use crate::scheduler::{
     BoundedDelayLeaderScheduler, BoundedDelayScheduler, CommitDelayScheduler, DelayLeaderScheduler,
     DelayScheduler, FifoScheduler, ProbabilisticDelayScheduler, ProposalDelayScheduler,
     QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome, TimeoutFirstScheduler,
-    VoteDelayScheduler,CriticalMessageDelayScheduler,
+    VoteDelayScheduler,CriticalMessageDelayScheduler, PaxosRetryAdversaryScheduler, PaxosRetryScheduler, PaxosOverlapScheduler, 
+    PaxosProgressScheduler, PaxosBallotOverlapScheduler,
 };
 
+use std::collections::HashMap;
 //pub scheduler: FifoScheduler,
 
 pub struct Network {
@@ -33,6 +35,42 @@ impl Network {
                 delayed: Vec::new(),
                 delays_used: 0,
             }),
+            "paxos-retry-adversary" => Box::new(PaxosRetryAdversaryScheduler {
+                delayed_accepts: Vec::new(),
+                max_delay: max_delay as usize,
+                delays_used: 0,
+            }),
+
+            "paxos-retry-scheduler" => Box::new(PaxosRetryScheduler {
+                held_accepts: Vec::new(),
+                max_delay: max_delay as usize,
+                delays_used: 0,
+            }),
+
+            "paxos-overlap" => Box::new(PaxosOverlapScheduler {
+                quorum_size: 3, // temporary hardcode for 5 nodes
+                delayed_accepted: Vec::new(),
+                held_lower_ballot: Vec::new(),
+                accepted_seen: HashMap::new(),
+                max_delay: max_delay as usize,
+                delays_used: 0,
+            }),
+
+            "paxos-progress" => Box::new(PaxosProgressScheduler {
+                quorum_size: 3, // temporary for 5 nodes
+                held_lower_ballot: Vec::new(),
+                promise_seen: HashMap::new(),
+                max_delay: max_delay as usize,
+                delays_used: 0,
+            }),
+
+            "ballot-overlap" => Box::new(PaxosBallotOverlapScheduler {
+                max_delay: max_delay as usize,
+                delays_used: 0,
+                held: Vec::new(),
+                promise_seen: HashMap::new(),
+            }),
+
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);
                 Box::new(FifoScheduler::new())

@@ -1,0 +1,46 @@
+[PAXOS-QUORUM-PROMISE] ballot=2 count=3 quorum=3 current=2
+[PAXOS-NACK] from=2 to=1 promised=2 current=2
+[PAXOS-RETRY] new_ballot=3
+[PAXOS-NACK] from=3 to=1 promised=3 current=3
+[PAXOS-RETRY] new_ballot=4
+[PAXOS-QUORUM-PROMISE] ballot=4 count=3 quorum=3 current=4
+[PAXOS-NACK] from=1 to=1 promised=3 current=4
+[PAXOS-NACK] from=2 to=1 promised=4 current=4
+[PAXOS-RETRY] new_ballot=5
+[PAXOS-NACK] from=5 to=1 promised=4 current=5
+[PAXOS-QUORUM-PROMISE] ballot=5 count=3 quorum=3 current=5
+[PAXOS-NACK] from=1 to=1 promised=5 current=5
+[PAXOS-RETRY] new_ballot=6
+[PAXOS-NACK] from=3 to=1 promised=5 current=6
+[PAXOS-NACK] from=2 to=1 promised=5 current=6
+[PAXOS-QUORUM-PROMISE] ballot=6 count=3 quorum=3 current=6
+[PAXOS-QUORUM-ACCEPTED] ballot=6 count=3 quorum=3 current=6
+[PAXOS-NACK] from=5 to=1 promised=6 current=6
+[PAXOS-RETRY] new_ballot=7
+[PAXOS-QUORUM-PROMISE] ballot=7 count=3 quorum=3 current=7
+[PAXOS-NACK] from=2 to=1 promised=7 current=7
+[PAXOS-RETRY] new_ballot=8
+[PAXOS-QUORUM-PROMISE] ballot=8 count=3 quorum=3 current=8
+[PAXOS-NACK] from=5 to=1 promised=8 current=8
+[PAXOS-RETRY] new_ballot=9
+[PAXOS-QUORUM-PROMISE] ballot=9 count=3 quorum=3 current=9
+[PAXOS-NACK] from=5 to=1 promised=9 current=9
+[PAXOS-RETRY] new_ballot=10
+[PAXOS-NACK] from=3 to=1 promised=10 current=10
+[PAXOS-RETRY] new_ballot=11
+[PAXOS-NACK] from=4 to=1 promised=10 current=11
+[PAXOS-QUORUM-PROMISE] ballot=11 count=3 quorum=3 current=11
+[PAXOS-NACK] from=5 to=1 promised=11 current=11
+[PAXOS-RETRY] new_ballot=12
+[PAXOS-NACK] from=3 to=1 promised=12 current=12
+[PAXOS-RETRY] new_ballot=13
+[PAXOS-NACK] from=1 to=1 promised=12 current=13
+[PAXOS-NACK] from=1 to=1 promised=12 current=13
+[PAXOS-NACK] from=2 to=1 promised=12 current=13
+[PAXOS-QUORUM-PROMISE] ballot=13 count=3 quorum=3 current=13
+[PAXOS-NACK] from=1 to=1 promised=13 current=13
+[PAXOS-RETRY] new_ballot=14
+[PAXOS-QUORUM-PROMISE] ballot=14 count=3 quorum=3 current=14
+[PAXOS-NACK] from=5 to=1 promised=14 current=14
+[PAXOS-RETRY] new_ballot=15
+[PAXOS-QUORUM-PROMISE] ballot=15 count=3 quorum=3 current=15
