@@ -306,7 +306,7 @@ impl Protocol for BasicPaxosProtocol {
             }
 
             MessageType::Nack {
-                ballot: _,
+                ballot,
                 promised_ballot,
             } => {
 
@@ -325,6 +325,16 @@ impl Protocol for BasicPaxosProtocol {
                 );
 
                 if node.id != self.proposer_id {
+                    return vec![];
+                }
+
+                if *ballot != self.current_ballot {
+                    println!(
+                        "[PAXOS-NACK-IGNORED] stale_nack ballot={} current={} promised={}",
+                        ballot,
+                        self.current_ballot,
+                        promised_ballot
+                    );
                     return vec![];
                 }
             

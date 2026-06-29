@@ -306,3 +306,38 @@ For K=2, the transition occurs between `T_step=10` and `T_step=12`.
 For K=5, the transition occurs between `T_step=20` and `T_step=24`.
 
 This shows that K-bounded fairness guarantees eventual delivery, but does not by itself prevent timeout-driven leader rotation. Timeout thresholds must be calibrated against the scheduler's delay budget.
+
+## Finding: Random scheduling creates higher ballot overlap than deterministic schedulers
+
+We instrumented the scheduler to measure the maximum number of distinct Paxos ballots simultaneously present in the message queue.
+
+Results:
+
+| Scheduler | Max concurrent ballots | Scheduler Steps | Retries |
+|-----------|------------------------|-----------------|---------|
+| FIFO | 1 | 20 | 0 |
+| Progress-aware | 3 | 84 | 4 |
+| Random (seed 40) | 6 | 254 | 18 |
+
+Observation:
+
+Random scheduling does not merely delay messages.
+Instead, it creates substantially more concurrent ballot generations,
+leading to repeated collisions between stale and newer protocol states.
+
+This suggests that scheduler effectiveness is better characterized by
+its ability to maximize ballot overlap than by delaying specific message
+types.
+
+### Finding: Heavy-tail random executions exhibit higher ballot overlap
+
+We measured the maximum number of distinct Paxos ballots simultaneously present in the scheduler queue.
+
+| Scheduler / Seed | Max Concurrent Ballots | Retries |
+|---|---:|---:|
+| Progress-aware deterministic | 3 | 4 |
+| Random seed 40 | 6 | 18 |
+| Random seed 11 | 5 | 17 |
+| Random seed 107 | 4 | 14 |
+
+Observation: high-overhead random executions consistently create more concurrent ballot generations than our deterministic scheduler. This suggests that retry cascades are driven not merely by delayed message types, but by sustained overlap among multiple ballot generations.

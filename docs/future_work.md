@@ -23,3 +23,18 @@ Expected relationship:
 - If K <= T, delayed proposals should arrive before timeout.
 - If K > T, proposals may arrive eventually but too late for the current view.
 - This can cause view churn without permanent message loss.
+
+### Ballot-Density Scheduler
+
+Current deterministic schedulers intentionally delay lower-ballot
+messages but create at most three concurrent ballots.
+
+Future work:
+
+Design a scheduler that explicitly maximizes the number of simultaneously
+active ballot generations while preserving bounded delay.
+
+Hypothesis:
+
+Increasing concurrent ballot overlap will reproduce the heavy retry
+cascades currently observed only under rare random schedules.
