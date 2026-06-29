@@ -22,6 +22,7 @@ pub struct Simulation {
     pub protocol: Box<dyn Protocol>,
 
     pub node_count: usize,
+    pub last_timeout_step: u64,
 } 
 
 impl Simulation {
@@ -149,6 +150,7 @@ impl Simulation {
             timeout_threshold: timeout_threshold,
             protocol_name: protocol_name.to_string(),
             node_count,
+            last_timeout_step: 0,
         }
     }
 
@@ -289,6 +291,7 @@ impl Simulation {
             }
         } else if self.protocol_name == "paxos-partial-timeout" {
             // Send Prepare(1) only to 2 nodes, not quorum.
+            // This creates an incomplete initial ballot.
             self.network.send(Message {
                 from: 1,
                 to: 2,
@@ -309,32 +312,9 @@ impl Simulation {
                 delay_count: 0,
             });
 
-            self.metrics.timeouts_triggered += 1;
-
-            let actions = self.protocol.on_timeout();
-
-            for action in actions {
-                
-                match action {
-                    NodeAction::BroadcastPrepare { ballot } => {
-                        self.metrics.paxos_retries += 1;
-                        self.metrics.max_ballot_seen =
-                            self.metrics.max_ballot_seen.max(ballot);
-
-                        self.broadcast(Message {
-                            from: 1,
-                            to: 0,
-                            round: 1,
-                            msg_type: MessageType::Prepare { ballot },
-                            payload: String::from("prepare"),
-                            value: VoteValue::Yes,
-                            delay_count: 0,
-                        });
-                    }
-                    _ => {}
-                }
-            }
-        } else if self.protocol_name == "paxos-missed-accept-recovery" {
+            // No timeout here.
+            // The simulator timeout loop will trigger retries based on scheduler time.
+        }  else if self.protocol_name == "paxos-missed-accept-recovery" {
             // Simulate partial Phase-2 progress:
             // two acceptors already accepted v1 at ballot 1,
             // but not enough Accepted messages reached proposer to decide.
@@ -669,20 +649,22 @@ impl Simulation {
                             self.metrics.scheduler_steps += 1;
                             self.metrics.messages_delivered += 1;
 
-                            if self.protocol.uses_timeout()
-                                && !self.timeout_injected
-                                && self.metrics.scheduler_steps >= self.timeout_threshold
-                            {
-                                self.inject_timeouts();
-                                self.timeout_injected = true;
-                            }
-
-                            if msg.msg_type == MessageType::Timeout {
-                                self.metrics.timeouts_triggered += 1;
-                                self.metrics.view_changes += 1;
-                            }
-
                             
+
+                            if self.protocol.uses_timeout()
+                                && self.metrics.scheduler_steps >= self.last_timeout_step + self.timeout_threshold
+                            {
+                                println!(
+                                    "[TIMEOUT-CHECK] step={} last={} threshold={}",
+                                    self.metrics.scheduler_steps,
+                                    self.last_timeout_step,
+                                    self.timeout_threshold
+                                );
+
+                                self.metrics.timeouts_triggered += 1;
+                               // self.inject_timeouts();
+                                self.last_timeout_step = self.metrics.scheduler_steps;
+                            }
 
                             trace(
                                 &self.config,
@@ -718,16 +700,48 @@ impl Simulation {
                             }
                         }
 
-                        SchedulerOutcome::Delay => {
+                       SchedulerOutcome::Delay => {
                             self.metrics.scheduler_steps += 1;
 
                             if self.protocol.uses_timeout()
-                                && !self.timeout_injected
-                                && self.metrics.scheduler_steps >= self.timeout_threshold
+                                && self.metrics.scheduler_steps >= self.last_timeout_step + self.timeout_threshold
                             {
-                                self.inject_timeouts();
-                                self.timeout_injected = true;
+                                println!(
+                                    "[TIMEOUT-FIRE] step={} last={} threshold={}",
+                                    self.metrics.scheduler_steps,
+                                    self.last_timeout_step,
+                                    self.timeout_threshold
+                                );
+
+                                self.metrics.timeouts_triggered += 1;
+
+                                let actions = self.protocol.on_timeout();
+
+                                for action in actions {
+                                    match action {
+                                        NodeAction::BroadcastPrepare { ballot } => {
+                                            self.metrics.paxos_retries += 1;
+                                            self.metrics.max_ballot_seen =
+                                                self.metrics.max_ballot_seen.max(ballot);
+
+                                            self.broadcast(Message {
+                                                from: 1,
+                                                to: 0,
+                                                round: 0,
+                                                msg_type: MessageType::Prepare { ballot },
+                                                payload: String::from("prepare"),
+                                                value: VoteValue::Yes,
+                                                delay_count: 0,
+                                            });
+                                        }
+                                        _ => {}
+                                    }
+                                }
+
+                                self.last_timeout_step = self.metrics.scheduler_steps;
                             }
+
+                            continue;
                         }
 
                         SchedulerOutcome::Empty => {
@@ -775,6 +789,7 @@ impl Simulation {
                     };
 
                     self.metrics.messages_sent += 1;
+                    //self.metrics.timeouts_triggered += 1;
                     self.network.send(timeout);
                 }
             }

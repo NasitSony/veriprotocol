@@ -1373,3 +1373,127 @@ impl Scheduler for PaxosGapOneBacklogScheduler {
         deliver(queue, 0)
     }
 }
+
+
+
+
+
+#[derive(Debug, Clone)]
+pub struct UniformBudgetDelayScheduler {
+    total_budget: usize,
+    remaining_budget: usize,
+    spent_budget: usize,
+}
+
+impl UniformBudgetDelayScheduler {
+    pub fn new(total_budget: usize) -> Self {
+        Self {
+            total_budget,
+            remaining_budget: total_budget,
+            spent_budget: 0,
+        }
+    }
+
+    pub fn total_budget(&self) -> usize {
+        self.total_budget
+    }
+
+    pub fn remaining_budget(&self) -> usize {
+        self.remaining_budget
+    }
+
+    pub fn spent_budget(&self) -> usize {
+        self.spent_budget
+    }
+
+    fn spend_one(&mut self) {
+        if self.remaining_budget > 0 {
+            self.remaining_budget -= 1;
+            self.spent_budget += 1;
+        }
+    }
+}
+
+impl Scheduler for UniformBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            self.spend_one();
+
+            println!(
+                "[UNIFORM-BUDGET-DELAY] spent={} remaining={} total={} queue_len={}",
+                self.spent_budget,
+                self.remaining_budget,
+                self.total_budget,
+                queue.len()
+            );
+
+            return SchedulerOutcome::Delay;
+        }
+
+        SchedulerOutcome::Deliver(queue.remove(0))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct TargetedBudgetDelayScheduler {
+    total_budget: usize,
+    remaining_budget: usize,
+    spent_budget: usize,
+}
+
+impl TargetedBudgetDelayScheduler {
+    pub fn new(total_budget: usize) -> Self {
+        Self {
+            total_budget,
+            remaining_budget: total_budget,
+            spent_budget: 0,
+        }
+    }
+
+    fn spend_one(&mut self) {
+        if self.remaining_budget > 0 {
+            self.remaining_budget -= 1;
+            self.spent_budget += 1;
+        }
+    }
+
+    fn is_critical(msg: &Message) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::Promise { .. } | MessageType::Accepted { .. }
+        )
+    }
+}
+
+impl Scheduler for TargetedBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 && Self::is_critical(&queue[0]) {
+            self.spend_one();
+
+            let msg = queue.remove(0);
+            let msg_type = format!("{:?}", msg.msg_type);
+            queue.push(msg);
+
+            println!(
+                "[TARGETED-BUDGET-DELAY] spent={} remaining={} total={} queue_len={} delayed={}",
+                self.spent_budget,
+                self.remaining_budget,
+                self.total_budget,
+                queue.len(),
+                msg_type
+            );
+
+            return SchedulerOutcome::Delay;
+        }
+
+        SchedulerOutcome::Deliver(queue.remove(0))
+    }
+}

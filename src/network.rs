@@ -4,7 +4,8 @@ use crate::scheduler::{
     DelayScheduler, FifoScheduler, ProbabilisticDelayScheduler, ProposalDelayScheduler,
     QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome, TimeoutFirstScheduler,
     VoteDelayScheduler,CriticalMessageDelayScheduler, PaxosRetryAdversaryScheduler, PaxosRetryScheduler, PaxosOverlapScheduler, 
-    PaxosProgressScheduler, PaxosBallotOverlapScheduler, PaxosGapOneScheduler,PaxosGapOneBacklogScheduler,
+    PaxosProgressScheduler, PaxosBallotOverlapScheduler, PaxosGapOneScheduler,PaxosGapOneBacklogScheduler, UniformBudgetDelayScheduler,
+    TargetedBudgetDelayScheduler,
 };
 
 use std::collections::HashMap;
@@ -93,6 +94,14 @@ impl Network {
                 quorum_size: 3,
                 release_after_held: 4,
             }),
+
+            "uniform-budget-delay" => {
+                Box::new(UniformBudgetDelayScheduler::new(max_delay))
+            }
+
+            "targeted-budget-delay" => {
+                Box::new(TargetedBudgetDelayScheduler::new(max_delay))
+            }
 
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);

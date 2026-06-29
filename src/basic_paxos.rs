@@ -35,7 +35,7 @@ impl BasicPaxosProtocol {
             chosen_proposal_value: "v1".to_string(),
 
             retry_count: 0,
-            max_retries: 3,
+            max_retries: 20,
 
             proposed_values_by_ballot,
             quorum_size: 3,
@@ -66,7 +66,7 @@ impl BasicPaxosProtocol {
             chosen_proposal_value: value,
 
             retry_count: 0,
-            max_retries: 3,
+            max_retries: 20,
 
             proposed_values_by_ballot,
             quorum_size: 3,
@@ -84,6 +84,24 @@ impl BasicPaxosProtocol {
 
 
     fn retry_with_higher_ballot(&mut self) -> Option<NodeAction> {
+        let quorum =  self.quorum_size;//3;//(self.node_count / 2) + 1;
+
+        let promise_count = self
+            .promises_by_ballot
+            .get(&self.current_ballot)
+            .map(|s| s.len())
+            .unwrap_or(0);
+
+        let accepted_count = self
+            .accepted_by_ballot
+            .get(&self.current_ballot)
+            .map(|s| s.len())
+            .unwrap_or(0);
+
+        if promise_count >= quorum || accepted_count >= quorum {
+            return None;
+        }
+
         if self.retry_count >= self.max_retries {
             return None;
         }
@@ -97,8 +115,6 @@ impl BasicPaxosProtocol {
 
         self.highest_accepted_ballot = None;
         self.chosen_proposal_value = "v1".to_string();
-
-        
 
         Some(NodeAction::BroadcastPrepare {
             ballot: self.current_ballot,
@@ -126,6 +142,21 @@ impl BasicPaxosProtocol {
 }
 
 impl Protocol for BasicPaxosProtocol {
+
+    fn uses_timeout(&self) -> bool {
+        true
+    }
+
+    fn on_timeout(&mut self) -> Vec<NodeAction> {
+
+        if let Some(action) = self.retry_with_higher_ballot() {
+            vec![action]
+        } else {
+            vec![]
+        }
+    }
+    
+
     fn handle_message(&mut self, node: &mut Node, msg: &Message) -> Vec<NodeAction> {
         match &msg.msg_type {
             MessageType::Prepare { ballot } => {
@@ -366,15 +397,18 @@ impl Protocol for BasicPaxosProtocol {
                vec![]
             }
 
+            MessageType::Timeout => {
+                return self
+                .on_timeout()
+                .map(|action| vec![action])
+                .unwrap_or_default();
+            }
+
             _ => vec![],
         }
     }
 
-    fn on_timeout(&mut self) -> Vec<NodeAction> {
-       if let Some(action) = self.retry_with_higher_ballot() {
-           vec![action]
-       } else {
-           vec![]
-       }
-    }
+    
 }
+
+
