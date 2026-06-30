@@ -67,15 +67,15 @@ pub enum NodeAction {
     BroadcastMembershipChange {
         new_node_count: usize,
     },
-    
+
     SendMembershipAck {
-       to: u64,
-       new_node_count: usize,
+        to: u64,
+        new_node_count: usize,
     },
 
     BroadcastRequestVote {
-    term: u64,
-    candidate_id: u64,
+        term: u64,
+        candidate_id: u64,
     },
 
     SendVoteResponse {
@@ -105,7 +105,6 @@ pub enum NodeAction {
         leader_id: u64,
         new_node_count: usize,
     },*/
-
     SendRaftConfigAck {
         to: u64,
         term: u64,

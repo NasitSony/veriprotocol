@@ -16,8 +16,12 @@ pub trait Protocol {
     fn uses_timeout(&self) -> bool {
         false
     }
-    
+
     fn on_timeout(&mut self) -> Vec<NodeAction> {
+        vec![]
+    }
+
+    fn on_tick(&mut self) -> Vec<NodeAction> {
         vec![]
     }
 }

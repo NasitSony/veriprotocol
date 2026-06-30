@@ -37,10 +37,7 @@ fn highest_ballot(queue: &[Message]) -> Option<u64> {
 }
 
 fn distinct_ballots(queue: &[Message]) -> Vec<u64> {
-    let mut ballots = queue
-        .iter()
-        .filter_map(paxos_ballot)
-        .collect::<Vec<u64>>();
+    let mut ballots = queue.iter().filter_map(paxos_ballot).collect::<Vec<u64>>();
 
     ballots.sort();
     ballots.dedup();
@@ -63,8 +60,6 @@ fn deliver(queue: &mut Vec<Message>, index: usize) -> SchedulerOutcome {
 
     SchedulerOutcome::Deliver(msg)
 }
-
-
 
 pub struct FifoScheduler;
 
@@ -104,7 +99,6 @@ pub struct CriticalMessageDelayScheduler {
     pub max_delay: usize,
     pub delayed: Vec<Message>,
     pub delays_used: usize,
-
 }
 
 pub struct PaxosRetryAdversaryScheduler {
@@ -112,8 +106,6 @@ pub struct PaxosRetryAdversaryScheduler {
     pub max_delay: usize,
     pub delays_used: usize,
 }
-
-
 
 impl CommitDelayScheduler {
     pub fn new() -> Self {
@@ -515,67 +507,65 @@ impl Scheduler for CriticalMessageDelayScheduler {
     }
 }
 
-    fn is_paxos_accept_request(msg: &Message) -> bool {
-        matches!(msg.msg_type, MessageType::AcceptRequest { .. })
-    }
+fn is_paxos_accept_request(msg: &Message) -> bool {
+    matches!(msg.msg_type, MessageType::AcceptRequest { .. })
+}
 
-    impl Scheduler for PaxosRetryAdversaryScheduler {
-        fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
-            if queue.is_empty() {
-                if !self.delayed_accepts.is_empty() {
-                    return SchedulerOutcome::Deliver(self.delayed_accepts.remove(0));
-                }
-                return SchedulerOutcome::Empty;
-            }
-
-            if self.delays_used < self.max_delay {
-                if let Some(pos) = queue.iter().position(is_paxos_accept_request) {
-                    let msg = queue.remove(pos);
-                    self.delayed_accepts.push(msg);
-                    self.delays_used += 1;
-
-                    if !queue.is_empty() {
-                        return SchedulerOutcome::Deliver(queue.remove(0));
-                    }
-                }
-            }
-
-            if !queue.is_empty() {
-                return SchedulerOutcome::Deliver(queue.remove(0));
-            }
-
+impl Scheduler for PaxosRetryAdversaryScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
             if !self.delayed_accepts.is_empty() {
                 return SchedulerOutcome::Deliver(self.delayed_accepts.remove(0));
             }
-
-            SchedulerOutcome::Empty
+            return SchedulerOutcome::Empty;
         }
-    }
 
-   fn paxos_ballot(msg: &Message) -> Option<u64> {
-        match &msg.msg_type {
-            MessageType::Prepare { ballot } => Some(*ballot),
-            MessageType::Promise { ballot, .. } => Some(*ballot),
-            MessageType::AcceptRequest { ballot, .. } => Some(*ballot),
-            MessageType::Accepted { ballot, .. } => Some(*ballot),
-            MessageType::Nack { ballot, .. } => Some(*ballot),
-            _ => None,
+        if self.delays_used < self.max_delay {
+            if let Some(pos) = queue.iter().position(is_paxos_accept_request) {
+                let msg = queue.remove(pos);
+                self.delayed_accepts.push(msg);
+                self.delays_used += 1;
+
+                if !queue.is_empty() {
+                    return SchedulerOutcome::Deliver(queue.remove(0));
+                }
+            }
         }
+
+        if !queue.is_empty() {
+            return SchedulerOutcome::Deliver(queue.remove(0));
+        }
+
+        if !self.delayed_accepts.is_empty() {
+            return SchedulerOutcome::Deliver(self.delayed_accepts.remove(0));
+        }
+
+        SchedulerOutcome::Empty
     }
+}
 
-    fn is_accept_request(msg: &Message) -> bool {
-        matches!(&msg.msg_type, MessageType::AcceptRequest { .. })
+fn paxos_ballot(msg: &Message) -> Option<u64> {
+    match &msg.msg_type {
+        MessageType::Prepare { ballot } => Some(*ballot),
+        MessageType::Promise { ballot, .. } => Some(*ballot),
+        MessageType::AcceptRequest { ballot, .. } => Some(*ballot),
+        MessageType::Accepted { ballot, .. } => Some(*ballot),
+        MessageType::Nack { ballot, .. } => Some(*ballot),
+        _ => None,
     }
+}
 
-    fn has_higher_ballot(queue: &[Message], ballot: u64) -> bool {
-        queue.iter().any(|m| {
-            paxos_ballot(m)
-                .map(|b| b > ballot)
-                .unwrap_or(false)
-        })
-    } 
+fn is_accept_request(msg: &Message) -> bool {
+    matches!(&msg.msg_type, MessageType::AcceptRequest { .. })
+}
 
-    impl Scheduler for PaxosRetryScheduler {
+fn has_higher_ballot(queue: &[Message], ballot: u64) -> bool {
+    queue
+        .iter()
+        .any(|m| paxos_ballot(m).map(|b| b > ballot).unwrap_or(false))
+}
+
+impl Scheduler for PaxosRetryScheduler {
     fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
         if queue.is_empty() {
             if !self.held_accepts.is_empty() {
@@ -589,7 +579,7 @@ impl Scheduler for CriticalMessageDelayScheduler {
                     queue.len(),
                 );
 
-                return SchedulerOutcome::Deliver(msg)
+                return SchedulerOutcome::Deliver(msg);
             }
             return SchedulerOutcome::Empty;
         }
@@ -626,7 +616,10 @@ impl Scheduler for CriticalMessageDelayScheduler {
 
         // 2. Prefer higher-ballot messages.
         if let Some(max_ballot) = queue.iter().filter_map(paxos_ballot).max() {
-            if let Some(pos) = queue.iter().position(|m| paxos_ballot(m) == Some(max_ballot)) {
+            if let Some(pos) = queue
+                .iter()
+                .position(|m| paxos_ballot(m) == Some(max_ballot))
+            {
                 return deliver(queue, pos);
                 //return SchedulerOutcome::Deliver(queue.remove(pos));
             }
@@ -663,11 +656,9 @@ pub struct PaxosOverlapScheduler {
 }
 
 fn has_lower_ballot(queue: &[Message], ballot: u64) -> bool {
-    queue.iter().any(|m| {
-        paxos_ballot(m)
-            .map(|b| b < ballot)
-            .unwrap_or(false)
-    })
+    queue
+        .iter()
+        .any(|m| paxos_ballot(m).map(|b| b < ballot).unwrap_or(false))
 }
 
 impl Scheduler for PaxosOverlapScheduler {
@@ -788,7 +779,10 @@ impl Scheduler for PaxosOverlapScheduler {
         // Rule 3:
         // Prefer higher-ballot messages, so newer ballots advance before old messages are released.
         if let Some(max_ballot) = queue.iter().filter_map(paxos_ballot).max() {
-            if let Some(pos) = queue.iter().position(|m| paxos_ballot(m) == Some(max_ballot)) {
+            if let Some(pos) = queue
+                .iter()
+                .position(|m| paxos_ballot(m) == Some(max_ballot))
+            {
                 let msg = queue.remove(pos);
 
                 if let MessageType::Accepted { ballot, .. } = &msg.msg_type {
@@ -810,7 +804,7 @@ impl Scheduler for PaxosOverlapScheduler {
 
         // Rule 4:
         // Release held lower-ballot messages after higher-ballot progress.
-       /* if !self.held_lower_ballot.is_empty() {
+        /* if !self.held_lower_ballot.is_empty() {
             let msg = self.held_lower_ballot.remove(0);
 
             println!(
@@ -892,7 +886,10 @@ impl Scheduler for PaxosProgressScheduler {
 
         // Prefer higher-ballot messages.
         if let Some(max_ballot) = queue.iter().filter_map(paxos_ballot).max() {
-            if let Some(pos) = queue.iter().position(|m| paxos_ballot(m) == Some(max_ballot)) {
+            if let Some(pos) = queue
+                .iter()
+                .position(|m| paxos_ballot(m) == Some(max_ballot))
+            {
                 let msg = queue.remove(pos);
 
                 if let MessageType::Promise { ballot, .. } = &msg.msg_type {
@@ -901,9 +898,7 @@ impl Scheduler for PaxosProgressScheduler {
 
                     println!(
                         "[PAXOS-PROGRESS] Promise progress ballot={} count={} quorum={}",
-                        ballot,
-                        count,
-                        self.quorum_size,
+                        ballot, count, self.quorum_size,
                     );
 
                     if *count >= self.quorum_size && !self.held_lower_ballot.is_empty() {
@@ -952,10 +947,7 @@ pub struct PaxosBallotOverlapScheduler {
 }
 
 fn has_multiple_ballots(queue: &[Message]) -> bool {
-    let mut ballots = queue
-        .iter()
-        .filter_map(paxos_ballot)
-        .collect::<Vec<u64>>();
+    let mut ballots = queue.iter().filter_map(paxos_ballot).collect::<Vec<u64>>();
 
     ballots.sort();
     ballots.dedup();
@@ -985,11 +977,10 @@ impl Scheduler for PaxosBallotOverlapScheduler {
         // This prevents the lower ballot from draining cleanly.
         if self.delays_used < self.max_delay && has_multiple_ballots(queue) {
             if let Some(max_ballot) = queue.iter().filter_map(paxos_ballot).max() {
-                if let Some(pos) = queue.iter().position(|msg| {
-                    paxos_ballot(msg)
-                        .map(|b| b < max_ballot)
-                        .unwrap_or(false)
-                }) {
+                if let Some(pos) = queue
+                    .iter()
+                    .position(|msg| paxos_ballot(msg).map(|b| b < max_ballot).unwrap_or(false))
+                {
                     let msg = queue.remove(pos);
 
                     println!(
@@ -1051,9 +1042,6 @@ impl Scheduler for PaxosBallotOverlapScheduler {
     }
 }
 
-
-
-
 pub struct PaxosGapOneScheduler {
     pub max_delay: usize,
     pub delays_used: usize,
@@ -1081,14 +1069,11 @@ fn is_gap1_stale_candidate(msg: &Message, queue: &[Message]) -> bool {
 
 impl Scheduler for PaxosGapOneScheduler {
     fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
-
         println!(
             "[GAP1-STATS] max_backlog={} inserts={} releases={}",
-            self.max_held_backlog,
-            self.held_inserts,
-            self.held_releases
+            self.max_held_backlog, self.held_inserts, self.held_releases
         );
-        
+
         if queue.is_empty() {
             let ballots = self.held_by_ballot.keys().cloned().collect::<Vec<_>>();
 
@@ -1113,10 +1098,7 @@ impl Scheduler for PaxosGapOneScheduler {
 
         // 1. Hold stale b messages when b+1 exists.
         if self.delays_used < self.max_delay {
-            if let Some(pos) = queue
-                .iter()
-                .position(|m| is_gap1_stale_candidate(m, queue))
-            {
+            if let Some(pos) = queue.iter().position(|m| is_gap1_stale_candidate(m, queue)) {
                 let msg = queue.remove(pos);
                 let b = paxos_ballot(&msg).unwrap();
 
@@ -1131,8 +1113,7 @@ impl Scheduler for PaxosGapOneScheduler {
                 self.delays_used += 1;
 
                 self.held_inserts += 1;
-                self.max_held_backlog =
-                    self.max_held_backlog.max(total_held(&self.held_by_ballot));
+                self.max_held_backlog = self.max_held_backlog.max(total_held(&self.held_by_ballot));
 
                 if !queue.is_empty() {
                     return deliver(queue, 0);
@@ -1157,9 +1138,7 @@ impl Scheduler for PaxosGapOneScheduler {
 
             println!(
                 "[GAP1] Deliver Prepare ballot={} count={} quorum={}",
-                ballot,
-                count,
-                self.quorum_size
+                ballot, count, self.quorum_size
             );
 
             let stale_ballot = ballot.saturating_sub(1);
@@ -1173,9 +1152,7 @@ impl Scheduler for PaxosGapOneScheduler {
 
                         println!(
                             "[GAP1] Release stale after Prepare quorum {:?} stale_ballot={} newer_ballot={}",
-                            held.msg_type,
-                            stale_ballot,
-                            ballot
+                            held.msg_type, stale_ballot, ballot
                         );
 
                         return SchedulerOutcome::Deliver(held);
@@ -1205,9 +1182,7 @@ impl Scheduler for PaxosGapOneScheduler {
 
                         println!(
                             "[GAP1] Release stale fallback {:?} stale_ballot={} newer_ballot={}",
-                            msg.msg_type,
-                            b,
-                            newer
+                            msg.msg_type, b, newer
                         );
 
                         return SchedulerOutcome::Deliver(msg);
@@ -1219,7 +1194,6 @@ impl Scheduler for PaxosGapOneScheduler {
         if !self.held_by_ballot.is_empty() && queue.len() <= 1 {
             let ballots = self.held_by_ballot.keys().cloned().collect::<Vec<_>>();
             self.held_releases += 1;
-
 
             for b in ballots {
                 if let Some(vec) = self.held_by_ballot.get_mut(&b) {
@@ -1251,12 +1225,6 @@ pub struct PaxosGapOneBacklogScheduler {
     pub release_after_held: usize,
 }
 
-
-
-
-
-
-
 fn total_held(held: &HashMap<u64, Vec<Message>>) -> usize {
     held.values().map(|v| v.len()).sum()
 }
@@ -1287,10 +1255,7 @@ impl Scheduler for PaxosGapOneBacklogScheduler {
 
         // 1. Hold stale b messages when b+1 exists.
         if self.delays_used < self.max_delay {
-            if let Some(pos) = queue
-                .iter()
-                .position(|m| is_gap1_stale_candidate(m, queue))
-            {
+            if let Some(pos) = queue.iter().position(|m| is_gap1_stale_candidate(m, queue)) {
                 let msg = queue.remove(pos);
                 let b = paxos_ballot(&msg).unwrap();
 
@@ -1373,10 +1338,6 @@ impl Scheduler for PaxosGapOneBacklogScheduler {
         deliver(queue, 0)
     }
 }
-
-
-
-
 
 #[derive(Debug, Clone)]
 pub struct UniformBudgetDelayScheduler {

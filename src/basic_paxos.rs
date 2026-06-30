@@ -3,6 +3,14 @@ use crate::node::{Node, NodeAction};
 use crate::protocol::Protocol;
 use std::collections::{HashMap, HashSet};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PaxosPhase {
+    Idle,
+    WaitingForPromises,
+    WaitingForAccepted,
+    Decided,
+}
+
 pub struct BasicPaxosProtocol {
     pub current_ballot: u64,
     pub proposer_id: u64,
@@ -16,6 +24,10 @@ pub struct BasicPaxosProtocol {
     pub proposed_values_by_ballot: HashMap<u64, String>,
     pub quorum_size: usize,
     pub highest_nack_seen: u64,
+
+    pub phase: PaxosPhase,
+    pub phase_elapsed: u64,
+    pub phase_timeout: u64,
 }
 
 impl BasicPaxosProtocol {
@@ -40,15 +52,14 @@ impl BasicPaxosProtocol {
             proposed_values_by_ballot,
             quorum_size: 3,
             highest_nack_seen: 0,
+
+            phase: PaxosPhase::Idle,
+            phase_elapsed: 0,
+            phase_timeout: 5,
         }
     }
 
-    pub fn new_with_proposer(
-        proposer_id: u64,
-        ballot: u64,
-        value: String,
-    ) -> Self {
-
+    pub fn new_with_proposer(proposer_id: u64, ballot: u64, value: String) -> Self {
         let mut proposed_values_by_ballot = HashMap::new();
         proposed_values_by_ballot.insert(1, "v1".to_string());
 
@@ -59,7 +70,6 @@ impl BasicPaxosProtocol {
             promises_by_ballot: HashMap::new(),
             accepted_by_ballot: HashMap::new(),
 
-           
             accept_request_sent_by_ballot: HashSet::new(),
 
             highest_accepted_ballot: None,
@@ -71,38 +81,106 @@ impl BasicPaxosProtocol {
             proposed_values_by_ballot,
             quorum_size: 3,
             highest_nack_seen: 0,
+
+            phase: PaxosPhase::Idle,
+            phase_elapsed: 0,
+            phase_timeout: 5,
         }
     }
 }
 
 impl BasicPaxosProtocol {
+    fn quorum_size(&self) -> usize {
+        3 // TODO: dynamic quorum
+    }
+
+    pub fn enter_phase(&mut self, phase: PaxosPhase) {
+        self.phase = phase;
+        self.phase_elapsed = 0;
+    }
+
+    fn promise_count(&self) -> usize {
+        self.promises_by_ballot
+            .get(&self.current_ballot)
+            .map(|s| s.len())
+            .unwrap_or(0)
+    }
+
+    fn accepted_count(&self) -> usize {
+        self.accepted_by_ballot
+            .get(&self.current_ballot)
+            .map(|s| s.len())
+            .unwrap_or(0)
+    }
+
+    pub fn with_phase(mut self, phase: PaxosPhase) -> Self {
+        self.phase = phase;
+        self.phase_elapsed = 0;
+        self
+    }
+
+    pub fn on_tick(&mut self) -> Vec<NodeAction> {
+        match self.phase {
+            PaxosPhase::WaitingForPromises => {
+                if self.promise_count() >= self.quorum_size() {
+                    return vec![];
+                }
+
+                println!(
+                    "[PAXOS-TICK] phase={:?} elapsed={} timeout={} ballot={} promises={} accepted={}",
+                    self.phase,
+                    self.phase_elapsed,
+                    self.phase_timeout,
+                    self.current_ballot,
+                    self.promise_count(),
+                    self.accepted_count()
+                );
+
+                self.phase_elapsed += 1;
+
+                if self.phase_elapsed >= self.phase_timeout {
+                    return self
+                        .on_timeout()
+                        .map(|action| vec![action])
+                        .unwrap_or_default();
+                }
+
+                vec![]
+            }
+
+            PaxosPhase::WaitingForAccepted => {
+                if self.accepted_count() >= self.quorum_size() {
+                    return vec![];
+                }
+
+                self.phase_elapsed += 1;
+
+                if self.phase_elapsed >= self.phase_timeout {
+                    return self
+                        .on_timeout()
+                        .map(|action| vec![action])
+                        .unwrap_or_default();
+                }
+
+                vec![]
+            }
+
+            PaxosPhase::Idle | PaxosPhase::Decided => vec![],
+        }
+    }
 
     pub fn with_quorum_size(mut self, quorum_size: usize) -> Self {
         self.quorum_size = quorum_size;
         self
     }
 
-
     fn retry_with_higher_ballot(&mut self) -> Option<NodeAction> {
-        let quorum =  self.quorum_size;//3;//(self.node_count / 2) + 1;
-
-        let promise_count = self
-            .promises_by_ballot
-            .get(&self.current_ballot)
-            .map(|s| s.len())
-            .unwrap_or(0);
-
-        let accepted_count = self
-            .accepted_by_ballot
-            .get(&self.current_ballot)
-            .map(|s| s.len())
-            .unwrap_or(0);
-
-        if promise_count >= quorum || accepted_count >= quorum {
+        if self.phase == PaxosPhase::Decided {
             return None;
         }
 
         if self.retry_count >= self.max_retries {
+            self.phase = PaxosPhase::Idle;
             return None;
         }
 
@@ -115,6 +193,8 @@ impl BasicPaxosProtocol {
 
         self.highest_accepted_ballot = None;
         self.chosen_proposal_value = "v1".to_string();
+
+        self.enter_phase(PaxosPhase::WaitingForPromises);
 
         Some(NodeAction::BroadcastPrepare {
             ballot: self.current_ballot,
@@ -137,32 +217,31 @@ impl BasicPaxosProtocol {
     pub fn on_timeout(&mut self) -> Option<NodeAction> {
         self.retry_with_higher_ballot()
     }
-
-
 }
 
 impl Protocol for BasicPaxosProtocol {
-
     fn uses_timeout(&self) -> bool {
         true
     }
 
-    fn on_timeout(&mut self) -> Vec<NodeAction> {
+    fn on_tick(&mut self) -> Vec<NodeAction> {
+        self.on_tick()
+    }
 
+    fn on_timeout(&mut self) -> Vec<NodeAction> {
         if let Some(action) = self.retry_with_higher_ballot() {
             vec![action]
         } else {
             vec![]
         }
     }
-    
 
     fn handle_message(&mut self, node: &mut Node, msg: &Message) -> Vec<NodeAction> {
         match &msg.msg_type {
             MessageType::Prepare { ballot } => {
                 if *ballot >= node.promised_ballot {
                     node.promised_ballot = *ballot;
-            
+
                     vec![NodeAction::SendPromise {
                         to: msg.from,
                         ballot: *ballot,
@@ -172,10 +251,7 @@ impl Protocol for BasicPaxosProtocol {
                 } else {
                     println!(
                         "[NACK-CAUSE] node={} incoming={:?} incoming_ballot={} promised_ballot={}",
-                        node.id,
-                        msg.msg_type,
-                        ballot,
-                        node.promised_ballot
+                        node.id, msg.msg_type, ballot, node.promised_ballot
                     );
 
                     println!(
@@ -194,9 +270,8 @@ impl Protocol for BasicPaxosProtocol {
             }
 
             MessageType::AcceptRequest { ballot, value } => {
-               
                 println!("Broadcasting AcceptRequest({}, {})", ballot, value);
-                
+
                 if *ballot >= node.promised_ballot {
                     node.promised_ballot = *ballot;
                     node.accepted_ballot = Some(*ballot);
@@ -210,10 +285,7 @@ impl Protocol for BasicPaxosProtocol {
                 } else {
                     println!(
                         "[NACK-CAUSE] node={} incoming={:?} incoming_ballot={} promised_ballot={}",
-                        node.id,
-                        msg.msg_type,
-                        ballot,
-                        node.promised_ballot
+                        node.id, msg.msg_type, ballot, node.promised_ballot
                     );
 
                     println!(
@@ -237,22 +309,22 @@ impl Protocol for BasicPaxosProtocol {
                 accepted_value,
             } => {
                 //let proposer_id = 1; //*ballot;
-               
+
                 if *ballot != self.current_ballot {
                     return vec![];
                 }
 
                 let proposer_id = self.proposer_id;
-            
+
                 if node.id != proposer_id {
                     return vec![];
                 }
-            
+
                 self.promises_by_ballot
                     .entry(*ballot)
                     .or_insert_with(HashSet::new)
                     .insert(msg.from);
-            
+
                 if let (Some(ab), Some(av)) = (accepted_ballot, accepted_value) {
                     if self.highest_accepted_ballot.is_none()
                         || *ab > self.highest_accepted_ballot.unwrap()
@@ -261,16 +333,21 @@ impl Protocol for BasicPaxosProtocol {
                         self.chosen_proposal_value = av.clone();
                     }
                 }
-            
+
                 let promise_count = self
                     .promises_by_ballot
                     .get(ballot)
                     .map(|s| s.len())
                     .unwrap_or(0);
-            
-                if promise_count >= self.quorum_size && !self.accept_request_sent_by_ballot.contains(ballot) && *ballot == self.current_ballot {
+
+                if promise_count >= self.quorum_size
+                    && !self.accept_request_sent_by_ballot.contains(ballot)
+                    && *ballot == self.current_ballot
+                {
                     self.accept_request_sent_by_ballot.insert(*ballot);
-                    
+
+                    self.enter_phase(PaxosPhase::WaitingForAccepted);
+
                     let proposed_value = if self.highest_accepted_ballot.is_some() {
                         self.chosen_proposal_value.clone()
                     } else {
@@ -279,10 +356,7 @@ impl Protocol for BasicPaxosProtocol {
 
                     println!(
                         "[PAXOS-QUORUM-PROMISE] ballot={} count={} quorum={} current={}",
-                        ballot,
-                        promise_count,
-                        self.quorum_size,
-                        self.current_ballot
+                        ballot, promise_count, self.quorum_size, self.current_ballot
                     );
 
                     return vec![NodeAction::BroadcastAcceptRequest {
@@ -290,7 +364,7 @@ impl Protocol for BasicPaxosProtocol {
                         value: proposed_value,
                     }];
                 }
-            
+
                 vec![]
             }
 
@@ -302,37 +376,35 @@ impl Protocol for BasicPaxosProtocol {
                 }
 
                 let proposer_id = self.proposer_id;
-            
+
                 if node.id != proposer_id {
                     return vec![];
                 }
-            
+
                 self.accepted_by_ballot
                     .entry(*ballot)
                     .or_insert_with(HashSet::new)
                     .insert(msg.from);
-            
+
                 let accepted_count = self
                     .accepted_by_ballot
                     .get(ballot)
                     .map(|s| s.len())
                     .unwrap_or(0);
-            
+
                 if accepted_count >= self.quorum_size && node.decided.is_none() {
                     node.decided = Some(VoteValue::Yes);
+                    self.enter_phase(PaxosPhase::Decided);
                     println!(
                         "[PAXOS-QUORUM-ACCEPTED] ballot={} count={} quorum={} current={}",
-                        ballot,
-                        accepted_count,
-                        self.quorum_size,
-                        self.current_ballot
+                        ballot, accepted_count, self.quorum_size, self.current_ballot
                     );
 
                     return vec![NodeAction::RecordChosen {
                         value: value.clone(),
                     }];
                 }
-            
+
                 vec![]
             }
 
@@ -340,8 +412,7 @@ impl Protocol for BasicPaxosProtocol {
                 ballot,
                 promised_ballot,
             } => {
-
-               /*println!(
+                /*println!(
                     "NACK: promised={}, current={}",
                     promised_ballot,
                     self.current_ballot
@@ -349,10 +420,7 @@ impl Protocol for BasicPaxosProtocol {
 
                 println!(
                     "[PAXOS-NACK] from={} to={} promised={} current={}",
-                    msg.from,
-                    msg.to,
-                    promised_ballot,
-                    self.current_ballot
+                    msg.from, msg.to, promised_ballot, self.current_ballot
                 );
 
                 if node.id != self.proposer_id {
@@ -362,53 +430,46 @@ impl Protocol for BasicPaxosProtocol {
                 if *ballot != self.current_ballot {
                     println!(
                         "[PAXOS-NACK-IGNORED] stale_nack ballot={} current={} promised={}",
-                        ballot,
-                        self.current_ballot,
-                        promised_ballot
+                        ballot, self.current_ballot, promised_ballot
                     );
                     return vec![];
                 }
-            
-                if *promised_ballot > self.highest_nack_seen && *promised_ballot >= self.current_ballot {
+
+                if *promised_ballot > self.highest_nack_seen
+                    && *promised_ballot >= self.current_ballot
+                {
                     self.highest_nack_seen = *promised_ballot;
                     self.current_ballot = promised_ballot + 1;
 
-                    println!(
-                        "[PAXOS-RETRY] new_ballot={}",
-                        self.current_ballot
-                    );
+                    println!("[PAXOS-RETRY] new_ballot={}", self.current_ballot);
 
-                    return vec![NodeAction::BroadcastPrepare { 
+                    return vec![NodeAction::BroadcastPrepare {
                         ballot: self.current_ballot,
                     }];
                 }
-            
+
                 vec![]
             }
 
             MessageType::MembershipChange { new_node_count } => {
-               vec![NodeAction::SendMembershipAck {
+                vec![NodeAction::SendMembershipAck {
                     to: msg.from,
                     new_node_count: *new_node_count,
                 }]
             }
 
             MessageType::MembershipAck { new_node_count: _ } => {
-               vec![]
+                vec![]
             }
 
             MessageType::Timeout => {
                 return self
-                .on_timeout()
-                .map(|action| vec![action])
-                .unwrap_or_default();
+                    .on_timeout()
+                    .map(|action| vec![action])
+                    .unwrap_or_default();
             }
 
             _ => vec![],
         }
     }
-
-    
 }
-
-

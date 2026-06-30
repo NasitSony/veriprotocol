@@ -1,11 +1,13 @@
 use crate::message::Message;
 use crate::scheduler::{
-    BoundedDelayLeaderScheduler, BoundedDelayScheduler, CommitDelayScheduler, DelayLeaderScheduler,
-    DelayScheduler, FifoScheduler, ProbabilisticDelayScheduler, ProposalDelayScheduler,
-    QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome, TimeoutFirstScheduler,
-    VoteDelayScheduler,CriticalMessageDelayScheduler, PaxosRetryAdversaryScheduler, PaxosRetryScheduler, PaxosOverlapScheduler, 
-    PaxosProgressScheduler, PaxosBallotOverlapScheduler, PaxosGapOneScheduler,PaxosGapOneBacklogScheduler, UniformBudgetDelayScheduler,
-    TargetedBudgetDelayScheduler,
+    BoundedDelayLeaderScheduler, BoundedDelayScheduler, CommitDelayScheduler,
+    CriticalMessageDelayScheduler, DelayLeaderScheduler, DelayScheduler, FifoScheduler,
+    PaxosBallotOverlapScheduler, PaxosGapOneBacklogScheduler, PaxosGapOneScheduler,
+    PaxosOverlapScheduler, PaxosProgressScheduler, PaxosRetryAdversaryScheduler,
+    PaxosRetryScheduler, ProbabilisticDelayScheduler, ProposalDelayScheduler,
+    QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome,
+    TargetedBudgetDelayScheduler, TimeoutFirstScheduler, UniformBudgetDelayScheduler,
+    VoteDelayScheduler,
 };
 
 use std::collections::HashMap;
@@ -72,8 +74,6 @@ impl Network {
                 promise_seen: HashMap::new(),
             }),
 
-            
-
             "gap1" => Box::new(PaxosGapOneScheduler {
                 max_delay: max_delay as usize,
                 delays_used: 0,
@@ -95,13 +95,9 @@ impl Network {
                 release_after_held: 4,
             }),
 
-            "uniform-budget-delay" => {
-                Box::new(UniformBudgetDelayScheduler::new(max_delay))
-            }
+            "uniform-budget-delay" => Box::new(UniformBudgetDelayScheduler::new(max_delay)),
 
-            "targeted-budget-delay" => {
-                Box::new(TargetedBudgetDelayScheduler::new(max_delay))
-            }
+            "targeted-budget-delay" => Box::new(TargetedBudgetDelayScheduler::new(max_delay)),
 
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);

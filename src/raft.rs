@@ -36,10 +36,9 @@ impl Protocol for RaftProtocol {
                     node.raft_voted_for = None;
                 }
 
-                let vote_granted =
-                    *term == node.raft_current_term
-                        && (node.raft_voted_for.is_none()
-                            || node.raft_voted_for == Some(*candidate_id));
+                let vote_granted = *term == node.raft_current_term
+                    && (node.raft_voted_for.is_none()
+                        || node.raft_voted_for == Some(*candidate_id));
 
                 if vote_granted {
                     node.raft_voted_for = Some(*candidate_id);
@@ -57,10 +56,7 @@ impl Protocol for RaftProtocol {
                     return vec![];
                 }
 
-                let votes = self
-                    .votes_by_term
-                    .entry(*term)
-                    .or_insert_with(HashSet::new);
+                let votes = self.votes_by_term.entry(*term).or_insert_with(HashSet::new);
 
                 votes.insert(msg.from);
 
@@ -78,9 +74,10 @@ impl Protocol for RaftProtocol {
                 vec![]
             }
 
-        
-
-            MessageType::AppendResponse { term: _, success: _ } => {
+            MessageType::AppendResponse {
+                term: _,
+                success: _,
+            } => {
                 vec![]
             }
 
@@ -106,57 +103,57 @@ impl Protocol for RaftProtocol {
             }
 
             MessageType::RaftConfigChange {
-                    term,
-                    leader_id,
-                    new_node_count,
-                } => {
-                    if *term >= node.raft_current_term {
-                        node.raft_current_term = *term;
-                        node.raft_role = RaftRole::Follower;
-                        self.leader_id = Some(*leader_id);
+                term,
+                leader_id,
+                new_node_count,
+            } => {
+                if *term >= node.raft_current_term {
+                    node.raft_current_term = *term;
+                    node.raft_role = RaftRole::Follower;
+                    self.leader_id = Some(*leader_id);
 
-                        return vec![NodeAction::SendRaftConfigAck {
-                            to: *leader_id,
-                            term: *term,
-                            success: true,
-                            new_node_count: *new_node_count,
-                        }];
-                    }
-
-                    vec![NodeAction::SendRaftConfigAck {
+                    return vec![NodeAction::SendRaftConfigAck {
                         to: *leader_id,
-                        term: node.raft_current_term,
-                        success: false,
+                        term: *term,
+                        success: true,
                         new_node_count: *new_node_count,
-                    }]
+                    }];
                 }
 
-             MessageType::RaftConfigAck {
-                    term,
-                    success,
-                    new_node_count,
-                } => {
-                    if !*success {
-                        return vec![];
-                    }
+                vec![NodeAction::SendRaftConfigAck {
+                    to: *leader_id,
+                    term: node.raft_current_term,
+                    success: false,
+                    new_node_count: *new_node_count,
+                }]
+            }
 
-                    let acks = self
-                        .config_acks_by_term
-                        .entry(*term)
-                        .or_insert_with(HashSet::new);
+            MessageType::RaftConfigAck {
+                term,
+                success,
+                new_node_count,
+            } => {
+                if !*success {
+                    return vec![];
+                }
 
-                    acks.insert(msg.from);
+                let acks = self
+                    .config_acks_by_term
+                    .entry(*term)
+                    .or_insert_with(HashSet::new);
 
-                    if acks.len() >= self.quorum_size {
-                        return vec![NodeAction::ActivateRaftConfig {
-                            new_node_count: *new_node_count,
-                        }];
-                    }
+                acks.insert(msg.from);
 
-                    vec![]
-                }   
+                if acks.len() >= self.quorum_size {
+                    return vec![NodeAction::ActivateRaftConfig {
+                        new_node_count: *new_node_count,
+                    }];
+                }
+
+                vec![]
+            }
 
             _ => vec![],
         }
-    } 
+    }
 }

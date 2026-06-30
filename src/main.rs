@@ -4,12 +4,11 @@ mod metrics;
 mod network;
 mod node;
 mod protocol;
+mod raft;
 mod scheduler;
 mod simulation;
 mod state;
 mod trace;
-mod raft;
-
 
 use simulation::Simulation;
 //use std::env;
@@ -29,9 +28,7 @@ fn main() {
 
     let max_delay: u64 = args.get(6).and_then(|s| s.parse().ok()).unwrap_or(6);
 
-    let node_count: usize = args.get(7)
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(4);
+    let node_count: usize = args.get(7).and_then(|s| s.parse().ok()).unwrap_or(4);
 
     let mut results: Vec<u64> = Vec::new();
 

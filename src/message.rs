@@ -31,14 +31,14 @@ pub enum MessageType {
     MembershipChange {
         new_node_count: usize,
     },
-    
+
     MembershipAck {
-       new_node_count: usize,
+        new_node_count: usize,
     },
 
     RequestVote {
-    term: u64,
-    candidate_id: u64,
+        term: u64,
+        candidate_id: u64,
     },
 
     VoteResponse {
@@ -67,7 +67,6 @@ pub enum MessageType {
         success: bool,
         new_node_count: usize,
     },
-    
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

@@ -1,0 +1,17 @@
+scheduler,k,scheduler_steps,timeouts,decisions,paxos_retries,max_ballot,reached_cap,safety
+uniform-budget-delay,0,4,0,0,0,0,false,false
+uniform-budget-delay,5,29,5,1,1,2,false,false
+uniform-budget-delay,10,44,8,1,2,3,false,false
+uniform-budget-delay,20,74,14,1,4,5,false,false
+uniform-budget-delay,40,134,26,1,8,9,false,false
+uniform-budget-delay,80,254,50,1,16,17,false,false
+uniform-budget-delay,120,334,66,1,20,21,false,false
+uniform-budget-delay,160,374,74,1,20,21,false,false
+targeted-budget-delay,0,4,0,0,0,0,false,false
+targeted-budget-delay,5,29,5,1,1,2,false,false
+targeted-budget-delay,10,44,8,1,2,3,false,false
+targeted-budget-delay,20,74,14,1,4,5,false,false
+targeted-budget-delay,40,134,26,1,8,9,false,false
+targeted-budget-delay,80,254,50,1,16,17,false,false
+targeted-budget-delay,120,334,66,1,20,21,false,false
+targeted-budget-delay,160,374,74,1,20,21,false,false
