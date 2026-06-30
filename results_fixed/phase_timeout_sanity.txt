@@ -1,0 +1,15 @@
+Command:
+cargo run --quiet -- fifo 1 42 paxos-partial-timeout 15 0 5
+
+Expected:
+Scheduler Steps: 21
+Timeout triggered: 0
+Decisions: 1
+Paxos Retries: 0
+Max Ballot Seen: 0
+Reached Step Cap: false
+Safety Violation: false
+
+Meaning:
+Healthy FIFO full-prepare run reaches decision without timeout.
+Phase-based timeout is active and calibrated with T=15.
