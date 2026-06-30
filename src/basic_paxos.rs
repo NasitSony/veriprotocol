@@ -55,7 +55,7 @@ impl BasicPaxosProtocol {
 
             phase: PaxosPhase::Idle,
             phase_elapsed: 0,
-            phase_timeout: 5,
+            phase_timeout: 15,
         }
     }
 
@@ -84,7 +84,7 @@ impl BasicPaxosProtocol {
 
             phase: PaxosPhase::Idle,
             phase_elapsed: 0,
-            phase_timeout: 5,
+            phase_timeout: 15,
         }
     }
 }
@@ -97,6 +97,11 @@ impl BasicPaxosProtocol {
     pub fn enter_phase(&mut self, phase: PaxosPhase) {
         self.phase = phase;
         self.phase_elapsed = 0;
+    }
+
+    pub fn with_phase_timeout(mut self, timeout: u64) -> Self {
+        self.phase_timeout = timeout;
+        self
     }
 
     fn promise_count(&self) -> usize {

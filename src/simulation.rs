@@ -85,7 +85,8 @@ impl Simulation {
            "paxos-partial-timeout" => Box::new(
                 BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
                     .with_quorum_size(quorum_size)
-                    .with_phase(PaxosPhase::WaitingForPromises),
+                    .with_phase(PaxosPhase::WaitingForPromises)
+                    .with_phase_timeout(timeout_threshold),
             ),
 
             "paxos-missed-accept-recovery" => Box::new(
@@ -659,6 +660,28 @@ impl Simulation {
                     self.metrics.scheduler_steps += 1;
                     self.metrics.messages_delivered += 1;
 
+                    
+
+                    trace(
+                        &self.config,
+                        TraceEvent::Deliver,
+                        &format!("{} -> {}", msg.from, msg.to),
+                    );
+
+                    self.count_message_metrics(&msg);
+
+                    for node in &mut self.nodes {
+                        if node.id == msg.to {
+                            let actions = self.protocol.handle_message(node, &msg);
+
+                            for action in actions {
+                                self.apply_action(&msg, action);
+                            }
+
+                            break;
+                        }
+                    }
+
                     let tick_actions = self.protocol.on_tick();
 
                     for action in tick_actions {
@@ -680,26 +703,6 @@ impl Simulation {
                                 });
                             }
                             _ => {}
-                        }
-                    }
-
-                    trace(
-                        &self.config,
-                        TraceEvent::Deliver,
-                        &format!("{} -> {}", msg.from, msg.to),
-                    );
-
-                    self.count_message_metrics(&msg);
-
-                    for node in &mut self.nodes {
-                        if node.id == msg.to {
-                            let actions = self.protocol.handle_message(node, &msg);
-
-                            for action in actions {
-                                self.apply_action(&msg, action);
-                            }
-
-                            break;
                         }
                     }
 
