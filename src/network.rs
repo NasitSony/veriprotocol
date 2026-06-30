@@ -7,7 +7,9 @@ use crate::scheduler::{
     PaxosRetryScheduler, ProbabilisticDelayScheduler, ProposalDelayScheduler,
     QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome,
     TargetedBudgetDelayScheduler, TimeoutFirstScheduler, UniformBudgetDelayScheduler,
-    VoteDelayScheduler,
+    VoteDelayScheduler, InterleavedUniformBudgetDelayScheduler, InterleavedTargetedBudgetDelayScheduler,
+    InterleavedProgressTargetedBudgetDelayScheduler, ProbInterleavedUniformBudgetDelayScheduler, ProbInterleavedTargetedBudgetDelayScheduler,
+
 };
 
 use std::collections::HashMap;
@@ -19,7 +21,7 @@ pub struct Network {
 }
 
 impl Network {
-    pub fn new(scheduler_name: &str, seed: u64, max_delay: usize) -> Self {
+    pub fn new(scheduler_name: &str, seed: u64, max_delay: usize, delay_probability: f64,) -> Self {
         let scheduler: Box<dyn Scheduler> = match scheduler_name {
             "fifo" => Box::new(FifoScheduler::new()),
             "random" => Box::new(RandomScheduler::new(seed)),
@@ -99,6 +101,26 @@ impl Network {
 
             "targeted-budget-delay" => Box::new(TargetedBudgetDelayScheduler::new(max_delay)),
 
+
+            "interleaved-uniform-budget-delay" => {
+                Box::new(InterleavedUniformBudgetDelayScheduler::new(max_delay, 2))
+            }
+
+            "interleaved-targeted-budget-delay" => {
+                Box::new(InterleavedTargetedBudgetDelayScheduler::new(max_delay, 2))
+            }
+
+            "interleaved-progress-targeted-budget-delay" => {
+                Box::new(InterleavedProgressTargetedBudgetDelayScheduler::new(max_delay, 2))
+            }
+
+            "prob-interleaved-uniform-budget-delay" => {
+                Box::new(ProbInterleavedUniformBudgetDelayScheduler::new(max_delay, delay_probability))
+            }
+
+            "prob-interleaved-targeted-budget-delay" => {
+                Box::new(ProbInterleavedTargetedBudgetDelayScheduler::new(max_delay, delay_probability))
+            }
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);
                 Box::new(FifoScheduler::new())

@@ -315,6 +315,14 @@ impl Protocol for BasicPaxosProtocol {
             } => {
                 //let proposer_id = 1; //*ballot;
 
+                println!(
+                    "[PROMISE-TRACE] from={} received_ballot={} current_ballot={} match={}",
+                    msg.from,
+                    ballot,
+                    self.current_ballot,
+                    *ballot == self.current_ballot
+                );
+
                 if *ballot != self.current_ballot {
                     return vec![];
                 }
@@ -364,6 +372,8 @@ impl Protocol for BasicPaxosProtocol {
                         ballot, promise_count, self.quorum_size, self.current_ballot
                     );
 
+                    self.enter_phase(PaxosPhase::WaitingForAccepted);
+
                     return vec![NodeAction::BroadcastAcceptRequest {
                         ballot: *ballot,
                         value: proposed_value,
@@ -404,6 +414,8 @@ impl Protocol for BasicPaxosProtocol {
                         "[PAXOS-QUORUM-ACCEPTED] ballot={} count={} quorum={} current={}",
                         ballot, accepted_count, self.quorum_size, self.current_ballot
                     );
+
+                    self.enter_phase(PaxosPhase::Decided);
 
                     return vec![NodeAction::RecordChosen {
                         value: value.clone(),

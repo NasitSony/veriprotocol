@@ -34,6 +34,7 @@ impl Simulation {
         timeout_threshold: u64,
         max_delay: usize,
         node_count: usize,
+        delay_probability: f64,
     ) -> Self {
         //let node_count = 4;
 
@@ -146,7 +147,7 @@ impl Simulation {
         };
 
         Self {
-            network: Network::new(scheduler_name, seed, max_delay),
+            network: Network::new(scheduler_name, seed, max_delay, delay_probability),
             nodes, //vec![Node::new(1), Node::new(2), Node::new(3), Node::new(4)],
             metrics: Metrics::new(),
             config: Config {
@@ -647,6 +648,8 @@ impl Simulation {
 
         while self.metrics.scheduler_steps < max_steps {
             match self.network.deliver_next() {
+               
+
                 SchedulerOutcome::Deliver(msg) => {
                     println!(
                         "[step={}] DELIVER from={} to={} type={:?} queue_len={}",
@@ -713,6 +716,8 @@ impl Simulation {
                         break;
                     }
                 }
+
+              
 
                 SchedulerOutcome::Delay => {
                     self.metrics.scheduler_steps += 1;

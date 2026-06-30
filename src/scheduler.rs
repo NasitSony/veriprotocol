@@ -3,6 +3,7 @@ use rand::RngExt;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
 use std::collections::HashMap;
+use rand::Rng;
 
 pub enum SchedulerOutcome {
     Deliver(Message),
@@ -1344,6 +1345,11 @@ pub struct UniformBudgetDelayScheduler {
     total_budget: usize,
     remaining_budget: usize,
     spent_budget: usize,
+    pub delayed_prepare: u64,
+    pub delayed_promise: u64,
+    pub delayed_accept_request: u64,
+    pub delayed_accepted: u64,
+    pub delayed_other: u64,
 }
 
 impl UniformBudgetDelayScheduler {
@@ -1352,6 +1358,11 @@ impl UniformBudgetDelayScheduler {
             total_budget,
             remaining_budget: total_budget,
             spent_budget: 0,
+            delayed_prepare: 0,
+            delayed_promise: 0,
+            delayed_accept_request: 0,
+            delayed_accepted: 0,
+            delayed_other: 0,
         }
     }
 
@@ -1384,12 +1395,35 @@ impl Scheduler for UniformBudgetDelayScheduler {
         if self.remaining_budget > 0 {
             self.spend_one();
 
+            let mut rng = rand::rng();
+            let idx = rng.random_range(0..queue.len());
+            let msg = queue.remove(idx);
+
             println!(
-                "[UNIFORM-BUDGET-DELAY] spent={} remaining={} total={} queue_len={}",
+                "[UNIFORM] idx={} queue_len={} delayed={:?}",
+                idx,
+                queue.len(),
+                msg.msg_type
+            );
+
+            match &msg.msg_type {
+                MessageType::Prepare { .. } => self.delayed_prepare += 1,
+                MessageType::Promise { .. } => self.delayed_promise += 1,
+                MessageType::AcceptRequest { .. } => self.delayed_accept_request += 1,
+                MessageType::Accepted { .. } => self.delayed_accepted += 1,
+                _ => self.delayed_other += 1,
+            }
+
+            let msg_type = format!("{:?}", msg.msg_type);
+            queue.push(msg);
+
+            println!(
+                "[UNIFORM-BUDGET-DELAY] spent={} remaining={} total={} queue_len={} delayed={}",
                 self.spent_budget,
                 self.remaining_budget,
                 self.total_budget,
-                queue.len()
+                queue.len(),
+                msg_type
             );
 
             return SchedulerOutcome::Delay;
@@ -1404,6 +1438,11 @@ pub struct TargetedBudgetDelayScheduler {
     total_budget: usize,
     remaining_budget: usize,
     spent_budget: usize,
+    pub delayed_prepare: u64,
+    pub delayed_promise: u64,
+    pub delayed_accept_request: u64,
+    pub delayed_accepted: u64,
+    pub delayed_other: u64,
 }
 
 impl TargetedBudgetDelayScheduler {
@@ -1412,6 +1451,11 @@ impl TargetedBudgetDelayScheduler {
             total_budget,
             remaining_budget: total_budget,
             spent_budget: 0,
+            delayed_prepare: 0,
+            delayed_promise: 0,
+            delayed_accept_request: 0,
+            delayed_accepted: 0,
+            delayed_other: 0,
         }
     }
 
@@ -1440,6 +1484,21 @@ impl Scheduler for TargetedBudgetDelayScheduler {
             self.spend_one();
 
             let msg = queue.remove(0);
+            match &msg.msg_type {
+                MessageType::Prepare { .. } => self.delayed_prepare += 1,
+
+                MessageType::Promise { .. } => self.delayed_promise += 1,
+
+                MessageType::AcceptRequest { .. } => {
+                    self.delayed_accept_request += 1;
+                }
+
+                MessageType::Accepted { .. } => {
+                    self.delayed_accepted += 1;
+                }
+
+                _ => self.delayed_other += 1,
+            }
             let msg_type = format!("{:?}", msg.msg_type);
             queue.push(msg);
 
@@ -1452,7 +1511,347 @@ impl Scheduler for TargetedBudgetDelayScheduler {
                 msg_type
             );
 
+            println!("==========================");
+            println!("Targeted Delay Profile");
+            println!("Prepare       : {}", self.delayed_prepare);
+            println!("Promise       : {}", self.delayed_promise);
+            println!("AcceptRequest : {}", self.delayed_accept_request);
+            println!("Accepted      : {}", self.delayed_accepted);
+            println!("Other         : {}", self.delayed_other);
+            println!("==========================");
+
             return SchedulerOutcome::Delay;
+        }
+
+        SchedulerOutcome::Deliver(queue.remove(0))
+    }
+}
+pub struct InterleavedUniformBudgetDelayScheduler {
+    total_budget: usize,
+    remaining_budget: usize,
+    spent_budget: usize,
+    delay_every: usize,
+    step: usize,
+}
+
+impl InterleavedUniformBudgetDelayScheduler {
+    pub fn new(total_budget: usize, delay_every: usize) -> Self {
+        Self {
+            total_budget,
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            delay_every,
+            step: 0,
+        }
+    }
+
+    fn should_delay(&mut self) -> bool {
+        self.step += 1;
+        self.remaining_budget > 0 && self.step % self.delay_every == 0
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+}
+
+impl Scheduler for InterleavedUniformBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.should_delay() {
+            self.spend_one();
+
+            let mut rng = rand::rng();
+            let idx = rng.random_range(0..queue.len());
+
+            let msg = queue.remove(idx);
+            let msg_type = format!("{:?}", msg.msg_type);
+            queue.push(msg);
+
+            println!(
+                "[INTERLEAVED-UNIFORM-DELAY] step={} spent={} remaining={} queue_len={} delayed={}",
+                self.step,
+                self.spent_budget,
+                self.remaining_budget,
+                queue.len(),
+                msg_type
+            );
+
+            return SchedulerOutcome::Delay;
+        }
+
+        SchedulerOutcome::Deliver(queue.remove(0))
+    }
+}
+
+
+
+pub struct InterleavedTargetedBudgetDelayScheduler {
+    total_budget: usize,
+    remaining_budget: usize,
+    spent_budget: usize,
+    delay_every: usize,
+    step: usize,
+}
+
+impl InterleavedTargetedBudgetDelayScheduler {
+    pub fn new(total_budget: usize, delay_every: usize) -> Self {
+        Self {
+            total_budget,
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            delay_every,
+            step: 0,
+        }
+    }
+
+    fn should_delay(&mut self) -> bool {
+        self.step += 1;
+        self.remaining_budget > 0 && self.step % self.delay_every == 0
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn is_critical(msg: &Message) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::Promise { .. }
+                | MessageType::Accepted { .. }
+                | MessageType::Nack { .. }
+        )
+    }
+}
+
+impl Scheduler for InterleavedTargetedBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.should_delay() {
+            if let Some(idx) = queue.iter().position(Self::is_critical) {
+                self.spend_one();
+
+                let msg = queue.remove(idx);
+                let msg_type = format!("{:?}", msg.msg_type);
+                queue.push(msg);
+
+                println!(
+                    "[INTERLEAVED-TARGETED-DELAY] step={} spent={} remaining={} queue_len={} delayed={}",
+                    self.step,
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            }
+        }
+
+        SchedulerOutcome::Deliver(queue.remove(0))
+    }
+}
+
+pub struct InterleavedProgressTargetedBudgetDelayScheduler {
+    total_budget: usize,
+    remaining_budget: usize,
+    spent_budget: usize,
+    delay_every: usize,
+    step: usize,
+}
+
+impl InterleavedProgressTargetedBudgetDelayScheduler {
+    pub fn new(total_budget: usize, delay_every: usize) -> Self {
+        Self {
+            total_budget,
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            delay_every,
+            step: 0,
+        }
+    }
+
+    fn should_delay(&mut self) -> bool {
+        self.step += 1;
+        self.remaining_budget > 0 && self.step % self.delay_every == 0
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn is_progress_critical(msg: &Message) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::Prepare { .. }
+                | MessageType::Promise { .. }
+                | MessageType::AcceptRequest { .. }
+                | MessageType::Accepted { .. }
+                | MessageType::Nack { .. }
+        )
+    }
+}
+
+impl Scheduler for InterleavedProgressTargetedBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.should_delay() {
+            if let Some(idx) = queue.iter().position(Self::is_progress_critical) {
+                self.spend_one();
+
+                let msg = queue.remove(idx);
+                let msg_type = format!("{:?}", msg.msg_type);
+                queue.push(msg);
+
+                println!(
+                    "[INTERLEAVED-PROGRESS-TARGETED-DELAY] step={} spent={} remaining={} queue_len={} delayed={}",
+                    self.step,
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            }
+        }
+
+        SchedulerOutcome::Deliver(queue.remove(0))
+    }
+}
+
+pub struct ProbInterleavedUniformBudgetDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    delay_probability: f64,
+}
+
+impl ProbInterleavedUniformBudgetDelayScheduler {
+    pub fn new(total_budget: usize, delay_probability: f64) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            delay_probability,
+        }
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+}
+
+impl Scheduler for ProbInterleavedUniformBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        let mut rng = rand::rng();
+
+        let should_delay =
+            self.remaining_budget > 0 && rng.random_bool(self.delay_probability);
+
+        if should_delay {
+            
+            self.spend_one();
+
+            let idx = rng.random_range(0..queue.len());
+            let msg = queue.remove(idx);
+            let msg_type = format!("{:?}", msg.msg_type);
+
+            queue.push(msg);
+
+            println!(
+                "[PROB-INTERLEAVED-UNIFORM] spent={} remaining={} queue_len={} delayed={}",
+                self.spent_budget,
+                self.remaining_budget,
+                queue.len(),
+                msg_type
+            );
+
+            return SchedulerOutcome::Delay;
+        }
+
+        SchedulerOutcome::Deliver(queue.remove(0))
+    }
+}
+
+pub struct ProbInterleavedTargetedBudgetDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    delay_probability: f64,
+}
+
+impl ProbInterleavedTargetedBudgetDelayScheduler {
+    pub fn new(total_budget: usize, delay_probability: f64) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            delay_probability,
+        }
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn is_critical(msg: &Message) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::Promise { .. }
+                | MessageType::Accepted { .. }
+                | MessageType::Nack { .. }
+        )
+    }
+}
+
+impl Scheduler for ProbInterleavedTargetedBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        let mut rng = rand::rng();
+
+        let should_delay =
+            self.remaining_budget > 0 && rng.random_bool(self.delay_probability);
+        
+        
+
+        if should_delay {
+           
+            if let Some(idx) = queue.iter().position(Self::is_critical) {
+                self.spend_one();
+
+                let msg = queue.remove(idx);
+                let msg_type = format!("{:?}", msg.msg_type);
+
+                queue.push(msg);
+
+                println!(
+                    "[PROB-INTERLEAVED-TARGETED] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            }
         }
 
         SchedulerOutcome::Deliver(queue.remove(0))

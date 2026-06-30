@@ -30,6 +30,8 @@ fn main() {
 
     let node_count: usize = args.get(7).and_then(|s| s.parse().ok()).unwrap_or(4);
 
+    let delay_probability: f64 = args.get(8).and_then(|s| s.parse().ok()).unwrap_or(0.5);
+
     let mut results: Vec<u64> = Vec::new();
 
     for i in 0..runs {
@@ -44,6 +46,7 @@ fn main() {
             timeout_threshold,
             max_delay as usize,
             node_count,
+            delay_probability,
         );
         sim.run();
 

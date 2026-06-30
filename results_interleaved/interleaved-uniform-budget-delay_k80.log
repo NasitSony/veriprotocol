@@ -1,0 +1,667 @@
+
+=== Run 1 ===
+Nodes: 5
+Quorum: 3
+Simulation starting
+[step=0] DELIVER from=1 to=1 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=1 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=2 spent=1 remaining=79 queue_len=5 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=1 promises=0 accepted=0
+[step=2] DELIVER from=1 to=2 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=1 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=4 spent=2 remaining=78 queue_len=5 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=1 promises=0 accepted=0
+[step=4] DELIVER from=1 to=5 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=1 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=6 spent=3 remaining=77 queue_len=5 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=1 promises=0 accepted=0
+[step=6] DELIVER from=1 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=4
+[PROMISE-TRACE] from=1 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=1 promises=1 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=8 spent=4 remaining=76 queue_len=4 delayed=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=1 promises=1 accepted=0
+[step=8] DELIVER from=2 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=3
+[PROMISE-TRACE] from=2 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=1 promises=2 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=10 spent=5 remaining=75 queue_len=3 delayed=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=1 promises=2 accepted=0
+[step=10] DELIVER from=1 to=3 type=Prepare { ballot: 1 } queue_len=2
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=1 promises=2 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=12 spent=6 remaining=74 queue_len=3 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=1 promises=2 accepted=0
+[step=12] DELIVER from=5 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=2
+[PROMISE-TRACE] from=5 received_ballot=1 current_ballot=1 match=true
+[PAXOS-QUORUM-PROMISE] ballot=1 count=3 quorum=3 current=1
+[INTERLEAVED-UNIFORM-DELAY] step=14 spent=7 remaining=73 queue_len=7 delayed=AcceptRequest { ballot: 1, value: "v1" }
+[step=14] DELIVER from=3 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=6
+[PROMISE-TRACE] from=3 received_ballot=1 current_ballot=1 match=true
+[INTERLEAVED-UNIFORM-DELAY] step=16 spent=8 remaining=72 queue_len=6 delayed=AcceptRequest { ballot: 1, value: "v1" }
+[step=16] DELIVER from=1 to=4 type=Prepare { ballot: 1 } queue_len=5
+[INTERLEAVED-UNIFORM-DELAY] step=18 spent=9 remaining=71 queue_len=6 delayed=AcceptRequest { ballot: 1, value: "v1" }
+[step=18] DELIVER from=1 to=3 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=5
+Broadcasting AcceptRequest(1, v1)
+[INTERLEAVED-UNIFORM-DELAY] step=20 spent=10 remaining=70 queue_len=6 delayed=AcceptRequest { ballot: 1, value: "v1" }
+[step=20] DELIVER from=1 to=4 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=5
+Broadcasting AcceptRequest(1, v1)
+[INTERLEAVED-UNIFORM-DELAY] step=22 spent=11 remaining=69 queue_len=6 delayed=AcceptRequest { ballot: 1, value: "v1" }
+[step=22] DELIVER from=4 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=5
+[PROMISE-TRACE] from=4 received_ballot=1 current_ballot=1 match=true
+[INTERLEAVED-UNIFORM-DELAY] step=24 spent=12 remaining=68 queue_len=5 delayed=AcceptRequest { ballot: 1, value: "v1" }
+[step=24] DELIVER from=1 to=1 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(1, v1)
+[INTERLEAVED-UNIFORM-DELAY] step=26 spent=13 remaining=67 queue_len=5 delayed=Accepted { ballot: 1, value: "v1" }
+[step=26] DELIVER from=3 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=4
+[INTERLEAVED-UNIFORM-DELAY] step=28 spent=14 remaining=66 queue_len=9 delayed=AcceptRequest { ballot: 1, value: "v1" }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=2 promises=0 accepted=0
+[step=28] DELIVER from=1 to=2 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=8
+Broadcasting AcceptRequest(1, v1)
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=2 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=30 spent=15 remaining=65 queue_len=9 delayed=Prepare { ballot: 2 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=2 promises=0 accepted=0
+[step=30] DELIVER from=4 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=8
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=2 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=32 spent=16 remaining=64 queue_len=8 delayed=Prepare { ballot: 2 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=2 promises=0 accepted=0
+[step=32] DELIVER from=1 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=7
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=2 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=34 spent=17 remaining=63 queue_len=7 delayed=AcceptRequest { ballot: 1, value: "v1" }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=2 promises=0 accepted=0
+[step=34] DELIVER from=1 to=2 type=Prepare { ballot: 2 } queue_len=6
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=2 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=36 spent=18 remaining=62 queue_len=7 delayed=Prepare { ballot: 2 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=2 promises=0 accepted=0
+[step=36] DELIVER from=1 to=3 type=Prepare { ballot: 2 } queue_len=6
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=2 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=38 spent=19 remaining=61 queue_len=7 delayed=Prepare { ballot: 2 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=2 promises=0 accepted=0
+[step=38] DELIVER from=1 to=4 type=Prepare { ballot: 2 } queue_len=6
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=2 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=40 spent=20 remaining=60 queue_len=7 delayed=Prepare { ballot: 2 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=2 promises=0 accepted=0
+[step=40] DELIVER from=2 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=6
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=2 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=42 spent=21 remaining=59 queue_len=6 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=2 promises=0 accepted=0
+[step=42] DELIVER from=1 to=5 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=10
+Broadcasting AcceptRequest(1, v1)
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=3 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=44 spent=22 remaining=58 queue_len=11 delayed=Accepted { ballot: 1, value: "v1" }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=3 promises=0 accepted=0
+[step=44] DELIVER from=2 to=1 type=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=10
+[PROMISE-TRACE] from=2 received_ballot=2 current_ballot=3 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=3 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=46 spent=23 remaining=57 queue_len=10 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=3 promises=0 accepted=0
+[step=46] DELIVER from=1 to=1 type=Prepare { ballot: 2 } queue_len=9
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=3 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=48 spent=24 remaining=56 queue_len=10 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=3 promises=0 accepted=0
+[step=48] DELIVER from=4 to=1 type=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=9
+[PROMISE-TRACE] from=4 received_ballot=2 current_ballot=3 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=3 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=50 spent=25 remaining=55 queue_len=9 delayed=Prepare { ballot: 3 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=3 promises=0 accepted=0
+[step=50] DELIVER from=1 to=5 type=Prepare { ballot: 2 } queue_len=8
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=3 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=52 spent=26 remaining=54 queue_len=9 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=3 promises=0 accepted=0
+[step=52] DELIVER from=1 to=1 type=Prepare { ballot: 3 } queue_len=8
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=3 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=54 spent=27 remaining=53 queue_len=9 delayed=Accepted { ballot: 1, value: "v1" }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=3 promises=0 accepted=0
+[step=54] DELIVER from=1 to=2 type=Prepare { ballot: 3 } queue_len=8
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=3 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=56 spent=28 remaining=52 queue_len=9 delayed=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=3 promises=0 accepted=0
+[step=56] DELIVER from=1 to=3 type=Prepare { ballot: 3 } queue_len=8
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=3 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=58 spent=29 remaining=51 queue_len=14 delayed=Prepare { ballot: 4 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=4 promises=0 accepted=0
+[step=58] DELIVER from=1 to=5 type=Prepare { ballot: 3 } queue_len=13
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=4 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=60 spent=30 remaining=50 queue_len=14 delayed=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=4 promises=0 accepted=0
+[step=60] DELIVER from=3 to=1 type=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=13
+[PROMISE-TRACE] from=3 received_ballot=2 current_ballot=4 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=4 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=62 spent=31 remaining=49 queue_len=13 delayed=Prepare { ballot: 3 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=4 promises=0 accepted=0
+[step=62] DELIVER from=5 to=1 type=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=12
+[PROMISE-TRACE] from=5 received_ballot=2 current_ballot=4 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=4 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=64 spent=32 remaining=48 queue_len=12 delayed=Prepare { ballot: 4 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=4 promises=0 accepted=0
+[step=64] DELIVER from=1 to=1 type=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=11
+[PROMISE-TRACE] from=1 received_ballot=2 current_ballot=4 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=4 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=66 spent=33 remaining=47 queue_len=11 delayed=Prepare { ballot: 4 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=4 promises=0 accepted=0
+[step=66] DELIVER from=5 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=10
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=4 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=68 spent=34 remaining=46 queue_len=10 delayed=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=4 promises=0 accepted=0
+[step=68] DELIVER from=1 to=1 type=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=9
+[PROMISE-TRACE] from=1 received_ballot=3 current_ballot=4 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=4 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=70 spent=35 remaining=45 queue_len=9 delayed=Prepare { ballot: 4 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=4 promises=0 accepted=0
+[step=70] DELIVER from=3 to=1 type=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=8
+[PROMISE-TRACE] from=3 received_ballot=3 current_ballot=4 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=4 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=72 spent=36 remaining=44 queue_len=8 delayed=Prepare { ballot: 3 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=4 promises=0 accepted=0
+[step=72] DELIVER from=1 to=2 type=Prepare { ballot: 4 } queue_len=12
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=5 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=74 spent=37 remaining=43 queue_len=13 delayed=Prepare { ballot: 5 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=5 promises=0 accepted=0
+[step=74] DELIVER from=1 to=4 type=Prepare { ballot: 4 } queue_len=12
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=5 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=76 spent=38 remaining=42 queue_len=13 delayed=Prepare { ballot: 5 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=5 promises=0 accepted=0
+[step=76] DELIVER from=1 to=5 type=Prepare { ballot: 4 } queue_len=12
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=5 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=78 spent=39 remaining=41 queue_len=13 delayed=Prepare { ballot: 4 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=5 promises=0 accepted=0
+[step=78] DELIVER from=5 to=1 type=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=12
+[PROMISE-TRACE] from=5 received_ballot=3 current_ballot=5 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=5 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=80 spent=40 remaining=40 queue_len=12 delayed=Prepare { ballot: 5 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=5 promises=0 accepted=0
+[step=80] DELIVER from=2 to=1 type=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=11
+[PROMISE-TRACE] from=2 received_ballot=3 current_ballot=5 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=5 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=82 spent=41 remaining=39 queue_len=11 delayed=Prepare { ballot: 4 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=5 promises=0 accepted=0
+[step=82] DELIVER from=1 to=4 type=Prepare { ballot: 3 } queue_len=10
+[NACK-CAUSE] node=4 incoming=Prepare { ballot: 3 } incoming_ballot=3 promised_ballot=4
+[RETRY-MOTIF] cause=stale_prepare node=4 incoming_ballot=3 promised_ballot=4 gap=1
+[NACK-SEND] from=4 to=1 ballot=3 promised_ballot=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=5 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=84 spent=42 remaining=38 queue_len=11 delayed=Prepare { ballot: 5 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=5 promises=0 accepted=0
+[step=84] DELIVER from=1 to=1 type=Prepare { ballot: 5 } queue_len=10
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=5 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=86 spent=43 remaining=37 queue_len=11 delayed=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=5 promises=0 accepted=0
+[step=86] DELIVER from=1 to=3 type=Prepare { ballot: 5 } queue_len=10
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=5 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=88 spent=44 remaining=36 queue_len=16 delayed=Prepare { ballot: 5 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=6 promises=0 accepted=0
+[step=88] DELIVER from=2 to=1 type=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=15
+[PROMISE-TRACE] from=2 received_ballot=4 current_ballot=6 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=6 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=90 spent=45 remaining=35 queue_len=15 delayed=Nack { ballot: 3, promised_ballot: 4 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=6 promises=0 accepted=0
+[step=90] DELIVER from=1 to=2 type=Prepare { ballot: 5 } queue_len=14
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=6 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=92 spent=46 remaining=34 queue_len=15 delayed=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=6 promises=0 accepted=0
+[step=92] DELIVER from=5 to=1 type=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=14
+[PROMISE-TRACE] from=5 received_ballot=4 current_ballot=6 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=6 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=94 spent=47 remaining=33 queue_len=14 delayed=Prepare { ballot: 4 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=6 promises=0 accepted=0
+[step=94] DELIVER from=1 to=1 type=Prepare { ballot: 4 } queue_len=13
+[NACK-CAUSE] node=1 incoming=Prepare { ballot: 4 } incoming_ballot=4 promised_ballot=5
+[RETRY-MOTIF] cause=stale_prepare node=1 incoming_ballot=4 promised_ballot=5 gap=1
+[NACK-SEND] from=1 to=1 ballot=4 promised_ballot=5
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=6 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=96 spent=48 remaining=32 queue_len=14 delayed=Prepare { ballot: 6 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=6 promises=0 accepted=0
+[step=96] DELIVER from=1 to=5 type=Prepare { ballot: 5 } queue_len=13
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=6 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=98 spent=49 remaining=31 queue_len=14 delayed=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=6 promises=0 accepted=0
+[step=98] DELIVER from=1 to=1 type=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=13
+[PROMISE-TRACE] from=1 received_ballot=5 current_ballot=6 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=6 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=100 spent=50 remaining=30 queue_len=13 delayed=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=6 promises=0 accepted=0
+[step=100] DELIVER from=1 to=1 type=Prepare { ballot: 6 } queue_len=12
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=6 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=102 spent=51 remaining=29 queue_len=13 delayed=Nack { ballot: 4, promised_ballot: 5 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=6 promises=0 accepted=0
+[step=102] DELIVER from=1 to=2 type=Prepare { ballot: 6 } queue_len=17
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=7 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=104 spent=52 remaining=28 queue_len=18 delayed=Promise { ballot: 6, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=7 promises=0 accepted=0
+[step=104] DELIVER from=1 to=3 type=Prepare { ballot: 6 } queue_len=17
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=7 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=106 spent=53 remaining=27 queue_len=18 delayed=Prepare { ballot: 5 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=7 promises=0 accepted=0
+[step=106] DELIVER from=1 to=4 type=Prepare { ballot: 6 } queue_len=17
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=7 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=108 spent=54 remaining=26 queue_len=18 delayed=Prepare { ballot: 7 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=7 promises=0 accepted=0
+[step=108] DELIVER from=4 to=1 type=Nack { ballot: 3, promised_ballot: 4 } queue_len=17
+[PAXOS-NACK] from=4 to=1 promised=4 current=7
+[PAXOS-NACK-IGNORED] stale_nack ballot=3 current=7 promised=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=7 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=110 spent=55 remaining=25 queue_len=17 delayed=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=7 promises=0 accepted=0
+[step=110] DELIVER from=2 to=1 type=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=16
+[PROMISE-TRACE] from=2 received_ballot=5 current_ballot=7 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=7 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=112 spent=56 remaining=24 queue_len=16 delayed=Prepare { ballot: 7 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=7 promises=0 accepted=0
+[step=112] DELIVER from=4 to=1 type=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=15
+[PROMISE-TRACE] from=4 received_ballot=4 current_ballot=7 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=7 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=114 spent=57 remaining=23 queue_len=15 delayed=Prepare { ballot: 7 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=7 promises=0 accepted=0
+[step=114] DELIVER from=1 to=3 type=Prepare { ballot: 4 } queue_len=14
+[NACK-CAUSE] node=3 incoming=Prepare { ballot: 4 } incoming_ballot=4 promised_ballot=6
+[RETRY-MOTIF] cause=stale_prepare node=3 incoming_ballot=4 promised_ballot=6 gap=2
+[NACK-SEND] from=3 to=1 ballot=4 promised_ballot=6
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=7 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=116 spent=58 remaining=22 queue_len=15 delayed=Prepare { ballot: 6 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=7 promises=0 accepted=0
+[step=116] DELIVER from=3 to=1 type=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=14
+[PROMISE-TRACE] from=3 received_ballot=5 current_ballot=7 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=7 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=118 spent=59 remaining=21 queue_len=19 delayed=Prepare { ballot: 6 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=8 promises=0 accepted=0
+[step=118] DELIVER from=1 to=1 type=Promise { ballot: 6, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=18
+[PROMISE-TRACE] from=1 received_ballot=6 current_ballot=8 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=8 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=120 spent=60 remaining=20 queue_len=18 delayed=Prepare { ballot: 8 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=8 promises=0 accepted=0
+[step=120] DELIVER from=1 to=1 type=Nack { ballot: 4, promised_ballot: 5 } queue_len=17
+[PAXOS-NACK] from=1 to=1 promised=5 current=8
+[PAXOS-NACK-IGNORED] stale_nack ballot=4 current=8 promised=5
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=8 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=122 spent=61 remaining=19 queue_len=17 delayed=Prepare { ballot: 8 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=8 promises=0 accepted=0
+[step=122] DELIVER from=1 to=3 type=Prepare { ballot: 7 } queue_len=16
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=8 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=124 spent=62 remaining=18 queue_len=17 delayed=Nack { ballot: 4, promised_ballot: 6 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=8 promises=0 accepted=0
+[step=124] DELIVER from=1 to=4 type=Prepare { ballot: 7 } queue_len=16
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=8 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=126 spent=63 remaining=17 queue_len=17 delayed=Prepare { ballot: 8 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=8 promises=0 accepted=0
+[step=126] DELIVER from=2 to=1 type=Promise { ballot: 6, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=16
+[PROMISE-TRACE] from=2 received_ballot=6 current_ballot=8 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=8 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=128 spent=64 remaining=16 queue_len=16 delayed=Prepare { ballot: 8 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=8 promises=0 accepted=0
+[step=128] DELIVER from=3 to=1 type=Promise { ballot: 6, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=15
+[PROMISE-TRACE] from=3 received_ballot=6 current_ballot=8 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=8 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=130 spent=65 remaining=15 queue_len=15 delayed=Prepare { ballot: 7 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=8 promises=0 accepted=0
+[step=130] DELIVER from=1 to=4 type=Prepare { ballot: 5 } queue_len=14
+[NACK-CAUSE] node=4 incoming=Prepare { ballot: 5 } incoming_ballot=5 promised_ballot=7
+[RETRY-MOTIF] cause=stale_prepare node=4 incoming_ballot=5 promised_ballot=7 gap=2
+[NACK-SEND] from=4 to=1 ballot=5 promised_ballot=7
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=8 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=132 spent=66 remaining=14 queue_len=15 delayed=Prepare { ballot: 7 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=8 promises=0 accepted=0
+[step=132] DELIVER from=4 to=1 type=Promise { ballot: 6, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=19
+[PROMISE-TRACE] from=4 received_ballot=6 current_ballot=9 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=9 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=134 spent=67 remaining=13 queue_len=19 delayed=Prepare { ballot: 6 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=9 promises=0 accepted=0
+[step=134] DELIVER from=5 to=1 type=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=18
+[PROMISE-TRACE] from=5 received_ballot=5 current_ballot=9 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=9 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=136 spent=68 remaining=12 queue_len=18 delayed=Prepare { ballot: 8 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=9 promises=0 accepted=0
+[step=136] DELIVER from=1 to=2 type=Prepare { ballot: 7 } queue_len=17
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=9 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=138 spent=69 remaining=11 queue_len=18 delayed=Prepare { ballot: 7 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=9 promises=0 accepted=0
+[step=138] DELIVER from=1 to=5 type=Prepare { ballot: 8 } queue_len=17
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=9 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=140 spent=70 remaining=10 queue_len=18 delayed=Nack { ballot: 5, promised_ballot: 7 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=9 promises=0 accepted=0
+[step=140] DELIVER from=1 to=3 type=Prepare { ballot: 8 } queue_len=17
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=9 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=142 spent=71 remaining=9 queue_len=18 delayed=Prepare { ballot: 9 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=9 promises=0 accepted=0
+[step=142] DELIVER from=3 to=1 type=Promise { ballot: 7, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=17
+[PROMISE-TRACE] from=3 received_ballot=7 current_ballot=9 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=9 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=144 spent=72 remaining=8 queue_len=17 delayed=Prepare { ballot: 9 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=9 promises=0 accepted=0
+[step=144] DELIVER from=3 to=1 type=Nack { ballot: 4, promised_ballot: 6 } queue_len=16
+[PAXOS-NACK] from=3 to=1 promised=6 current=9
+[PAXOS-NACK-IGNORED] stale_nack ballot=4 current=9 promised=6
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=9 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=146 spent=73 remaining=7 queue_len=16 delayed=Prepare { ballot: 9 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=9 promises=0 accepted=0
+[step=146] DELIVER from=4 to=1 type=Promise { ballot: 7, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=15
+[PROMISE-TRACE] from=4 received_ballot=7 current_ballot=9 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=9 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=148 spent=74 remaining=6 queue_len=20 delayed=Prepare { ballot: 9 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=10 promises=0 accepted=0
+[step=148] DELIVER from=1 to=1 type=Prepare { ballot: 8 } queue_len=19
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=10 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=150 spent=75 remaining=5 queue_len=20 delayed=Promise { ballot: 7, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=10 promises=0 accepted=0
+[step=150] DELIVER from=1 to=2 type=Prepare { ballot: 8 } queue_len=19
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=10 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=152 spent=76 remaining=4 queue_len=20 delayed=Prepare { ballot: 9 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=10 promises=0 accepted=0
+[step=152] DELIVER from=1 to=5 type=Prepare { ballot: 7 } queue_len=19
+[NACK-CAUSE] node=5 incoming=Prepare { ballot: 7 } incoming_ballot=7 promised_ballot=8
+[RETRY-MOTIF] cause=stale_prepare node=5 incoming_ballot=7 promised_ballot=8 gap=1
+[NACK-SEND] from=5 to=1 ballot=7 promised_ballot=8
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=10 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=154 spent=77 remaining=3 queue_len=20 delayed=Promise { ballot: 8, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=10 promises=0 accepted=0
+[step=154] DELIVER from=1 to=1 type=Prepare { ballot: 9 } queue_len=19
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=10 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=156 spent=78 remaining=2 queue_len=20 delayed=Prepare { ballot: 9 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=10 promises=0 accepted=0
+[step=156] DELIVER from=1 to=2 type=Prepare { ballot: 9 } queue_len=19
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=10 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=158 spent=79 remaining=1 queue_len=20 delayed=Prepare { ballot: 10 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=10 promises=0 accepted=0
+[step=158] DELIVER from=1 to=4 type=Prepare { ballot: 9 } queue_len=19
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=10 promises=0 accepted=0
+[INTERLEAVED-UNIFORM-DELAY] step=160 spent=80 remaining=0 queue_len=20 delayed=Promise { ballot: 9, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=10 promises=0 accepted=0
+[step=160] DELIVER from=1 to=5 type=Prepare { ballot: 6 } queue_len=19
+[NACK-CAUSE] node=5 incoming=Prepare { ballot: 6 } incoming_ballot=6 promised_ballot=8
+[RETRY-MOTIF] cause=stale_prepare node=5 incoming_ballot=6 promised_ballot=8 gap=2
+[NACK-SEND] from=5 to=1 ballot=6 promised_ballot=8
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=10 promises=0 accepted=0
+[step=161] DELIVER from=1 to=4 type=Prepare { ballot: 8 } queue_len=19
+[NACK-CAUSE] node=4 incoming=Prepare { ballot: 8 } incoming_ballot=8 promised_ballot=9
+[RETRY-MOTIF] cause=stale_prepare node=4 incoming_ballot=8 promised_ballot=9 gap=1
+[NACK-SEND] from=4 to=1 ballot=8 promised_ballot=9
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=10 promises=0 accepted=0
+[step=162] DELIVER from=1 to=1 type=Prepare { ballot: 7 } queue_len=24
+[NACK-CAUSE] node=1 incoming=Prepare { ballot: 7 } incoming_ballot=7 promised_ballot=9
+[RETRY-MOTIF] cause=stale_prepare node=1 incoming_ballot=7 promised_ballot=9 gap=2
+[NACK-SEND] from=1 to=1 ballot=7 promised_ballot=9
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=11 promises=0 accepted=0
+[step=163] DELIVER from=5 to=1 type=Promise { ballot: 8, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=24
+[PROMISE-TRACE] from=5 received_ballot=8 current_ballot=11 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=11 promises=0 accepted=0
+[step=164] DELIVER from=4 to=1 type=Nack { ballot: 5, promised_ballot: 7 } queue_len=23
+[PAXOS-NACK] from=4 to=1 promised=7 current=11
+[PAXOS-NACK-IGNORED] stale_nack ballot=5 current=11 promised=7
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=11 promises=0 accepted=0
+[step=165] DELIVER from=1 to=1 type=Prepare { ballot: 10 } queue_len=22
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=11 promises=0 accepted=0
+[step=166] DELIVER from=1 to=3 type=Prepare { ballot: 10 } queue_len=22
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=11 promises=0 accepted=0
+[step=167] DELIVER from=1 to=4 type=Prepare { ballot: 10 } queue_len=22
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=11 promises=0 accepted=0
+[step=168] DELIVER from=1 to=5 type=Prepare { ballot: 10 } queue_len=22
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=11 promises=0 accepted=0
+[step=169] DELIVER from=1 to=5 type=Prepare { ballot: 9 } queue_len=22
+[NACK-CAUSE] node=5 incoming=Prepare { ballot: 9 } incoming_ballot=9 promised_ballot=10
+[RETRY-MOTIF] cause=stale_prepare node=5 incoming_ballot=9 promised_ballot=10 gap=1
+[NACK-SEND] from=5 to=1 ballot=9 promised_ballot=10
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=11 promises=0 accepted=0
+[step=170] DELIVER from=1 to=1 type=Promise { ballot: 8, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=22
+[PROMISE-TRACE] from=1 received_ballot=8 current_ballot=11 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=11 promises=0 accepted=0
+[step=171] DELIVER from=2 to=1 type=Promise { ballot: 7, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=21
+[PROMISE-TRACE] from=2 received_ballot=7 current_ballot=11 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=11 promises=0 accepted=0
+[step=172] DELIVER from=2 to=1 type=Promise { ballot: 8, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=20
+[PROMISE-TRACE] from=2 received_ballot=8 current_ballot=11 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=11 promises=0 accepted=0
+[step=173] DELIVER from=5 to=1 type=Nack { ballot: 7, promised_ballot: 8 } queue_len=19
+[PAXOS-NACK] from=5 to=1 promised=8 current=11
+[PAXOS-NACK-IGNORED] stale_nack ballot=7 current=11 promised=8
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=11 promises=0 accepted=0
+[step=174] DELIVER from=3 to=1 type=Promise { ballot: 8, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=18
+[PROMISE-TRACE] from=3 received_ballot=8 current_ballot=11 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=11 promises=0 accepted=0
+[step=175] DELIVER from=1 to=1 type=Promise { ballot: 9, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=17
+[PROMISE-TRACE] from=1 received_ballot=9 current_ballot=11 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=11 promises=0 accepted=0
+[step=176] DELIVER from=1 to=3 type=Prepare { ballot: 9 } queue_len=16
+[NACK-CAUSE] node=3 incoming=Prepare { ballot: 9 } incoming_ballot=9 promised_ballot=10
+[RETRY-MOTIF] cause=stale_prepare node=3 incoming_ballot=9 promised_ballot=10 gap=1
+[NACK-SEND] from=3 to=1 ballot=9 promised_ballot=10
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=11 promises=0 accepted=0
+[step=177] DELIVER from=1 to=2 type=Prepare { ballot: 10 } queue_len=21
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=12 promises=0 accepted=0
+[step=178] DELIVER from=4 to=1 type=Promise { ballot: 9, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=21
+[PROMISE-TRACE] from=4 received_ballot=9 current_ballot=12 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=12 promises=0 accepted=0
+[step=179] DELIVER from=2 to=1 type=Promise { ballot: 9, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=20
+[PROMISE-TRACE] from=2 received_ballot=9 current_ballot=12 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=12 promises=0 accepted=0
+[step=180] DELIVER from=5 to=1 type=Nack { ballot: 6, promised_ballot: 8 } queue_len=19
+[PAXOS-NACK] from=5 to=1 promised=8 current=12
+[PAXOS-NACK-IGNORED] stale_nack ballot=6 current=12 promised=8
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=12 promises=0 accepted=0
+[step=181] DELIVER from=4 to=1 type=Nack { ballot: 8, promised_ballot: 9 } queue_len=18
+[PAXOS-NACK] from=4 to=1 promised=9 current=12
+[PAXOS-NACK-IGNORED] stale_nack ballot=8 current=12 promised=9
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=12 promises=0 accepted=0
+[step=182] DELIVER from=1 to=1 type=Prepare { ballot: 11 } queue_len=17
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=12 promises=0 accepted=0
+[step=183] DELIVER from=1 to=2 type=Prepare { ballot: 11 } queue_len=17
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=12 promises=0 accepted=0
+[step=184] DELIVER from=1 to=3 type=Prepare { ballot: 11 } queue_len=17
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=12 promises=0 accepted=0
+[step=185] DELIVER from=1 to=4 type=Prepare { ballot: 11 } queue_len=17
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=12 promises=0 accepted=0
+[step=186] DELIVER from=1 to=5 type=Prepare { ballot: 11 } queue_len=17
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=12 promises=0 accepted=0
+[step=187] DELIVER from=1 to=1 type=Nack { ballot: 7, promised_ballot: 9 } queue_len=17
+[PAXOS-NACK] from=1 to=1 promised=9 current=12
+[PAXOS-NACK-IGNORED] stale_nack ballot=7 current=12 promised=9
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=12 promises=0 accepted=0
+[step=188] DELIVER from=1 to=1 type=Promise { ballot: 10, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=16
+[PROMISE-TRACE] from=1 received_ballot=10 current_ballot=12 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=12 promises=0 accepted=0
+[step=189] DELIVER from=3 to=1 type=Promise { ballot: 10, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=15
+[PROMISE-TRACE] from=3 received_ballot=10 current_ballot=12 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=12 promises=0 accepted=0
+[step=190] DELIVER from=4 to=1 type=Promise { ballot: 10, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=14
+[PROMISE-TRACE] from=4 received_ballot=10 current_ballot=12 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=12 promises=0 accepted=0
+[step=191] DELIVER from=5 to=1 type=Promise { ballot: 10, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=13
+[PROMISE-TRACE] from=5 received_ballot=10 current_ballot=12 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=12 promises=0 accepted=0
+[step=192] DELIVER from=5 to=1 type=Nack { ballot: 9, promised_ballot: 10 } queue_len=17
+[PAXOS-NACK] from=5 to=1 promised=10 current=13
+[PAXOS-NACK-IGNORED] stale_nack ballot=9 current=13 promised=10
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=13 promises=0 accepted=0
+[step=193] DELIVER from=3 to=1 type=Nack { ballot: 9, promised_ballot: 10 } queue_len=16
+[PAXOS-NACK] from=3 to=1 promised=10 current=13
+[PAXOS-NACK-IGNORED] stale_nack ballot=9 current=13 promised=10
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=13 promises=0 accepted=0
+[step=194] DELIVER from=1 to=1 type=Prepare { ballot: 12 } queue_len=15
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=13 promises=0 accepted=0
+[step=195] DELIVER from=1 to=2 type=Prepare { ballot: 12 } queue_len=15
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=13 promises=0 accepted=0
+[step=196] DELIVER from=1 to=3 type=Prepare { ballot: 12 } queue_len=15
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=13 promises=0 accepted=0
+[step=197] DELIVER from=1 to=4 type=Prepare { ballot: 12 } queue_len=15
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=13 promises=0 accepted=0
+[step=198] DELIVER from=1 to=5 type=Prepare { ballot: 12 } queue_len=15
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=13 promises=0 accepted=0
+[step=199] DELIVER from=2 to=1 type=Promise { ballot: 10, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=15
+[PROMISE-TRACE] from=2 received_ballot=10 current_ballot=13 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=13 promises=0 accepted=0
+[step=200] DELIVER from=1 to=1 type=Promise { ballot: 11, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=14
+[PROMISE-TRACE] from=1 received_ballot=11 current_ballot=13 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=13 promises=0 accepted=0
+[step=201] DELIVER from=2 to=1 type=Promise { ballot: 11, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=13
+[PROMISE-TRACE] from=2 received_ballot=11 current_ballot=13 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=13 promises=0 accepted=0
+[step=202] DELIVER from=3 to=1 type=Promise { ballot: 11, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=12
+[PROMISE-TRACE] from=3 received_ballot=11 current_ballot=13 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=13 promises=0 accepted=0
+[step=203] DELIVER from=4 to=1 type=Promise { ballot: 11, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=11
+[PROMISE-TRACE] from=4 received_ballot=11 current_ballot=13 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=13 promises=0 accepted=0
+[step=204] DELIVER from=5 to=1 type=Promise { ballot: 11, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=10
+[PROMISE-TRACE] from=5 received_ballot=11 current_ballot=13 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=13 promises=0 accepted=0
+[step=205] DELIVER from=1 to=1 type=Prepare { ballot: 13 } queue_len=9
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=13 promises=0 accepted=0
+[step=206] DELIVER from=1 to=2 type=Prepare { ballot: 13 } queue_len=9
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=13 promises=0 accepted=0
+[step=207] DELIVER from=1 to=3 type=Prepare { ballot: 13 } queue_len=14
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=14 promises=0 accepted=0
+[step=208] DELIVER from=1 to=4 type=Prepare { ballot: 13 } queue_len=14
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=14 promises=0 accepted=0
+[step=209] DELIVER from=1 to=5 type=Prepare { ballot: 13 } queue_len=14
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=14 promises=0 accepted=0
+[step=210] DELIVER from=1 to=1 type=Promise { ballot: 12, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=14
+[PROMISE-TRACE] from=1 received_ballot=12 current_ballot=14 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=14 promises=0 accepted=0
+[step=211] DELIVER from=2 to=1 type=Promise { ballot: 12, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=13
+[PROMISE-TRACE] from=2 received_ballot=12 current_ballot=14 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=14 promises=0 accepted=0
+[step=212] DELIVER from=3 to=1 type=Promise { ballot: 12, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=12
+[PROMISE-TRACE] from=3 received_ballot=12 current_ballot=14 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=14 promises=0 accepted=0
+[step=213] DELIVER from=4 to=1 type=Promise { ballot: 12, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=11
+[PROMISE-TRACE] from=4 received_ballot=12 current_ballot=14 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=14 promises=0 accepted=0
+[step=214] DELIVER from=5 to=1 type=Promise { ballot: 12, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=10
+[PROMISE-TRACE] from=5 received_ballot=12 current_ballot=14 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=14 promises=0 accepted=0
+[step=215] DELIVER from=1 to=1 type=Promise { ballot: 13, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=9
+[PROMISE-TRACE] from=1 received_ballot=13 current_ballot=14 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=14 promises=0 accepted=0
+[step=216] DELIVER from=2 to=1 type=Promise { ballot: 13, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=8
+[PROMISE-TRACE] from=2 received_ballot=13 current_ballot=14 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=14 promises=0 accepted=0
+[step=217] DELIVER from=1 to=1 type=Prepare { ballot: 14 } queue_len=7
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=14 promises=0 accepted=0
+[step=218] DELIVER from=1 to=2 type=Prepare { ballot: 14 } queue_len=7
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=14 promises=0 accepted=0
+[step=219] DELIVER from=1 to=3 type=Prepare { ballot: 14 } queue_len=7
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=14 promises=0 accepted=0
+[step=220] DELIVER from=1 to=4 type=Prepare { ballot: 14 } queue_len=7
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=14 promises=0 accepted=0
+[step=221] DELIVER from=1 to=5 type=Prepare { ballot: 14 } queue_len=7
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=14 promises=0 accepted=0
+[step=222] DELIVER from=3 to=1 type=Promise { ballot: 13, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=12
+[PROMISE-TRACE] from=3 received_ballot=13 current_ballot=15 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=15 promises=0 accepted=0
+[step=223] DELIVER from=4 to=1 type=Promise { ballot: 13, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=11
+[PROMISE-TRACE] from=4 received_ballot=13 current_ballot=15 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=15 promises=0 accepted=0
+[step=224] DELIVER from=5 to=1 type=Promise { ballot: 13, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=10
+[PROMISE-TRACE] from=5 received_ballot=13 current_ballot=15 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=15 promises=0 accepted=0
+[step=225] DELIVER from=1 to=1 type=Promise { ballot: 14, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=9
+[PROMISE-TRACE] from=1 received_ballot=14 current_ballot=15 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=15 promises=0 accepted=0
+[step=226] DELIVER from=2 to=1 type=Promise { ballot: 14, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=8
+[PROMISE-TRACE] from=2 received_ballot=14 current_ballot=15 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=15 promises=0 accepted=0
+[step=227] DELIVER from=3 to=1 type=Promise { ballot: 14, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=7
+[PROMISE-TRACE] from=3 received_ballot=14 current_ballot=15 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=15 promises=0 accepted=0
+[step=228] DELIVER from=4 to=1 type=Promise { ballot: 14, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=6
+[PROMISE-TRACE] from=4 received_ballot=14 current_ballot=15 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=15 promises=0 accepted=0
+[step=229] DELIVER from=5 to=1 type=Promise { ballot: 14, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=5
+[PROMISE-TRACE] from=5 received_ballot=14 current_ballot=15 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=15 promises=0 accepted=0
+[step=230] DELIVER from=1 to=1 type=Prepare { ballot: 15 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=15 promises=0 accepted=0
+[step=231] DELIVER from=1 to=2 type=Prepare { ballot: 15 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=15 promises=0 accepted=0
+[step=232] DELIVER from=1 to=3 type=Prepare { ballot: 15 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=15 ballot=15 promises=0 accepted=0
+[step=233] DELIVER from=1 to=4 type=Prepare { ballot: 15 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=15 ballot=15 promises=0 accepted=0
+[step=234] DELIVER from=1 to=5 type=Prepare { ballot: 15 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=15 ballot=15 promises=0 accepted=0
+[step=235] DELIVER from=1 to=1 type=Promise { ballot: 15, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=4
+[PROMISE-TRACE] from=1 received_ballot=15 current_ballot=15 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=15 ballot=15 promises=1 accepted=0
+[step=236] DELIVER from=2 to=1 type=Promise { ballot: 15, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=3
+[PROMISE-TRACE] from=2 received_ballot=15 current_ballot=15 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=15 ballot=15 promises=2 accepted=0
+[step=237] DELIVER from=3 to=1 type=Promise { ballot: 15, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=7
+[PROMISE-TRACE] from=3 received_ballot=15 current_ballot=16 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=16 promises=0 accepted=0
+[step=238] DELIVER from=4 to=1 type=Promise { ballot: 15, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=6
+[PROMISE-TRACE] from=4 received_ballot=15 current_ballot=16 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=16 promises=0 accepted=0
+[step=239] DELIVER from=5 to=1 type=Promise { ballot: 15, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=5
+[PROMISE-TRACE] from=5 received_ballot=15 current_ballot=16 match=false
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=16 promises=0 accepted=0
+[step=240] DELIVER from=1 to=1 type=Prepare { ballot: 16 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=16 promises=0 accepted=0
+[step=241] DELIVER from=1 to=2 type=Prepare { ballot: 16 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=16 promises=0 accepted=0
+[step=242] DELIVER from=1 to=3 type=Prepare { ballot: 16 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=16 promises=0 accepted=0
+[step=243] DELIVER from=1 to=4 type=Prepare { ballot: 16 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=16 promises=0 accepted=0
+[step=244] DELIVER from=1 to=5 type=Prepare { ballot: 16 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=16 promises=0 accepted=0
+[step=245] DELIVER from=1 to=1 type=Promise { ballot: 16, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=4
+[PROMISE-TRACE] from=1 received_ballot=16 current_ballot=16 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=16 promises=1 accepted=0
+[step=246] DELIVER from=2 to=1 type=Promise { ballot: 16, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=3
+[PROMISE-TRACE] from=2 received_ballot=16 current_ballot=16 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=16 promises=2 accepted=0
+[step=247] DELIVER from=3 to=1 type=Promise { ballot: 16, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=2
+[PROMISE-TRACE] from=3 received_ballot=16 current_ballot=16 match=true
+[PAXOS-QUORUM-PROMISE] ballot=16 count=3 quorum=3 current=16
+[step=248] DELIVER from=4 to=1 type=Promise { ballot: 16, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=6
+[PROMISE-TRACE] from=4 received_ballot=16 current_ballot=16 match=true
+[step=249] DELIVER from=5 to=1 type=Promise { ballot: 16, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=5
+[PROMISE-TRACE] from=5 received_ballot=16 current_ballot=16 match=true
+[step=250] DELIVER from=1 to=1 type=AcceptRequest { ballot: 16, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(16, v1)
+[step=251] DELIVER from=1 to=2 type=AcceptRequest { ballot: 16, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(16, v1)
+[step=252] DELIVER from=1 to=3 type=AcceptRequest { ballot: 16, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(16, v1)
+[step=253] DELIVER from=1 to=4 type=AcceptRequest { ballot: 16, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(16, v1)
+[step=254] DELIVER from=1 to=5 type=AcceptRequest { ballot: 16, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(16, v1)
+[step=255] DELIVER from=1 to=1 type=Accepted { ballot: 16, value: "v1" } queue_len=4
+[step=256] DELIVER from=2 to=1 type=Accepted { ballot: 16, value: "v1" } queue_len=3
+[step=257] DELIVER from=3 to=1 type=Accepted { ballot: 16, value: "v1" } queue_len=2
+[PAXOS-QUORUM-ACCEPTED] ballot=16 count=3 quorum=3 current=16
+[step=258] DELIVER from=4 to=1 type=Accepted { ballot: 16, value: "v1" } queue_len=1
+[step=259] DELIVER from=5 to=1 type=Accepted { ballot: 16, value: "v1" } queue_len=0
+
+=== Metrics ===
+Messages Sent: 180
+Messages Delivered: 180
+Scheduler Steps: 261
+Stale Messages Ignored: 0
+Messages Sent Until Decision: 0
+Undelivered Messages At Decision: 0
+Timeout triggered: 15
+View changes: 0
+Decisions: 1
+Prepare Messages: 80
+Promise Messages: 70
+Accept Requests: 10
+Accepted Messages: 10
+Raft Leader Elected: false
+Raft Leader Id: None
+Raft Election Count: 0
+AppendEntries Messages: 0
+AppendResponse Messages: 0
+Heartbeat Successes: 0
+Heartbeat Rejections: 0
+Raft Config Changes: 0
+Raft Config Acks: 0
+Raft Config Activated: false
+Nack Messages: 10
+Paxos Retries: 15
+Max Ballot Seen: 16
+Reached Step Cap: false
+Max Steps: 1000
+Membership Changes: 0
+Membership Acks: 0
+Chosen Values: {"v1"}
+Safety Violation: false
+Paxos Retry Exhausted: false
+Critical Messages Delayed: 0
+Delayed Messages Released: 0
