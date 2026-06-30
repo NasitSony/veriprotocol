@@ -296,7 +296,7 @@ impl Simulation {
         } else if self.protocol_name == "paxos-partial-timeout" {
             // Send Prepare(1) only to 2 nodes, not quorum.
             // This creates an incomplete initial ballot.
-            self.network.send(Message {
+           /* self.network.send(Message {
                 from: 1,
                 to: 2,
                 round: 0,
@@ -309,6 +309,16 @@ impl Simulation {
             self.network.send(Message {
                 from: 1,
                 to: 3,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 1 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });*/
+
+            self.broadcast(Message {
+                from: 1,
+                to: 0,
                 round: 0,
                 msg_type: MessageType::Prepare { ballot: 1 },
                 payload: String::from("prepare"),
