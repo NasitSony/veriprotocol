@@ -5,6 +5,7 @@ use rand::rngs::StdRng;
 use std::collections::HashMap;
 use rand::Rng;
 
+
 pub enum SchedulerOutcome {
     Deliver(Message),
     Delay,
@@ -1736,14 +1737,16 @@ pub struct ProbInterleavedUniformBudgetDelayScheduler {
     remaining_budget: usize,
     spent_budget: usize,
     delay_probability: f64,
+    rng: StdRng,
 }
 
 impl ProbInterleavedUniformBudgetDelayScheduler {
-    pub fn new(total_budget: usize, delay_probability: f64) -> Self {
+    pub fn new(total_budget: usize, p: f64, seed: u64) -> Self {
         Self {
             remaining_budget: total_budget,
             spent_budget: 0,
-            delay_probability,
+            delay_probability: p,
+            rng: StdRng::seed_from_u64(seed),
         }
     }
 
@@ -1759,19 +1762,19 @@ impl Scheduler for ProbInterleavedUniformBudgetDelayScheduler {
             return SchedulerOutcome::Empty;
         }
 
-        let mut rng = rand::rng();
+       //et mut rng = rand::rng();
 
         let should_delay =
-            self.remaining_budget > 0 && rng.random_bool(self.delay_probability);
+            self.remaining_budget > 0 &&
+            self.rng.random_bool(self.delay_probability);
 
         if should_delay {
-            
             self.spend_one();
 
-            let idx = rng.random_range(0..queue.len());
+            let idx = self.rng.random_range(0..queue.len());
+
             let msg = queue.remove(idx);
             let msg_type = format!("{:?}", msg.msg_type);
-
             queue.push(msg);
 
             println!(
@@ -1793,14 +1796,22 @@ pub struct ProbInterleavedTargetedBudgetDelayScheduler {
     remaining_budget: usize,
     spent_budget: usize,
     delay_probability: f64,
+    rng: rand::rngs::StdRng,
 }
 
+
+
+
+
+
+
 impl ProbInterleavedTargetedBudgetDelayScheduler {
-    pub fn new(total_budget: usize, delay_probability: f64) -> Self {
+    pub fn new(total_budget: usize, delay_probability: f64, seed: u64) -> Self {
         Self {
             remaining_budget: total_budget,
             spent_budget: 0,
             delay_probability,
+            rng: StdRng::seed_from_u64(seed),
         }
     }
 
@@ -1817,6 +1828,30 @@ impl ProbInterleavedTargetedBudgetDelayScheduler {
                 | MessageType::Nack { .. }
         )
     }
+
+   fn random_critical_index(
+        queue: &[Message],
+        rng: &mut impl rand::Rng,
+    ) -> Option<usize> {
+        let critical_indices: Vec<usize> = queue
+            .iter()
+            .enumerate()
+            .filter_map(|(i, msg)| {
+                if Self::is_critical(msg) {
+                    Some(i)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        if critical_indices.is_empty() {
+            None
+        } else {
+            let j = rng.random_range(0..critical_indices.len());
+            Some(critical_indices[j])
+        }
+    }
 }
 
 impl Scheduler for ProbInterleavedTargetedBudgetDelayScheduler {
@@ -1824,34 +1859,34 @@ impl Scheduler for ProbInterleavedTargetedBudgetDelayScheduler {
         if queue.is_empty() {
             return SchedulerOutcome::Empty;
         }
-
-        let mut rng = rand::rng();
-
+        
         let should_delay =
-            self.remaining_budget > 0 && rng.random_bool(self.delay_probability);
-        
-        
+            self.remaining_budget > 0 &&
+            self.rng.random_bool(self.delay_probability);
 
         if should_delay {
-           
-            if let Some(idx) = queue.iter().position(Self::is_critical) {
-                self.spend_one();
+            self.spend_one();
 
-                let msg = queue.remove(idx);
-                let msg_type = format!("{:?}", msg.msg_type);
+            let idx = if let Some(idx) = Self::random_critical_index(queue, &mut self.rng) {
+                idx
+            } else {
+                self.rng.random_range(0..queue.len())
+            };
 
-                queue.push(msg);
+            let msg = queue.remove(idx);
+            let msg_type = format!("{:?}", msg.msg_type);
 
-                println!(
-                    "[PROB-INTERLEAVED-TARGETED] spent={} remaining={} queue_len={} delayed={}",
-                    self.spent_budget,
-                    self.remaining_budget,
-                    queue.len(),
-                    msg_type
-                );
+            queue.push(msg);
 
-                return SchedulerOutcome::Delay;
-            }
+            println!(
+                "[PROB-INTERLEAVED-TARGETED] spent={} remaining={} queue_len={} delayed={}",
+                self.spent_budget,
+                self.remaining_budget,
+                queue.len(),
+                msg_type
+            );
+
+            return SchedulerOutcome::Delay;
         }
 
         SchedulerOutcome::Deliver(queue.remove(0))

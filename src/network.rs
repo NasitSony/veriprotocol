@@ -115,11 +115,11 @@ impl Network {
             }
 
             "prob-interleaved-uniform-budget-delay" => {
-                Box::new(ProbInterleavedUniformBudgetDelayScheduler::new(max_delay, delay_probability))
+                Box::new(ProbInterleavedUniformBudgetDelayScheduler::new(max_delay, delay_probability, seed))
             }
 
             "prob-interleaved-targeted-budget-delay" => {
-                Box::new(ProbInterleavedTargetedBudgetDelayScheduler::new(max_delay, delay_probability))
+                Box::new(ProbInterleavedTargetedBudgetDelayScheduler::new(max_delay, delay_probability, seed))
             }
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);
