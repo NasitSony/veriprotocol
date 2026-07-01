@@ -47,7 +47,7 @@ impl BasicPaxosProtocol {
             chosen_proposal_value: "v1".to_string(),
 
             retry_count: 0,
-            max_retries: 20,
+            max_retries: 100,
 
             proposed_values_by_ballot,
             quorum_size: 3,
@@ -76,7 +76,7 @@ impl BasicPaxosProtocol {
             chosen_proposal_value: value,
 
             retry_count: 0,
-            max_retries: 20,
+            max_retries: 100,
 
             proposed_values_by_ballot,
             quorum_size: 3,
@@ -90,10 +90,7 @@ impl BasicPaxosProtocol {
 }
 
 impl BasicPaxosProtocol {
-    fn quorum_size(&self) -> usize {
-        3 // TODO: dynamic quorum
-    }
-
+    
     pub fn enter_phase(&mut self, phase: PaxosPhase) {
         self.phase = phase;
         self.phase_elapsed = 0;
@@ -127,7 +124,7 @@ impl BasicPaxosProtocol {
     pub fn on_tick(&mut self) -> Vec<NodeAction> {
         match self.phase {
             PaxosPhase::WaitingForPromises => {
-                if self.promise_count() >= self.quorum_size() {
+                if self.promise_count() >= self.quorum_size {
                     return vec![];
                 }
 
@@ -144,6 +141,15 @@ impl BasicPaxosProtocol {
                 self.phase_elapsed += 1;
 
                 if self.phase_elapsed >= self.phase_timeout {
+                    println!(
+                        "[TIMEOUT-CAUSE] phase={:?} ballot={} promises={} accepted={} quorum={}",
+                        self.phase,
+                        self.current_ballot,
+                        self.promise_count(),
+                        self.accepted_count(),
+                        self.quorum_size,
+                    );
+
                     return self
                         .on_timeout()
                         .map(|action| vec![action])
@@ -154,13 +160,22 @@ impl BasicPaxosProtocol {
             }
 
             PaxosPhase::WaitingForAccepted => {
-                if self.accepted_count() >= self.quorum_size() {
+                if self.accepted_count() >= self.quorum_size {
                     return vec![];
                 }
 
                 self.phase_elapsed += 1;
 
                 if self.phase_elapsed >= self.phase_timeout {
+                    println!(
+                        "[TIMEOUT-CAUSE] phase={:?} ballot={} promises={} accepted={} quorum={}",
+                        self.phase,
+                        self.current_ballot,
+                        self.promise_count(),
+                        self.accepted_count(),
+                        self.quorum_size,
+                    );
+
                     return self
                         .on_timeout()
                         .map(|action| vec![action])
@@ -179,7 +194,7 @@ impl BasicPaxosProtocol {
         self
     }
 
-    fn retry_with_higher_ballot(&mut self) -> Option<NodeAction> {
+   fn retry_with_higher_ballot_at_least(&mut self, min_ballot: u64) -> Option<NodeAction> {
         if self.phase == PaxosPhase::Decided {
             return None;
         }
@@ -190,14 +205,12 @@ impl BasicPaxosProtocol {
         }
 
         self.retry_count += 1;
-        self.current_ballot += 1;
+        self.current_ballot = self.current_ballot.max(min_ballot) + 1;
 
         self.promises_by_ballot.clear();
         self.accepted_by_ballot.clear();
         self.accept_request_sent_by_ballot.clear();
-
         self.highest_accepted_ballot = None;
-        self.chosen_proposal_value = "v1".to_string();
 
         self.enter_phase(PaxosPhase::WaitingForPromises);
 
@@ -205,6 +218,12 @@ impl BasicPaxosProtocol {
             ballot: self.current_ballot,
         })
     }
+
+    fn retry_with_higher_ballot(&mut self) -> Option<NodeAction> {
+        self.retry_with_higher_ballot_at_least(self.current_ballot)
+    }
+
+    
 
     fn value_for_ballot(&self, ballot: u64) -> String {
         self.proposed_values_by_ballot
@@ -455,14 +474,16 @@ impl Protocol for BasicPaxosProtocol {
                 if *promised_ballot > self.highest_nack_seen
                     && *promised_ballot >= self.current_ballot
                 {
-                    self.highest_nack_seen = *promised_ballot;
-                    self.current_ballot = promised_ballot + 1;
+                    //self.highest_nack_seen = *promised_ballot;
+                    //self.current_ballot = promised_ballot + 1;
 
                     println!("[PAXOS-RETRY] new_ballot={}", self.current_ballot);
 
-                    return vec![NodeAction::BroadcastPrepare {
-                        ballot: self.current_ballot,
-                    }];
+                    if let Some(action) = self.retry_with_higher_ballot_at_least(*promised_ballot) {
+                        return vec![action];
+                    }
+
+                    return vec![];
                 }
 
                 vec![]

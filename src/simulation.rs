@@ -147,7 +147,7 @@ impl Simulation {
         };
 
         Self {
-            network: Network::new(scheduler_name, seed, max_delay, delay_probability),
+            network: Network::new(scheduler_name, seed, max_delay, delay_probability, quorum_size),
             nodes, //vec![Node::new(1), Node::new(2), Node::new(3), Node::new(4)],
             metrics: Metrics::new(),
             config: Config {
@@ -296,27 +296,7 @@ impl Simulation {
                 }
             }
         } else if self.protocol_name == "paxos-partial-timeout" {
-            // Send Prepare(1) only to 2 nodes, not quorum.
-            // This creates an incomplete initial ballot.
-           /* self.network.send(Message {
-                from: 1,
-                to: 2,
-                round: 0,
-                msg_type: MessageType::Prepare { ballot: 1 },
-                payload: String::from("prepare"),
-                value: VoteValue::Yes,
-                delay_count: 0,
-            });
-
-            self.network.send(Message {
-                from: 1,
-                to: 3,
-                round: 0,
-                msg_type: MessageType::Prepare { ballot: 1 },
-                payload: String::from("prepare"),
-                value: VoteValue::Yes,
-                delay_count: 0,
-            });*/
+            
 
             self.broadcast(Message {
                 from: 1,
@@ -643,7 +623,7 @@ impl Simulation {
     }
 
     fn deliver_all_messages(&mut self) {
-        let max_steps: u64 = 1000;
+        let max_steps: u64 = 5000;
         self.metrics.max_steps = max_steps;
 
         while self.metrics.scheduler_steps < max_steps {

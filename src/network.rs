@@ -9,7 +9,7 @@ use crate::scheduler::{
     TargetedBudgetDelayScheduler, TimeoutFirstScheduler, UniformBudgetDelayScheduler,
     VoteDelayScheduler, InterleavedUniformBudgetDelayScheduler, InterleavedTargetedBudgetDelayScheduler,
     InterleavedProgressTargetedBudgetDelayScheduler, ProbInterleavedUniformBudgetDelayScheduler, ProbInterleavedTargetedBudgetDelayScheduler,
-
+    DeadlineAwareQuorumDelayScheduler, BoundedQuorumUsefulDelayScheduler, ProgressAwareQuorumDelayScheduler,
 };
 
 use std::collections::HashMap;
@@ -21,7 +21,7 @@ pub struct Network {
 }
 
 impl Network {
-    pub fn new(scheduler_name: &str, seed: u64, max_delay: usize, delay_probability: f64,) -> Self {
+    pub fn new(scheduler_name: &str, seed: u64, max_delay: usize, delay_probability: f64, quorum_size: usize) -> Self {
         let scheduler: Box<dyn Scheduler> = match scheduler_name {
             "fifo" => Box::new(FifoScheduler::new()),
             "random" => Box::new(RandomScheduler::new(seed)),
@@ -120,6 +120,29 @@ impl Network {
 
             "prob-interleaved-targeted-budget-delay" => {
                 Box::new(ProbInterleavedTargetedBudgetDelayScheduler::new(max_delay, delay_probability, seed))
+            }
+
+            "deadline-aware-quorum-delay" => {
+                Box::new(DeadlineAwareQuorumDelayScheduler::new(max_delay, quorum_size, seed))
+            }
+
+            "bounded-quorum-useful-delay" => {
+                Box::new(BoundedQuorumUsefulDelayScheduler::new(
+                    max_delay,
+                    quorum_size,
+                    5,      // max_consecutive_delay
+                    1,
+                    seed,
+                ))
+            }
+
+            "progress-aware-quorum-delay" => {
+                Box::new(ProgressAwareQuorumDelayScheduler::new(
+                    max_delay,
+                    quorum_size,
+                    100,
+                    seed,
+                ))
             }
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);

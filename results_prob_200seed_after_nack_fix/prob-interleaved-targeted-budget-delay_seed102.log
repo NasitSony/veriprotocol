@@ -1,0 +1,444 @@
+
+=== Run 1 ===
+Nodes: 5
+Quorum: 3
+Simulation starting
+[step=0] DELIVER from=1 to=1 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=15 ballot=1 promises=0 accepted=0
+[PROB-INTERLEAVED-TARGETED] spent=1 remaining=39 queue_len=5 delayed=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=15 ballot=1 promises=0 accepted=0
+[PROB-INTERLEAVED-TARGETED] spent=2 remaining=38 queue_len=5 delayed=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=15 ballot=1 promises=0 accepted=0
+[step=3] DELIVER from=1 to=2 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=15 ballot=1 promises=0 accepted=0
+[step=4] DELIVER from=1 to=3 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=15 ballot=1 promises=0 accepted=0
+[step=5] DELIVER from=1 to=4 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=15 ballot=1 promises=0 accepted=0
+[PROB-INTERLEAVED-TARGETED] spent=3 remaining=37 queue_len=5 delayed=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=15 ballot=1 promises=0 accepted=0
+[step=7] DELIVER from=1 to=5 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=15 ballot=1 promises=0 accepted=0
+[step=8] DELIVER from=1 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=4
+[PROMISE-TRACE] from=1 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=15 ballot=1 promises=1 accepted=0
+[step=9] DELIVER from=3 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=3
+[PROMISE-TRACE] from=3 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=15 ballot=1 promises=2 accepted=0
+[step=10] DELIVER from=4 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=2
+[PROMISE-TRACE] from=4 received_ballot=1 current_ballot=1 match=true
+[PAXOS-QUORUM-PROMISE] ballot=1 count=3 quorum=3 current=1
+[step=11] DELIVER from=2 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=6
+[PROMISE-TRACE] from=2 received_ballot=1 current_ballot=1 match=true
+[step=12] DELIVER from=5 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=5
+[PROMISE-TRACE] from=5 received_ballot=1 current_ballot=1 match=true
+[step=13] DELIVER from=1 to=1 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(1, v1)
+[step=14] DELIVER from=1 to=2 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(1, v1)
+[step=15] DELIVER from=1 to=3 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(1, v1)
+[PROB-INTERLEAVED-TARGETED] spent=4 remaining=36 queue_len=5 delayed=Accepted { ballot: 1, value: "v1" }
+[step=17] DELIVER from=1 to=4 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(1, v1)
+[PROB-INTERLEAVED-TARGETED] spent=5 remaining=35 queue_len=5 delayed=Accepted { ballot: 1, value: "v1" }
+[step=19] DELIVER from=1 to=5 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(1, v1)
+[PROB-INTERLEAVED-TARGETED] spent=6 remaining=34 queue_len=5 delayed=Accepted { ballot: 1, value: "v1" }
+[PROB-INTERLEAVED-TARGETED] spent=7 remaining=33 queue_len=5 delayed=Accepted { ballot: 1, value: "v1" }
+[PROB-INTERLEAVED-TARGETED] spent=8 remaining=32 queue_len=5 delayed=Accepted { ballot: 1, value: "v1" }
+[step=23] DELIVER from=2 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=4
+[step=24] DELIVER from=5 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=3
+[step=25] DELIVER from=3 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=7
+[step=26] DELIVER from=1 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=11
+[step=27] DELIVER from=4 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=15
+[PROB-INTERLEAVED-TARGETED] spent=9 remaining=31 queue_len=20 delayed=Prepare { ballot: 3 }
+[step=29] DELIVER from=1 to=1 type=Prepare { ballot: 2 } queue_len=24
+[PROB-INTERLEAVED-TARGETED] spent=10 remaining=30 queue_len=30 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PROB-INTERLEAVED-TARGETED] spent=11 remaining=29 queue_len=35 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PROB-INTERLEAVED-TARGETED] spent=12 remaining=28 queue_len=40 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=33] DELIVER from=1 to=2 type=Prepare { ballot: 2 } queue_len=44
+[step=34] DELIVER from=1 to=3 type=Prepare { ballot: 2 } queue_len=49
+[step=35] DELIVER from=1 to=4 type=Prepare { ballot: 2 } queue_len=54
+[PROB-INTERLEAVED-TARGETED] spent=13 remaining=27 queue_len=60 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PROB-INTERLEAVED-TARGETED] spent=14 remaining=26 queue_len=65 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=38] DELIVER from=1 to=5 type=Prepare { ballot: 2 } queue_len=69
+[step=39] DELIVER from=1 to=2 type=Prepare { ballot: 3 } queue_len=74
+[step=40] DELIVER from=1 to=3 type=Prepare { ballot: 3 } queue_len=79
+[PROB-INTERLEAVED-TARGETED] spent=15 remaining=25 queue_len=85 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=42] DELIVER from=1 to=4 type=Prepare { ballot: 3 } queue_len=89
+[step=43] DELIVER from=1 to=5 type=Prepare { ballot: 3 } queue_len=94
+[step=44] DELIVER from=1 to=1 type=Prepare { ballot: 4 } queue_len=99
+[PROB-INTERLEAVED-TARGETED] spent=16 remaining=24 queue_len=100 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=46] DELIVER from=1 to=2 type=Prepare { ballot: 4 } queue_len=99
+[step=47] DELIVER from=1 to=3 type=Prepare { ballot: 4 } queue_len=99
+[step=48] DELIVER from=1 to=4 type=Prepare { ballot: 4 } queue_len=99
+[step=49] DELIVER from=1 to=5 type=Prepare { ballot: 4 } queue_len=99
+[step=50] DELIVER from=1 to=1 type=Prepare { ballot: 5 } queue_len=99
+[step=51] DELIVER from=1 to=2 type=Prepare { ballot: 5 } queue_len=99
+[PROB-INTERLEAVED-TARGETED] spent=17 remaining=23 queue_len=100 delayed=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=53] DELIVER from=1 to=3 type=Prepare { ballot: 5 } queue_len=99
+[PROB-INTERLEAVED-TARGETED] spent=18 remaining=22 queue_len=100 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=55] DELIVER from=1 to=4 type=Prepare { ballot: 5 } queue_len=99
+[PROB-INTERLEAVED-TARGETED] spent=19 remaining=21 queue_len=100 delayed=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=57] DELIVER from=1 to=5 type=Prepare { ballot: 5 } queue_len=99
+[step=58] DELIVER from=1 to=1 type=Prepare { ballot: 3 } queue_len=99
+[NACK-CAUSE] node=1 incoming=Prepare { ballot: 3 } incoming_ballot=3 promised_ballot=5
+[RETRY-MOTIF] cause=stale_prepare node=1 incoming_ballot=3 promised_ballot=5 gap=2
+[NACK-SEND] from=1 to=1 ballot=3 promised_ballot=5
+[step=59] DELIVER from=1 to=1 type=Prepare { ballot: 6 } queue_len=99
+[step=60] DELIVER from=1 to=2 type=Prepare { ballot: 6 } queue_len=99
+[step=61] DELIVER from=1 to=3 type=Prepare { ballot: 6 } queue_len=99
+[step=62] DELIVER from=1 to=4 type=Prepare { ballot: 6 } queue_len=99
+[step=63] DELIVER from=1 to=5 type=Prepare { ballot: 6 } queue_len=99
+[PROB-INTERLEAVED-TARGETED] spent=20 remaining=20 queue_len=100 delayed=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=65] DELIVER from=1 to=1 type=Prepare { ballot: 7 } queue_len=99
+[step=66] DELIVER from=1 to=2 type=Prepare { ballot: 7 } queue_len=99
+[PROB-INTERLEAVED-TARGETED] spent=21 remaining=19 queue_len=100 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PROB-INTERLEAVED-TARGETED] spent=22 remaining=18 queue_len=100 delayed=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=69] DELIVER from=1 to=3 type=Prepare { ballot: 7 } queue_len=99
+[step=70] DELIVER from=1 to=4 type=Prepare { ballot: 7 } queue_len=99
+[PROB-INTERLEAVED-TARGETED] spent=23 remaining=17 queue_len=100 delayed=Promise { ballot: 7, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=72] DELIVER from=1 to=5 type=Prepare { ballot: 7 } queue_len=99
+[PROB-INTERLEAVED-TARGETED] spent=24 remaining=16 queue_len=100 delayed=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PROB-INTERLEAVED-TARGETED] spent=25 remaining=15 queue_len=100 delayed=Promise { ballot: 6, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PROB-INTERLEAVED-TARGETED] spent=26 remaining=14 queue_len=100 delayed=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=76] DELIVER from=1 to=1 type=Prepare { ballot: 8 } queue_len=99
+[step=77] DELIVER from=1 to=2 type=Prepare { ballot: 8 } queue_len=99
+[PROB-INTERLEAVED-TARGETED] spent=27 remaining=13 queue_len=100 delayed=Promise { ballot: 8, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=79] DELIVER from=1 to=3 type=Prepare { ballot: 8 } queue_len=99
+[step=80] DELIVER from=1 to=4 type=Prepare { ballot: 8 } queue_len=99
+[step=81] DELIVER from=1 to=5 type=Prepare { ballot: 8 } queue_len=99
+[PROB-INTERLEAVED-TARGETED] spent=28 remaining=12 queue_len=100 delayed=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=83] DELIVER from=1 to=1 type=Prepare { ballot: 9 } queue_len=99
+[step=84] DELIVER from=1 to=2 type=Prepare { ballot: 9 } queue_len=99
+[step=85] DELIVER from=1 to=3 type=Prepare { ballot: 9 } queue_len=99
+[step=86] DELIVER from=1 to=4 type=Prepare { ballot: 9 } queue_len=99
+[step=87] DELIVER from=1 to=5 type=Prepare { ballot: 9 } queue_len=99
+[step=88] DELIVER from=1 to=1 type=Prepare { ballot: 10 } queue_len=99
+[step=89] DELIVER from=1 to=2 type=Prepare { ballot: 10 } queue_len=99
+[step=90] DELIVER from=1 to=3 type=Prepare { ballot: 10 } queue_len=99
+[PROB-INTERLEAVED-TARGETED] spent=29 remaining=11 queue_len=100 delayed=Promise { ballot: 9, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PROB-INTERLEAVED-TARGETED] spent=30 remaining=10 queue_len=100 delayed=Promise { ballot: 8, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=93] DELIVER from=1 to=4 type=Prepare { ballot: 10 } queue_len=99
+[step=94] DELIVER from=1 to=5 type=Prepare { ballot: 10 } queue_len=99
+[step=95] DELIVER from=2 to=1 type=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=99
+[PROMISE-TRACE] from=2 received_ballot=2 current_ballot=21 match=false
+[step=96] DELIVER from=1 to=1 type=Prepare { ballot: 11 } queue_len=98
+[PROB-INTERLEAVED-TARGETED] spent=31 remaining=9 queue_len=99 delayed=Promise { ballot: 11, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=98] DELIVER from=1 to=2 type=Prepare { ballot: 11 } queue_len=98
+[PROB-INTERLEAVED-TARGETED] spent=32 remaining=8 queue_len=99 delayed=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=100] DELIVER from=1 to=3 type=Prepare { ballot: 11 } queue_len=98
+[PROB-INTERLEAVED-TARGETED] spent=33 remaining=7 queue_len=99 delayed=Promise { ballot: 7, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PROB-INTERLEAVED-TARGETED] spent=34 remaining=6 queue_len=99 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=103] DELIVER from=1 to=4 type=Prepare { ballot: 11 } queue_len=98
+[step=104] DELIVER from=1 to=5 type=Prepare { ballot: 11 } queue_len=98
+[step=105] DELIVER from=1 to=1 type=Prepare { ballot: 12 } queue_len=98
+[step=106] DELIVER from=1 to=2 type=Prepare { ballot: 12 } queue_len=98
+[PROB-INTERLEAVED-TARGETED] spent=35 remaining=5 queue_len=99 delayed=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=108] DELIVER from=1 to=3 type=Prepare { ballot: 12 } queue_len=98
+[step=109] DELIVER from=1 to=4 type=Prepare { ballot: 12 } queue_len=98
+[step=110] DELIVER from=1 to=5 type=Prepare { ballot: 12 } queue_len=98
+[PROB-INTERLEAVED-TARGETED] spent=36 remaining=4 queue_len=99 delayed=Promise { ballot: 9, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[PROB-INTERLEAVED-TARGETED] spent=37 remaining=3 queue_len=99 delayed=Promise { ballot: 6, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=113] DELIVER from=4 to=1 type=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=98
+[PROMISE-TRACE] from=4 received_ballot=2 current_ballot=21 match=false
+[step=114] DELIVER from=1 to=1 type=Prepare { ballot: 13 } queue_len=97
+[step=115] DELIVER from=1 to=2 type=Prepare { ballot: 13 } queue_len=97
+[PROB-INTERLEAVED-TARGETED] spent=38 remaining=2 queue_len=98 delayed=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=117] DELIVER from=1 to=3 type=Prepare { ballot: 13 } queue_len=97
+[step=118] DELIVER from=1 to=4 type=Prepare { ballot: 13 } queue_len=97
+[PROB-INTERLEAVED-TARGETED] spent=39 remaining=1 queue_len=98 delayed=Promise { ballot: 9, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=120] DELIVER from=1 to=5 type=Prepare { ballot: 13 } queue_len=97
+[step=121] DELIVER from=1 to=1 type=Prepare { ballot: 14 } queue_len=97
+[step=122] DELIVER from=1 to=2 type=Prepare { ballot: 14 } queue_len=97
+[PROB-INTERLEAVED-TARGETED] spent=40 remaining=0 queue_len=98 delayed=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") }
+[step=124] DELIVER from=1 to=3 type=Prepare { ballot: 14 } queue_len=97
+[step=125] DELIVER from=1 to=4 type=Prepare { ballot: 14 } queue_len=97
+[step=126] DELIVER from=1 to=5 type=Prepare { ballot: 14 } queue_len=97
+[step=127] DELIVER from=1 to=1 type=Prepare { ballot: 15 } queue_len=97
+[step=128] DELIVER from=1 to=2 type=Prepare { ballot: 15 } queue_len=97
+[step=129] DELIVER from=1 to=3 type=Prepare { ballot: 15 } queue_len=97
+[step=130] DELIVER from=1 to=4 type=Prepare { ballot: 15 } queue_len=97
+[step=131] DELIVER from=1 to=5 type=Prepare { ballot: 15 } queue_len=97
+[step=132] DELIVER from=1 to=1 type=Prepare { ballot: 16 } queue_len=97
+[step=133] DELIVER from=1 to=2 type=Prepare { ballot: 16 } queue_len=97
+[step=134] DELIVER from=1 to=3 type=Prepare { ballot: 16 } queue_len=97
+[step=135] DELIVER from=1 to=4 type=Prepare { ballot: 16 } queue_len=97
+[step=136] DELIVER from=1 to=5 type=Prepare { ballot: 16 } queue_len=97
+[step=137] DELIVER from=2 to=1 type=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=97
+[PROMISE-TRACE] from=2 received_ballot=3 current_ballot=21 match=false
+[step=138] DELIVER from=1 to=1 type=Prepare { ballot: 17 } queue_len=96
+[step=139] DELIVER from=1 to=2 type=Prepare { ballot: 17 } queue_len=96
+[step=140] DELIVER from=1 to=3 type=Prepare { ballot: 17 } queue_len=96
+[step=141] DELIVER from=1 to=4 type=Prepare { ballot: 17 } queue_len=96
+[step=142] DELIVER from=1 to=5 type=Prepare { ballot: 17 } queue_len=96
+[step=143] DELIVER from=1 to=1 type=Prepare { ballot: 18 } queue_len=96
+[step=144] DELIVER from=1 to=2 type=Prepare { ballot: 18 } queue_len=96
+[step=145] DELIVER from=1 to=3 type=Prepare { ballot: 18 } queue_len=96
+[step=146] DELIVER from=1 to=4 type=Prepare { ballot: 18 } queue_len=96
+[step=147] DELIVER from=1 to=5 type=Prepare { ballot: 18 } queue_len=96
+[step=148] DELIVER from=1 to=1 type=Prepare { ballot: 19 } queue_len=96
+[step=149] DELIVER from=1 to=2 type=Prepare { ballot: 19 } queue_len=96
+[step=150] DELIVER from=1 to=3 type=Prepare { ballot: 19 } queue_len=96
+[step=151] DELIVER from=1 to=4 type=Prepare { ballot: 19 } queue_len=96
+[step=152] DELIVER from=1 to=5 type=Prepare { ballot: 19 } queue_len=96
+[step=153] DELIVER from=4 to=1 type=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=96
+[PROMISE-TRACE] from=4 received_ballot=3 current_ballot=21 match=false
+[step=154] DELIVER from=1 to=1 type=Prepare { ballot: 20 } queue_len=95
+[step=155] DELIVER from=1 to=2 type=Prepare { ballot: 20 } queue_len=95
+[step=156] DELIVER from=1 to=3 type=Prepare { ballot: 20 } queue_len=95
+[step=157] DELIVER from=1 to=4 type=Prepare { ballot: 20 } queue_len=95
+[step=158] DELIVER from=1 to=5 type=Prepare { ballot: 20 } queue_len=95
+[step=159] DELIVER from=1 to=1 type=Prepare { ballot: 21 } queue_len=95
+[step=160] DELIVER from=1 to=2 type=Prepare { ballot: 21 } queue_len=95
+[step=161] DELIVER from=1 to=3 type=Prepare { ballot: 21 } queue_len=95
+[step=162] DELIVER from=1 to=4 type=Prepare { ballot: 21 } queue_len=95
+[step=163] DELIVER from=1 to=5 type=Prepare { ballot: 21 } queue_len=95
+[step=164] DELIVER from=1 to=1 type=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=95
+[PROMISE-TRACE] from=1 received_ballot=4 current_ballot=21 match=false
+[step=165] DELIVER from=3 to=1 type=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=94
+[PROMISE-TRACE] from=3 received_ballot=4 current_ballot=21 match=false
+[step=166] DELIVER from=1 to=1 type=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=93
+[PROMISE-TRACE] from=1 received_ballot=5 current_ballot=21 match=false
+[step=167] DELIVER from=5 to=1 type=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=92
+[PROMISE-TRACE] from=5 received_ballot=4 current_ballot=21 match=false
+[step=168] DELIVER from=5 to=1 type=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=91
+[PROMISE-TRACE] from=5 received_ballot=5 current_ballot=21 match=false
+[step=169] DELIVER from=1 to=1 type=Nack { ballot: 3, promised_ballot: 5 } queue_len=90
+[PAXOS-NACK] from=1 to=1 promised=5 current=21
+[PAXOS-NACK-IGNORED] stale_nack ballot=3 current=21 promised=5
+[step=170] DELIVER from=1 to=1 type=Promise { ballot: 6, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=89
+[PROMISE-TRACE] from=1 received_ballot=6 current_ballot=21 match=false
+[step=171] DELIVER from=3 to=1 type=Promise { ballot: 6, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=88
+[PROMISE-TRACE] from=3 received_ballot=6 current_ballot=21 match=false
+[step=172] DELIVER from=4 to=1 type=Promise { ballot: 6, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=87
+[PROMISE-TRACE] from=4 received_ballot=6 current_ballot=21 match=false
+[step=173] DELIVER from=3 to=1 type=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=86
+[PROMISE-TRACE] from=3 received_ballot=3 current_ballot=21 match=false
+[step=174] DELIVER from=1 to=1 type=Promise { ballot: 7, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=85
+[PROMISE-TRACE] from=1 received_ballot=7 current_ballot=21 match=false
+[step=175] DELIVER from=1 to=1 type=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=84
+[PROMISE-TRACE] from=1 received_ballot=2 current_ballot=21 match=false
+[step=176] DELIVER from=2 to=1 type=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=83
+[PROMISE-TRACE] from=2 received_ballot=4 current_ballot=21 match=false
+[step=177] DELIVER from=3 to=1 type=Promise { ballot: 7, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=82
+[PROMISE-TRACE] from=3 received_ballot=7 current_ballot=21 match=false
+[step=178] DELIVER from=2 to=1 type=Promise { ballot: 7, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=81
+[PROMISE-TRACE] from=2 received_ballot=7 current_ballot=21 match=false
+[step=179] DELIVER from=5 to=1 type=Promise { ballot: 7, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=80
+[PROMISE-TRACE] from=5 received_ballot=7 current_ballot=21 match=false
+[step=180] DELIVER from=2 to=1 type=Promise { ballot: 6, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=79
+[PROMISE-TRACE] from=2 received_ballot=6 current_ballot=21 match=false
+[step=181] DELIVER from=4 to=1 type=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=78
+[PROMISE-TRACE] from=4 received_ballot=5 current_ballot=21 match=false
+[step=182] DELIVER from=2 to=1 type=Promise { ballot: 8, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=77
+[PROMISE-TRACE] from=2 received_ballot=8 current_ballot=21 match=false
+[step=183] DELIVER from=3 to=1 type=Promise { ballot: 8, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=76
+[PROMISE-TRACE] from=3 received_ballot=8 current_ballot=21 match=false
+[step=184] DELIVER from=4 to=1 type=Promise { ballot: 8, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=75
+[PROMISE-TRACE] from=4 received_ballot=8 current_ballot=21 match=false
+[step=185] DELIVER from=5 to=1 type=Promise { ballot: 8, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=74
+[PROMISE-TRACE] from=5 received_ballot=8 current_ballot=21 match=false
+[step=186] DELIVER from=2 to=1 type=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=73
+[PROMISE-TRACE] from=2 received_ballot=5 current_ballot=21 match=false
+[step=187] DELIVER from=1 to=1 type=Promise { ballot: 9, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=72
+[PROMISE-TRACE] from=1 received_ballot=9 current_ballot=21 match=false
+[step=188] DELIVER from=2 to=1 type=Promise { ballot: 9, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=71
+[PROMISE-TRACE] from=2 received_ballot=9 current_ballot=21 match=false
+[step=189] DELIVER from=3 to=1 type=Promise { ballot: 9, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=70
+[PROMISE-TRACE] from=3 received_ballot=9 current_ballot=21 match=false
+[step=190] DELIVER from=1 to=1 type=Promise { ballot: 10, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=69
+[PROMISE-TRACE] from=1 received_ballot=10 current_ballot=21 match=false
+[step=191] DELIVER from=2 to=1 type=Promise { ballot: 10, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=68
+[PROMISE-TRACE] from=2 received_ballot=10 current_ballot=21 match=false
+[step=192] DELIVER from=3 to=1 type=Promise { ballot: 10, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=67
+[PROMISE-TRACE] from=3 received_ballot=10 current_ballot=21 match=false
+[step=193] DELIVER from=4 to=1 type=Promise { ballot: 9, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=66
+[PROMISE-TRACE] from=4 received_ballot=9 current_ballot=21 match=false
+[step=194] DELIVER from=1 to=1 type=Promise { ballot: 8, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=65
+[PROMISE-TRACE] from=1 received_ballot=8 current_ballot=21 match=false
+[step=195] DELIVER from=4 to=1 type=Promise { ballot: 10, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=64
+[PROMISE-TRACE] from=4 received_ballot=10 current_ballot=21 match=false
+[step=196] DELIVER from=5 to=1 type=Promise { ballot: 10, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=63
+[PROMISE-TRACE] from=5 received_ballot=10 current_ballot=21 match=false
+[step=197] DELIVER from=1 to=1 type=Promise { ballot: 11, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=62
+[PROMISE-TRACE] from=1 received_ballot=11 current_ballot=21 match=false
+[step=198] DELIVER from=2 to=1 type=Promise { ballot: 11, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=61
+[PROMISE-TRACE] from=2 received_ballot=11 current_ballot=21 match=false
+[step=199] DELIVER from=5 to=1 type=Promise { ballot: 3, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=60
+[PROMISE-TRACE] from=5 received_ballot=3 current_ballot=21 match=false
+[step=200] DELIVER from=3 to=1 type=Promise { ballot: 11, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=59
+[PROMISE-TRACE] from=3 received_ballot=11 current_ballot=21 match=false
+[step=201] DELIVER from=4 to=1 type=Promise { ballot: 7, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=58
+[PROMISE-TRACE] from=4 received_ballot=7 current_ballot=21 match=false
+[step=202] DELIVER from=5 to=1 type=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=57
+[PROMISE-TRACE] from=5 received_ballot=2 current_ballot=21 match=false
+[step=203] DELIVER from=4 to=1 type=Promise { ballot: 11, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=56
+[PROMISE-TRACE] from=4 received_ballot=11 current_ballot=21 match=false
+[step=204] DELIVER from=5 to=1 type=Promise { ballot: 11, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=55
+[PROMISE-TRACE] from=5 received_ballot=11 current_ballot=21 match=false
+[step=205] DELIVER from=1 to=1 type=Promise { ballot: 12, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=54
+[PROMISE-TRACE] from=1 received_ballot=12 current_ballot=21 match=false
+[step=206] DELIVER from=2 to=1 type=Promise { ballot: 12, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=53
+[PROMISE-TRACE] from=2 received_ballot=12 current_ballot=21 match=false
+[step=207] DELIVER from=3 to=1 type=Promise { ballot: 5, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=52
+[PROMISE-TRACE] from=3 received_ballot=5 current_ballot=21 match=false
+[step=208] DELIVER from=3 to=1 type=Promise { ballot: 12, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=51
+[PROMISE-TRACE] from=3 received_ballot=12 current_ballot=21 match=false
+[step=209] DELIVER from=4 to=1 type=Promise { ballot: 12, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=50
+[PROMISE-TRACE] from=4 received_ballot=12 current_ballot=21 match=false
+[step=210] DELIVER from=5 to=1 type=Promise { ballot: 12, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=49
+[PROMISE-TRACE] from=5 received_ballot=12 current_ballot=21 match=false
+[step=211] DELIVER from=5 to=1 type=Promise { ballot: 6, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=48
+[PROMISE-TRACE] from=5 received_ballot=6 current_ballot=21 match=false
+[step=212] DELIVER from=1 to=1 type=Promise { ballot: 13, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=47
+[PROMISE-TRACE] from=1 received_ballot=13 current_ballot=21 match=false
+[step=213] DELIVER from=2 to=1 type=Promise { ballot: 13, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=46
+[PROMISE-TRACE] from=2 received_ballot=13 current_ballot=21 match=false
+[step=214] DELIVER from=3 to=1 type=Promise { ballot: 2, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=45
+[PROMISE-TRACE] from=3 received_ballot=2 current_ballot=21 match=false
+[step=215] DELIVER from=3 to=1 type=Promise { ballot: 13, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=44
+[PROMISE-TRACE] from=3 received_ballot=13 current_ballot=21 match=false
+[step=216] DELIVER from=4 to=1 type=Promise { ballot: 13, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=43
+[PROMISE-TRACE] from=4 received_ballot=13 current_ballot=21 match=false
+[step=217] DELIVER from=5 to=1 type=Promise { ballot: 9, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=42
+[PROMISE-TRACE] from=5 received_ballot=9 current_ballot=21 match=false
+[step=218] DELIVER from=5 to=1 type=Promise { ballot: 13, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=41
+[PROMISE-TRACE] from=5 received_ballot=13 current_ballot=21 match=false
+[step=219] DELIVER from=1 to=1 type=Promise { ballot: 14, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=40
+[PROMISE-TRACE] from=1 received_ballot=14 current_ballot=21 match=false
+[step=220] DELIVER from=2 to=1 type=Promise { ballot: 14, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=39
+[PROMISE-TRACE] from=2 received_ballot=14 current_ballot=21 match=false
+[step=221] DELIVER from=4 to=1 type=Promise { ballot: 4, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=38
+[PROMISE-TRACE] from=4 received_ballot=4 current_ballot=21 match=false
+[step=222] DELIVER from=3 to=1 type=Promise { ballot: 14, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=37
+[PROMISE-TRACE] from=3 received_ballot=14 current_ballot=21 match=false
+[step=223] DELIVER from=4 to=1 type=Promise { ballot: 14, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=36
+[PROMISE-TRACE] from=4 received_ballot=14 current_ballot=21 match=false
+[step=224] DELIVER from=5 to=1 type=Promise { ballot: 14, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=35
+[PROMISE-TRACE] from=5 received_ballot=14 current_ballot=21 match=false
+[step=225] DELIVER from=1 to=1 type=Promise { ballot: 15, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=34
+[PROMISE-TRACE] from=1 received_ballot=15 current_ballot=21 match=false
+[step=226] DELIVER from=2 to=1 type=Promise { ballot: 15, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=33
+[PROMISE-TRACE] from=2 received_ballot=15 current_ballot=21 match=false
+[step=227] DELIVER from=3 to=1 type=Promise { ballot: 15, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=32
+[PROMISE-TRACE] from=3 received_ballot=15 current_ballot=21 match=false
+[step=228] DELIVER from=4 to=1 type=Promise { ballot: 15, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=31
+[PROMISE-TRACE] from=4 received_ballot=15 current_ballot=21 match=false
+[step=229] DELIVER from=5 to=1 type=Promise { ballot: 15, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=30
+[PROMISE-TRACE] from=5 received_ballot=15 current_ballot=21 match=false
+[step=230] DELIVER from=1 to=1 type=Promise { ballot: 16, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=29
+[PROMISE-TRACE] from=1 received_ballot=16 current_ballot=21 match=false
+[step=231] DELIVER from=2 to=1 type=Promise { ballot: 16, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=28
+[PROMISE-TRACE] from=2 received_ballot=16 current_ballot=21 match=false
+[step=232] DELIVER from=3 to=1 type=Promise { ballot: 16, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=27
+[PROMISE-TRACE] from=3 received_ballot=16 current_ballot=21 match=false
+[step=233] DELIVER from=4 to=1 type=Promise { ballot: 16, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=26
+[PROMISE-TRACE] from=4 received_ballot=16 current_ballot=21 match=false
+[step=234] DELIVER from=5 to=1 type=Promise { ballot: 16, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=25
+[PROMISE-TRACE] from=5 received_ballot=16 current_ballot=21 match=false
+[step=235] DELIVER from=1 to=1 type=Promise { ballot: 17, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=24
+[PROMISE-TRACE] from=1 received_ballot=17 current_ballot=21 match=false
+[step=236] DELIVER from=2 to=1 type=Promise { ballot: 17, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=23
+[PROMISE-TRACE] from=2 received_ballot=17 current_ballot=21 match=false
+[step=237] DELIVER from=3 to=1 type=Promise { ballot: 17, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=22
+[PROMISE-TRACE] from=3 received_ballot=17 current_ballot=21 match=false
+[step=238] DELIVER from=4 to=1 type=Promise { ballot: 17, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=21
+[PROMISE-TRACE] from=4 received_ballot=17 current_ballot=21 match=false
+[step=239] DELIVER from=5 to=1 type=Promise { ballot: 17, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=20
+[PROMISE-TRACE] from=5 received_ballot=17 current_ballot=21 match=false
+[step=240] DELIVER from=1 to=1 type=Promise { ballot: 18, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=19
+[PROMISE-TRACE] from=1 received_ballot=18 current_ballot=21 match=false
+[step=241] DELIVER from=2 to=1 type=Promise { ballot: 18, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=18
+[PROMISE-TRACE] from=2 received_ballot=18 current_ballot=21 match=false
+[step=242] DELIVER from=3 to=1 type=Promise { ballot: 18, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=17
+[PROMISE-TRACE] from=3 received_ballot=18 current_ballot=21 match=false
+[step=243] DELIVER from=4 to=1 type=Promise { ballot: 18, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=16
+[PROMISE-TRACE] from=4 received_ballot=18 current_ballot=21 match=false
+[step=244] DELIVER from=5 to=1 type=Promise { ballot: 18, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=15
+[PROMISE-TRACE] from=5 received_ballot=18 current_ballot=21 match=false
+[step=245] DELIVER from=1 to=1 type=Promise { ballot: 19, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=14
+[PROMISE-TRACE] from=1 received_ballot=19 current_ballot=21 match=false
+[step=246] DELIVER from=2 to=1 type=Promise { ballot: 19, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=13
+[PROMISE-TRACE] from=2 received_ballot=19 current_ballot=21 match=false
+[step=247] DELIVER from=3 to=1 type=Promise { ballot: 19, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=12
+[PROMISE-TRACE] from=3 received_ballot=19 current_ballot=21 match=false
+[step=248] DELIVER from=4 to=1 type=Promise { ballot: 19, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=11
+[PROMISE-TRACE] from=4 received_ballot=19 current_ballot=21 match=false
+[step=249] DELIVER from=5 to=1 type=Promise { ballot: 19, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=10
+[PROMISE-TRACE] from=5 received_ballot=19 current_ballot=21 match=false
+[step=250] DELIVER from=1 to=1 type=Promise { ballot: 20, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=9
+[PROMISE-TRACE] from=1 received_ballot=20 current_ballot=21 match=false
+[step=251] DELIVER from=2 to=1 type=Promise { ballot: 20, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=8
+[PROMISE-TRACE] from=2 received_ballot=20 current_ballot=21 match=false
+[step=252] DELIVER from=3 to=1 type=Promise { ballot: 20, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=7
+[PROMISE-TRACE] from=3 received_ballot=20 current_ballot=21 match=false
+[step=253] DELIVER from=4 to=1 type=Promise { ballot: 20, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=6
+[PROMISE-TRACE] from=4 received_ballot=20 current_ballot=21 match=false
+[step=254] DELIVER from=5 to=1 type=Promise { ballot: 20, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=5
+[PROMISE-TRACE] from=5 received_ballot=20 current_ballot=21 match=false
+[step=255] DELIVER from=1 to=1 type=Promise { ballot: 21, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=4
+[PROMISE-TRACE] from=1 received_ballot=21 current_ballot=21 match=true
+[step=256] DELIVER from=2 to=1 type=Promise { ballot: 21, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=3
+[PROMISE-TRACE] from=2 received_ballot=21 current_ballot=21 match=true
+[step=257] DELIVER from=3 to=1 type=Promise { ballot: 21, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=2
+[PROMISE-TRACE] from=3 received_ballot=21 current_ballot=21 match=true
+[PAXOS-QUORUM-PROMISE] ballot=21 count=3 quorum=3 current=21
+[step=258] DELIVER from=4 to=1 type=Promise { ballot: 21, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=6
+[PROMISE-TRACE] from=4 received_ballot=21 current_ballot=21 match=true
+[step=259] DELIVER from=5 to=1 type=Promise { ballot: 21, accepted_ballot: Some(1), accepted_value: Some("v1") } queue_len=5
+[PROMISE-TRACE] from=5 received_ballot=21 current_ballot=21 match=true
+[step=260] DELIVER from=1 to=1 type=AcceptRequest { ballot: 21, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(21, v1)
+[step=261] DELIVER from=1 to=2 type=AcceptRequest { ballot: 21, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(21, v1)
+[step=262] DELIVER from=1 to=3 type=AcceptRequest { ballot: 21, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(21, v1)
+[step=263] DELIVER from=1 to=4 type=AcceptRequest { ballot: 21, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(21, v1)
+[step=264] DELIVER from=1 to=5 type=AcceptRequest { ballot: 21, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(21, v1)
+[step=265] DELIVER from=1 to=1 type=Accepted { ballot: 21, value: "v1" } queue_len=4
+[step=266] DELIVER from=2 to=1 type=Accepted { ballot: 21, value: "v1" } queue_len=3
+[step=267] DELIVER from=3 to=1 type=Accepted { ballot: 21, value: "v1" } queue_len=2
+[PAXOS-QUORUM-ACCEPTED] ballot=21 count=3 quorum=3 current=21
+[step=268] DELIVER from=4 to=1 type=Accepted { ballot: 21, value: "v1" } queue_len=1
+[step=269] DELIVER from=5 to=1 type=Accepted { ballot: 21, value: "v1" } queue_len=0
+
+=== Metrics ===
+Messages Sent: 230
+Messages Delivered: 230
+Scheduler Steps: 271
+Stale Messages Ignored: 0
+Messages Sent Until Decision: 0
+Undelivered Messages At Decision: 0
+Timeout triggered: 20
+View changes: 0
+Decisions: 1
+Prepare Messages: 105
+Promise Messages: 104
+Accept Requests: 10
+Accepted Messages: 10
+Raft Leader Elected: false
+Raft Leader Id: None
+Raft Election Count: 0
+AppendEntries Messages: 0
+AppendResponse Messages: 0
+Heartbeat Successes: 0
+Heartbeat Rejections: 0
+Raft Config Changes: 0
+Raft Config Acks: 0
+Raft Config Activated: false
+Nack Messages: 1
+Paxos Retries: 20
+Max Ballot Seen: 21
+Reached Step Cap: false
+Max Steps: 1000
+Membership Changes: 0
+Membership Acks: 0
+Chosen Values: {"v1"}
+Safety Violation: false
+Paxos Retry Exhausted: false
+Critical Messages Delayed: 0
+Delayed Messages Released: 0

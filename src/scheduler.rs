@@ -2,7 +2,7 @@ use crate::message::{Message, MessageType, VoteValue};
 use rand::RngExt;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use rand::Rng;
 
 
@@ -1825,7 +1825,6 @@ impl ProbInterleavedTargetedBudgetDelayScheduler {
             msg.msg_type,
             MessageType::Promise { .. }
                 | MessageType::Accepted { .. }
-                | MessageType::Nack { .. }
         )
     }
 
@@ -1890,5 +1889,501 @@ impl Scheduler for ProbInterleavedTargetedBudgetDelayScheduler {
         }
 
         SchedulerOutcome::Deliver(queue.remove(0))
+    }
+}
+
+pub struct DeadlineAwareQuorumDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    quorum_size: usize,
+    rng: StdRng,
+}
+
+impl DeadlineAwareQuorumDelayScheduler {
+    pub fn new(total_budget: usize, quorum_size: usize, seed: u64) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            quorum_size,
+            rng: StdRng::seed_from_u64(seed),
+        }
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn is_promise(msg: &Message) -> bool {
+        matches!(msg.msg_type, MessageType::Promise { .. })
+    }
+
+    fn is_accepted(msg: &Message) -> bool {
+        matches!(msg.msg_type, MessageType::Accepted { .. })
+    }
+
+    fn count_deliverable_before_idx<F>(
+        queue: &[Message],
+        idx: usize,
+        predicate: F,
+    ) -> usize
+    where
+        F: Fn(&Message) -> bool,
+    {
+        queue[..idx].iter().filter(|m| predicate(m)).count()
+    }
+
+    fn find_quorum_blocking_message(&self, queue: &[Message]) -> Option<usize> {
+        for (idx, msg) in queue.iter().enumerate() {
+            match msg.msg_type {
+                MessageType::Promise { .. } => {
+                    let before =
+                        Self::count_deliverable_before_idx(queue, idx, Self::is_promise);
+
+                    if before + 1 >= self.quorum_size {
+                        return Some(idx);
+                    }
+                }
+
+                MessageType::Accepted { .. } => {
+                    let before =
+                        Self::count_deliverable_before_idx(queue, idx, Self::is_accepted);
+
+                    if before + 1 >= self.quorum_size {
+                        return Some(idx);
+                    }
+                }
+
+                _ => {}
+            }
+        }
+
+        None
+    }
+}
+
+impl Scheduler for DeadlineAwareQuorumDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(idx) = self.find_quorum_blocking_message(queue) {
+                self.spend_one();
+
+                let msg = queue.remove(idx);
+                let msg_type = format!("{:?}", msg.msg_type);
+                queue.push(msg);
+
+                println!(
+                    "[DEADLINE-QUORUM-DELAY] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            }
+        }
+
+        SchedulerOutcome::Deliver(queue.remove(0))
+    }
+}
+
+pub struct BoundedQuorumUsefulDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    quorum_size: usize,
+    max_consecutive_delay: u64,
+    consecutive_delay: HashMap<String, u64>,
+    rng: StdRng,
+}
+
+impl BoundedQuorumUsefulDelayScheduler {
+    pub fn new(
+        total_budget: usize,
+        quorum_size: usize,
+        max_consecutive_delay: u64,
+        proposer_id: u64,
+        seed: u64,
+    ) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            quorum_size,
+            max_consecutive_delay,
+            consecutive_delay: HashMap::new(),
+            rng: StdRng::seed_from_u64(seed),
+        }
+    }
+
+    fn is_promise_for(msg: &Message, ballot: u64, proposer_id: u64) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::Promise { ballot: b, .. } if b == ballot && msg.to == proposer_id
+        )
+    }
+
+    fn is_accepted_for(msg: &Message, ballot: u64, proposer_id: u64) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::Accepted { ballot: b, .. } if b == ballot && msg.to == proposer_id
+        )
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn message_key(msg: &Message) -> String {
+        format!("{}-{}-{:?}", msg.from, msg.to, msg.msg_type)
+    }
+
+    fn can_delay(&self, msg: &Message) -> bool {
+        let key = Self::message_key(msg);
+        self.consecutive_delay.get(&key).copied().unwrap_or(0)
+            < self.max_consecutive_delay
+    }
+
+    fn record_delay(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        let count = self.consecutive_delay.entry(key.clone()).or_insert(0);
+        *count += 1;
+
+        println!(
+            "[CAP-TRACE] key={} count={} max={}",
+            key,
+            count,
+            self.max_consecutive_delay
+        );
+    }
+
+    fn record_delivery(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        self.consecutive_delay.remove(&key);
+    }
+
+    fn ballot(msg: &Message) -> Option<u64> {
+        match msg.msg_type {
+            MessageType::Prepare { ballot }
+            | MessageType::Promise { ballot, .. }
+            | MessageType::AcceptRequest { ballot, .. }
+            | MessageType::Accepted { ballot, .. }
+            | MessageType::Nack { ballot, .. } => Some(ballot),
+            _ => None,
+        }
+    }
+
+    fn latest_ballot(queue: &[Message]) -> Option<u64> {
+        queue.iter().filter_map(Self::ballot).max()
+    }
+
+    
+
+    fn count_before<F>(queue: &[Message], idx: usize, pred: F) -> usize
+    where
+        F: Fn(&Message) -> bool,
+    {
+        queue[..idx].iter().filter(|m| pred(m)).count()
+    }
+
+    fn find_candidate(&mut self, queue: &[Message]) -> Option<usize> {
+        let latest = Self::latest_ballot(queue)?;
+
+        let mut candidates = Vec::new();
+        let proposer_id = 1;
+
+        for (idx, msg) in queue.iter().enumerate() {
+            match msg.msg_type {
+                MessageType::Promise { ballot, .. } if ballot == latest => {
+                    let before =
+                       Self::count_before(queue, idx, |m|
+                            Self::is_promise_for(m, latest, proposer_id)
+                        );
+
+                    if before < self.quorum_size && self.can_delay(msg) {
+                        candidates.push(idx);
+                    }
+                }
+
+                MessageType::Accepted { ballot, .. } if ballot == latest => {
+                    let before =
+                       Self::count_before(queue, idx, |m|
+                            Self::is_accepted_for(m, latest, proposer_id)
+                        );
+
+                    if before < self.quorum_size && self.can_delay(msg) {
+                        candidates.push(idx);
+                    }
+                }
+
+                _ => {}
+            }
+        }
+
+        if candidates.is_empty() {
+            None
+        } else {
+            let j = self.rng.random_range(0..candidates.len());
+            Some(candidates[j])
+        }
+    }
+}
+
+impl Scheduler for BoundedQuorumUsefulDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(idx) = self.find_candidate(queue) {
+                self.spend_one();
+
+                let msg = queue.remove(idx);
+                self.record_delay(&msg);
+
+                let msg_type = format!("{:?}", msg.msg_type);
+                queue.push(msg);
+
+                println!(
+                    "[BOUNDED-QUORUM-USEFUL-DELAY] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            }
+        }
+
+        let msg = queue.remove(0);
+        self.record_delivery(&msg);
+
+        if matches!(msg.msg_type, MessageType::Promise { .. }) {
+            println!(
+                "[BOUNDED-QUORUM-USEFUL-DELIVER] from={} to={} type={:?}",
+                msg.from,
+                msg.to,
+                msg.msg_type
+            );
+        }
+
+        SchedulerOutcome::Deliver(msg)
+    }
+}
+
+pub struct ProgressAwareQuorumDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    quorum_size: usize,
+    max_consecutive_delay: u64,
+    consecutive_delay: HashMap<String, u64>,
+    delay_limit: HashMap<String, u64>,
+    delivered_promises: HashMap<u64, HashSet<u64>>,
+    delivered_accepted: HashMap<u64, HashSet<u64>>,
+    rng: StdRng,
+}
+
+impl ProgressAwareQuorumDelayScheduler {
+    pub fn new(
+        total_budget: usize,
+        quorum_size: usize,
+        max_consecutive_delay: u64,
+        seed: u64,
+    ) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            quorum_size,
+            max_consecutive_delay,
+            consecutive_delay: HashMap::new(),
+            delay_limit: HashMap::new(),
+            delivered_promises: HashMap::new(),
+            delivered_accepted: HashMap::new(),
+            rng: StdRng::seed_from_u64(seed),
+        }
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn message_key(msg: &Message) -> String {
+        format!("{}-{}-{:?}", msg.from, msg.to, msg.msg_type)
+    }
+
+    fn can_delay(&mut self, msg: &Message) -> bool {
+        let key = Self::message_key(msg);
+        let count = self.consecutive_delay.get(&key).copied().unwrap_or(0);
+        let limit = self.delay_limit_for(msg);
+
+        count < limit
+    }
+
+    fn record_delay(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        let count = self.consecutive_delay.entry(key.clone()).or_insert(0);
+        *count += 1;
+
+        let limit = self.delay_limit.get(&key).copied().unwrap_or(0);
+
+        println!(
+            "[PROGRESS-CAP] key={} count={} limit={} max={}",
+            key,
+            count,
+            limit,
+            self.max_consecutive_delay
+        );
+    }
+
+    fn record_delivery(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        self.consecutive_delay.remove(&key);
+
+        match msg.msg_type {
+            MessageType::Promise { ballot, .. } => {
+                self.delivered_promises
+                    .entry(ballot)
+                    .or_insert_with(HashSet::new)
+                    .insert(msg.from);
+            }
+
+            MessageType::Accepted { ballot, .. } => {
+                self.delivered_accepted
+                    .entry(ballot)
+                    .or_insert_with(HashSet::new)
+                    .insert(msg.from);
+            }
+
+            _ => {}
+        }
+    }
+
+    fn delay_limit_for(&mut self, msg: &Message) -> u64 {
+        let key = Self::message_key(msg);
+
+        if let Some(limit) = self.delay_limit.get(&key) {
+            *limit
+        } else {
+            let limit = self.rng.random_range(0..=self.max_consecutive_delay);
+            self.delay_limit.insert(key, limit);
+            limit
+        }
+    }
+
+    fn ballot(msg: &Message) -> Option<u64> {
+        match msg.msg_type {
+            MessageType::Prepare { ballot }
+            | MessageType::Promise { ballot, .. }
+            | MessageType::AcceptRequest { ballot, .. }
+            | MessageType::Accepted { ballot, .. }
+            | MessageType::Nack { ballot, .. } => Some(ballot),
+            _ => None,
+        }
+    }
+
+    fn latest_ballot(queue: &[Message]) -> Option<u64> {
+        queue.iter().filter_map(Self::ballot).max()
+    }
+
+    fn promise_count(&self, ballot: u64) -> usize {
+        self.delivered_promises
+            .get(&ballot)
+            .map(|s| s.len())
+            .unwrap_or(0)
+    }
+
+    fn accepted_count(&self, ballot: u64) -> usize {
+        self.delivered_accepted
+            .get(&ballot)
+            .map(|s| s.len())
+            .unwrap_or(0)
+    }
+
+    fn find_quorum_forming_candidate(&mut self, queue: &[Message]) -> Option<usize> {
+        let latest = Self::latest_ballot(queue)?;
+
+        let mut candidates = Vec::new();
+
+        for (idx, msg) in queue.iter().enumerate() {
+            match msg.msg_type {
+                MessageType::Promise { ballot, .. } if ballot == latest => {
+                    let count = self.promise_count(ballot);
+
+                    // Only delay the Promise that would complete quorum.
+                    if count + 1 >= self.quorum_size && self.can_delay(msg) {
+                        candidates.push(idx);
+                    }
+                }
+
+                MessageType::Accepted { ballot, .. } if ballot == latest => {
+                    let count = self.accepted_count(ballot);
+
+                    // Only delay the Accepted that would complete quorum.
+                    if count + 1 >= self.quorum_size && self.can_delay(msg) {
+                        candidates.push(idx);
+                    }
+                }
+
+                _ => {}
+            }
+        }
+
+        if candidates.is_empty() {
+            None
+        } else {
+            let j = self.rng.random_range(0..candidates.len());
+            Some(candidates[j])
+        }
+    }
+}
+
+impl Scheduler for ProgressAwareQuorumDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(idx) = self.find_quorum_forming_candidate(queue) {
+                self.spend_one();
+
+                let msg = queue.remove(idx);
+                self.record_delay(&msg);
+
+                let msg_type = format!("{:?}", msg.msg_type);
+                queue.push(msg);
+
+                println!(
+                    "[PROGRESS-QUORUM-DELAY] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            }
+        }
+
+        let msg = queue.remove(0);
+        self.record_delivery(&msg);
+
+        if matches!(msg.msg_type, MessageType::Promise { .. } | MessageType::Accepted { .. }) {
+            println!(
+                "[PROGRESS-QUORUM-DELIVER] from={} to={} type={:?}",
+                msg.from,
+                msg.to,
+                msg.msg_type
+            );
+        }
+
+        SchedulerOutcome::Deliver(msg)
     }
 }
