@@ -140,7 +140,7 @@ impl Network {
                 Box::new(ProgressAwareQuorumDelayScheduler::new(
                     max_delay,
                     quorum_size,
-                    100,
+                    50,
                     seed,
                 ))
             }

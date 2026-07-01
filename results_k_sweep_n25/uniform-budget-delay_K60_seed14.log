@@ -1,0 +1,411 @@
+
+=== Run 1 ===
+Nodes: 25
+Quorum: 13
+Simulation starting
+[UNIFORM] idx=11 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=1 remaining=59 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=0 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=2 remaining=58 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=0 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=3 remaining=57 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=19 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=4 remaining=56 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=18 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=5 remaining=55 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=9 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=6 remaining=54 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=18 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=7 remaining=53 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=3 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=8 remaining=52 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=16 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=9 remaining=51 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=23 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=10 remaining=50 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=0 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=11 remaining=49 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=10 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=14 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=12 remaining=48 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=11 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=17 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=13 remaining=47 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=12 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=0 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=14 remaining=46 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=13 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=11 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=15 remaining=45 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=14 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=2 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=16 remaining=44 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=15 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=18 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=17 remaining=43 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=16 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=15 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=18 remaining=42 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=17 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=10 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=19 remaining=41 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=18 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=3 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=20 remaining=40 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=19 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=11 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=21 remaining=39 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=20 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=21 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=22 remaining=38 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=21 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=8 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=23 remaining=37 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=22 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=20 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=24 remaining=36 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=23 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=9 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=25 remaining=35 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=24 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=16 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=26 remaining=34 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=25 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=24 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=27 remaining=33 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=26 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=11 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=28 remaining=32 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=27 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=3 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=29 remaining=31 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=28 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=10 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=30 remaining=30 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=29 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=13 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=31 remaining=29 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=30 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=23 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=32 remaining=28 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=31 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=23 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=33 remaining=27 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=32 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=23 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=34 remaining=26 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=33 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=16 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=35 remaining=25 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=34 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=21 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=36 remaining=24 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=35 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=23 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=37 remaining=23 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=36 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=7 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=38 remaining=22 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=37 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=9 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=39 remaining=21 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=38 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=22 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=40 remaining=20 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=39 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=12 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=41 remaining=19 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=40 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=0 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=42 remaining=18 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=41 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=13 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=43 remaining=17 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=42 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=17 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=44 remaining=16 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=43 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=24 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=45 remaining=15 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=44 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=4 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=46 remaining=14 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=45 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=18 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=47 remaining=13 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=46 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=10 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=48 remaining=12 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=47 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=14 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=49 remaining=11 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=48 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=16 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=50 remaining=10 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=49 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=2 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=51 remaining=9 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=50 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=21 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=52 remaining=8 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=51 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=4 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=53 remaining=7 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=52 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=6 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=54 remaining=6 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=53 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=24 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=55 remaining=5 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=54 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=13 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=56 remaining=4 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=55 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=13 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=57 remaining=3 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=56 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=18 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=58 remaining=2 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=57 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=2 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=59 remaining=1 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=58 timeout=100 ballot=1 promises=0 accepted=0
+[UNIFORM] idx=13 queue_len=24 delayed=Prepare { ballot: 1 }
+[UNIFORM-BUDGET-DELAY] spent=60 remaining=0 total=60 queue_len=25 delayed=Prepare { ballot: 1 }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=59 timeout=100 ballot=1 promises=0 accepted=0
+[step=60] DELIVER from=1 to=7 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=60 timeout=100 ballot=1 promises=0 accepted=0
+[step=61] DELIVER from=1 to=9 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=61 timeout=100 ballot=1 promises=0 accepted=0
+[step=62] DELIVER from=1 to=17 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=62 timeout=100 ballot=1 promises=0 accepted=0
+[step=63] DELIVER from=1 to=25 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=63 timeout=100 ballot=1 promises=0 accepted=0
+[step=64] DELIVER from=1 to=23 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=64 timeout=100 ballot=1 promises=0 accepted=0
+[step=65] DELIVER from=1 to=6 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=65 timeout=100 ballot=1 promises=0 accepted=0
+[step=66] DELIVER from=1 to=18 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=66 timeout=100 ballot=1 promises=0 accepted=0
+[step=67] DELIVER from=1 to=1 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=67 timeout=100 ballot=1 promises=0 accepted=0
+[step=68] DELIVER from=1 to=19 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=68 timeout=100 ballot=1 promises=0 accepted=0
+[step=69] DELIVER from=1 to=24 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=69 timeout=100 ballot=1 promises=0 accepted=0
+[step=70] DELIVER from=1 to=11 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=70 timeout=100 ballot=1 promises=0 accepted=0
+[step=71] DELIVER from=1 to=12 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=71 timeout=100 ballot=1 promises=0 accepted=0
+[step=72] DELIVER from=1 to=20 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=72 timeout=100 ballot=1 promises=0 accepted=0
+[step=73] DELIVER from=1 to=16 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=73 timeout=100 ballot=1 promises=0 accepted=0
+[step=74] DELIVER from=1 to=21 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=74 timeout=100 ballot=1 promises=0 accepted=0
+[step=75] DELIVER from=1 to=8 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=75 timeout=100 ballot=1 promises=0 accepted=0
+[step=76] DELIVER from=1 to=14 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=76 timeout=100 ballot=1 promises=0 accepted=0
+[step=77] DELIVER from=1 to=2 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=77 timeout=100 ballot=1 promises=0 accepted=0
+[step=78] DELIVER from=1 to=22 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=78 timeout=100 ballot=1 promises=0 accepted=0
+[step=79] DELIVER from=1 to=4 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=79 timeout=100 ballot=1 promises=0 accepted=0
+[step=80] DELIVER from=1 to=10 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=80 timeout=100 ballot=1 promises=0 accepted=0
+[step=81] DELIVER from=1 to=5 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=81 timeout=100 ballot=1 promises=0 accepted=0
+[step=82] DELIVER from=1 to=13 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=82 timeout=100 ballot=1 promises=0 accepted=0
+[step=83] DELIVER from=1 to=15 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=83 timeout=100 ballot=1 promises=0 accepted=0
+[step=84] DELIVER from=1 to=3 type=Prepare { ballot: 1 } queue_len=24
+[PAXOS-TICK] phase=WaitingForPromises elapsed=84 timeout=100 ballot=1 promises=0 accepted=0
+[step=85] DELIVER from=7 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=24
+[PROMISE-TRACE] from=7 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=85 timeout=100 ballot=1 promises=1 accepted=0
+[step=86] DELIVER from=9 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=23
+[PROMISE-TRACE] from=9 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=86 timeout=100 ballot=1 promises=2 accepted=0
+[step=87] DELIVER from=17 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=22
+[PROMISE-TRACE] from=17 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=87 timeout=100 ballot=1 promises=3 accepted=0
+[step=88] DELIVER from=25 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=21
+[PROMISE-TRACE] from=25 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=88 timeout=100 ballot=1 promises=4 accepted=0
+[step=89] DELIVER from=23 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=20
+[PROMISE-TRACE] from=23 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=89 timeout=100 ballot=1 promises=5 accepted=0
+[step=90] DELIVER from=6 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=19
+[PROMISE-TRACE] from=6 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=90 timeout=100 ballot=1 promises=6 accepted=0
+[step=91] DELIVER from=18 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=18
+[PROMISE-TRACE] from=18 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=91 timeout=100 ballot=1 promises=7 accepted=0
+[step=92] DELIVER from=1 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=17
+[PROMISE-TRACE] from=1 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=92 timeout=100 ballot=1 promises=8 accepted=0
+[step=93] DELIVER from=19 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=16
+[PROMISE-TRACE] from=19 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=93 timeout=100 ballot=1 promises=9 accepted=0
+[step=94] DELIVER from=24 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=15
+[PROMISE-TRACE] from=24 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=94 timeout=100 ballot=1 promises=10 accepted=0
+[step=95] DELIVER from=11 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=14
+[PROMISE-TRACE] from=11 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=95 timeout=100 ballot=1 promises=11 accepted=0
+[step=96] DELIVER from=12 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=13
+[PROMISE-TRACE] from=12 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=96 timeout=100 ballot=1 promises=12 accepted=0
+[step=97] DELIVER from=20 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=12
+[PROMISE-TRACE] from=20 received_ballot=1 current_ballot=1 match=true
+[PAXOS-QUORUM-PROMISE] ballot=1 count=13 quorum=13 current=1
+[step=98] DELIVER from=16 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=36
+[PROMISE-TRACE] from=16 received_ballot=1 current_ballot=1 match=true
+[step=99] DELIVER from=21 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=35
+[PROMISE-TRACE] from=21 received_ballot=1 current_ballot=1 match=true
+[step=100] DELIVER from=8 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=34
+[PROMISE-TRACE] from=8 received_ballot=1 current_ballot=1 match=true
+[step=101] DELIVER from=14 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=33
+[PROMISE-TRACE] from=14 received_ballot=1 current_ballot=1 match=true
+[step=102] DELIVER from=2 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=32
+[PROMISE-TRACE] from=2 received_ballot=1 current_ballot=1 match=true
+[step=103] DELIVER from=22 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=31
+[PROMISE-TRACE] from=22 received_ballot=1 current_ballot=1 match=true
+[step=104] DELIVER from=4 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=30
+[PROMISE-TRACE] from=4 received_ballot=1 current_ballot=1 match=true
+[step=105] DELIVER from=10 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=29
+[PROMISE-TRACE] from=10 received_ballot=1 current_ballot=1 match=true
+[step=106] DELIVER from=5 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=28
+[PROMISE-TRACE] from=5 received_ballot=1 current_ballot=1 match=true
+[step=107] DELIVER from=13 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=27
+[PROMISE-TRACE] from=13 received_ballot=1 current_ballot=1 match=true
+[step=108] DELIVER from=15 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=26
+[PROMISE-TRACE] from=15 received_ballot=1 current_ballot=1 match=true
+[step=109] DELIVER from=3 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=25
+[PROMISE-TRACE] from=3 received_ballot=1 current_ballot=1 match=true
+[step=110] DELIVER from=1 to=1 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=111] DELIVER from=1 to=2 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=112] DELIVER from=1 to=3 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=113] DELIVER from=1 to=4 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=114] DELIVER from=1 to=5 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=115] DELIVER from=1 to=6 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=116] DELIVER from=1 to=7 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=117] DELIVER from=1 to=8 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=118] DELIVER from=1 to=9 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=119] DELIVER from=1 to=10 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=120] DELIVER from=1 to=11 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=121] DELIVER from=1 to=12 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=122] DELIVER from=1 to=13 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=123] DELIVER from=1 to=14 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=124] DELIVER from=1 to=15 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=125] DELIVER from=1 to=16 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=126] DELIVER from=1 to=17 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=127] DELIVER from=1 to=18 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=128] DELIVER from=1 to=19 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=129] DELIVER from=1 to=20 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=130] DELIVER from=1 to=21 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=131] DELIVER from=1 to=22 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=132] DELIVER from=1 to=23 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=133] DELIVER from=1 to=24 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=134] DELIVER from=1 to=25 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=24
+Broadcasting AcceptRequest(1, v1)
+[step=135] DELIVER from=1 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=24
+[step=136] DELIVER from=2 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=23
+[step=137] DELIVER from=3 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=22
+[step=138] DELIVER from=4 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=21
+[step=139] DELIVER from=5 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=20
+[step=140] DELIVER from=6 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=19
+[step=141] DELIVER from=7 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=18
+[step=142] DELIVER from=8 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=17
+[step=143] DELIVER from=9 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=16
+[step=144] DELIVER from=10 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=15
+[step=145] DELIVER from=11 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=14
+[step=146] DELIVER from=12 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=13
+[step=147] DELIVER from=13 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=12
+[PAXOS-QUORUM-ACCEPTED] ballot=1 count=13 quorum=13 current=1
+[step=148] DELIVER from=14 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=11
+[step=149] DELIVER from=15 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=10
+[step=150] DELIVER from=16 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=9
+[step=151] DELIVER from=17 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=8
+[step=152] DELIVER from=18 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=7
+[step=153] DELIVER from=19 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=6
+[step=154] DELIVER from=20 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=5
+[step=155] DELIVER from=21 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=4
+[step=156] DELIVER from=22 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=3
+[step=157] DELIVER from=23 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=2
+[step=158] DELIVER from=24 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=1
+[step=159] DELIVER from=25 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=0
+
+=== Metrics ===
+Messages Sent: 100
+Messages Delivered: 100
+Scheduler Steps: 161
+Stale Messages Ignored: 0
+Messages Sent Until Decision: 0
+Undelivered Messages At Decision: 0
+Timeout triggered: 0
+View changes: 0
+Decisions: 1
+Prepare Messages: 25
+Promise Messages: 25
+Accept Requests: 25
+Accepted Messages: 25
+Raft Leader Elected: false
+Raft Leader Id: None
+Raft Election Count: 0
+AppendEntries Messages: 0
+AppendResponse Messages: 0
+Heartbeat Successes: 0
+Heartbeat Rejections: 0
+Raft Config Changes: 0
+Raft Config Acks: 0
+Raft Config Activated: false
+Nack Messages: 0
+Paxos Retries: 0
+Max Ballot Seen: 0
+Reached Step Cap: false
+Max Steps: 5000
+Membership Changes: 0
+Membership Acks: 0
+Chosen Values: {"v1"}
+Safety Violation: false
+Paxos Retry Exhausted: false
+Critical Messages Delayed: 0
+Delayed Messages Released: 0

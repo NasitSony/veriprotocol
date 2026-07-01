@@ -2183,9 +2183,8 @@ pub struct ProgressAwareQuorumDelayScheduler {
     quorum_size: usize,
     max_consecutive_delay: u64,
     consecutive_delay: HashMap<String, u64>,
-    delay_limit: HashMap<String, u64>,
-    delivered_promises: HashMap<u64, HashSet<u64>>,
-    delivered_accepted: HashMap<u64, HashSet<u64>>,
+    delivered_promises: HashMap<(u64, u64), HashSet<u64>>, // (to, ballot) -> from set
+    delivered_accepted: HashMap<(u64, u64), HashSet<u64>>, // (to, ballot) -> from set
     rng: StdRng,
 }
 
@@ -2202,7 +2201,6 @@ impl ProgressAwareQuorumDelayScheduler {
             quorum_size,
             max_consecutive_delay,
             consecutive_delay: HashMap::new(),
-            delay_limit: HashMap::new(),
             delivered_promises: HashMap::new(),
             delivered_accepted: HashMap::new(),
             rng: StdRng::seed_from_u64(seed),
@@ -2218,12 +2216,10 @@ impl ProgressAwareQuorumDelayScheduler {
         format!("{}-{}-{:?}", msg.from, msg.to, msg.msg_type)
     }
 
-    fn can_delay(&mut self, msg: &Message) -> bool {
+    fn can_delay(&self, msg: &Message) -> bool {
         let key = Self::message_key(msg);
         let count = self.consecutive_delay.get(&key).copied().unwrap_or(0);
-        let limit = self.delay_limit_for(msg);
-
-        count < limit
+        count < self.max_consecutive_delay
     }
 
     fn record_delay(&mut self, msg: &Message) {
@@ -2231,13 +2227,10 @@ impl ProgressAwareQuorumDelayScheduler {
         let count = self.consecutive_delay.entry(key.clone()).or_insert(0);
         *count += 1;
 
-        let limit = self.delay_limit.get(&key).copied().unwrap_or(0);
-
         println!(
-            "[PROGRESS-CAP] key={} count={} limit={} max={}",
+            "[PROGRESS-CAP] key={} count={} max={}",
             key,
             count,
-            limit,
             self.max_consecutive_delay
         );
     }
@@ -2249,31 +2242,19 @@ impl ProgressAwareQuorumDelayScheduler {
         match msg.msg_type {
             MessageType::Promise { ballot, .. } => {
                 self.delivered_promises
-                    .entry(ballot)
+                    .entry((msg.to, ballot))
                     .or_insert_with(HashSet::new)
                     .insert(msg.from);
             }
 
             MessageType::Accepted { ballot, .. } => {
                 self.delivered_accepted
-                    .entry(ballot)
+                    .entry((msg.to, ballot))
                     .or_insert_with(HashSet::new)
                     .insert(msg.from);
             }
 
             _ => {}
-        }
-    }
-
-    fn delay_limit_for(&mut self, msg: &Message) -> u64 {
-        let key = Self::message_key(msg);
-
-        if let Some(limit) = self.delay_limit.get(&key) {
-            *limit
-        } else {
-            let limit = self.rng.random_range(0..=self.max_consecutive_delay);
-            self.delay_limit.insert(key, limit);
-            limit
         }
     }
 
@@ -2292,16 +2273,16 @@ impl ProgressAwareQuorumDelayScheduler {
         queue.iter().filter_map(Self::ballot).max()
     }
 
-    fn promise_count(&self, ballot: u64) -> usize {
+    fn promise_count(&self, to: u64, ballot: u64) -> usize {
         self.delivered_promises
-            .get(&ballot)
+            .get(&(to, ballot))
             .map(|s| s.len())
             .unwrap_or(0)
     }
 
-    fn accepted_count(&self, ballot: u64) -> usize {
+    fn accepted_count(&self, to: u64, ballot: u64) -> usize {
         self.delivered_accepted
-            .get(&ballot)
+            .get(&(to, ballot))
             .map(|s| s.len())
             .unwrap_or(0)
     }
@@ -2314,18 +2295,16 @@ impl ProgressAwareQuorumDelayScheduler {
         for (idx, msg) in queue.iter().enumerate() {
             match msg.msg_type {
                 MessageType::Promise { ballot, .. } if ballot == latest => {
-                    let count = self.promise_count(ballot);
+                    let count = self.promise_count(msg.to, ballot);
 
-                    // Only delay the Promise that would complete quorum.
                     if count + 1 >= self.quorum_size && self.can_delay(msg) {
                         candidates.push(idx);
                     }
                 }
 
                 MessageType::Accepted { ballot, .. } if ballot == latest => {
-                    let count = self.accepted_count(ballot);
+                    let count = self.accepted_count(msg.to, ballot);
 
-                    // Only delay the Accepted that would complete quorum.
                     if count + 1 >= self.quorum_size && self.can_delay(msg) {
                         candidates.push(idx);
                     }
