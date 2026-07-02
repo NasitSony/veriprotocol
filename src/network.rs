@@ -9,7 +9,8 @@ use crate::scheduler::{
     TargetedBudgetDelayScheduler, TimeoutFirstScheduler, UniformBudgetDelayScheduler,
     VoteDelayScheduler, InterleavedUniformBudgetDelayScheduler, InterleavedTargetedBudgetDelayScheduler,
     InterleavedProgressTargetedBudgetDelayScheduler, ProbInterleavedUniformBudgetDelayScheduler, ProbInterleavedTargetedBudgetDelayScheduler,
-    DeadlineAwareQuorumDelayScheduler, BoundedQuorumUsefulDelayScheduler, ProgressAwareQuorumDelayScheduler,
+    DeadlineAwareQuorumDelayScheduler, BoundedQuorumUsefulDelayScheduler, ProgressAwareQuorumDelayScheduler, UniformActiveBudgetDelayScheduler,
+    UniformCappedBudgetDelayScheduler, PhaseBalancedBudgetDelayScheduler,
 };
 
 use std::collections::HashMap;
@@ -140,7 +141,31 @@ impl Network {
                 Box::new(ProgressAwareQuorumDelayScheduler::new(
                     max_delay,
                     quorum_size,
-                    50,
+                    5,
+                    seed,
+                ))
+            }
+
+            "uniform-active-budget-delay" => {
+                Box::new(UniformActiveBudgetDelayScheduler::new(
+                    max_delay,
+                    5,
+                    seed,
+                ))
+            }
+
+            "phase-balanced-budget-delay" => {
+                Box::new(PhaseBalancedBudgetDelayScheduler::new(
+                    max_delay,
+                    5,
+                    seed,
+                ))
+            }
+
+            "uniform-capped-budget-delay" => {
+                Box::new(UniformCappedBudgetDelayScheduler::new(
+                    max_delay,
+                    2,
                     seed,
                 ))
             }
