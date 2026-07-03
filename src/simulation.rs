@@ -9,21 +9,22 @@ use crate::raft::RaftProtocol;
 use crate::scheduler::SchedulerOutcome;
 use crate::trace::{Config, TraceEvent, trace};
 use crate::basic_paxos::PaxosPhase;
+use crate::multi_paxos::MultiPaxosProtocol;
 
 pub struct Simulation {
     pub network: Network,
     nodes: Vec<Node>,
     pub metrics: Metrics,
     pub config: Config,
-    pub timeout_injected: bool,
-    pub timeout_threshold: u64,
+   // pub timeout_injected: bool,
+   // pub timeout_threshold: u64,
     protocol_name: String,
 
     // pub protocol: SimpleConsensusProtocol,
     pub protocol: Box<dyn Protocol>,
 
     pub node_count: usize,
-    pub last_timeout_step: u64,
+    //pub last_timeout_step: u64,
 }
 
 impl Simulation {
@@ -134,6 +135,11 @@ impl Simulation {
                     .with_quorum_size(quorum_size),
             ),
 
+            "multi-paxos" => Box::new(MultiPaxosProtocol::new(
+                quorum_size,
+                timeout_threshold,
+            )),
+
             "raft-election" => Box::new(RaftProtocol::new(quorum_size)),
 
             "raft-leader-crash" => Box::new(RaftProtocol::new(quorum_size)),
@@ -157,17 +163,17 @@ impl Simulation {
                 print_decisions: true,
             },
             protocol,
-            timeout_injected: false,
-            timeout_threshold: timeout_threshold,
+           // timeout_injected: false,
+           // timeout_threshold: timeout_threshold,
             protocol_name: protocol_name.to_string(),
             node_count,
-            last_timeout_step: 0,
+           // last_timeout_step: 0,
         }
     }
 
-    fn quorum_size(&self) -> usize {
+    /*fn quorum_size(&self) -> usize {
         (self.nodes.len() / 2) + 1
-    }
+    }*/
 
     pub fn run(&mut self) {
         println!("Simulation starting");
@@ -501,6 +507,37 @@ impl Simulation {
                 value: VoteValue::Yes,
                 delay_count: 0,
             });
+        } else if self.protocol_name == "multi-paxos" {
+            self.broadcast(Message {
+                from: 1,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 1 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+
+            self.broadcast(Message {
+                from: 2,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 2 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+
+            self.broadcast(Message {
+                from: 3,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 3 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+
         } else if self.protocol_name == "raft-leader-crash" {
             // First election: node 1 becomes leader in term 1.
             self.broadcast(Message {
@@ -685,6 +722,24 @@ impl Simulation {
                                     delay_count: 0,
                                 });
                             }
+
+                            NodeAction::BroadcastPrepareFrom { from, ballot } => {
+                                println!("[RETRY-BROADCAST] proposer={} ballot={}", from, ballot);
+
+                                self.metrics.timeouts_triggered += 1;
+                                self.metrics.paxos_retries += 1;
+                                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
+                                self.broadcast(Message {
+                                    from,
+                                    to: 0,
+                                    round: 0,
+                                    msg_type: MessageType::Prepare { ballot },
+                                    payload: String::from("prepare"),
+                                    value: VoteValue::Yes,
+                                    delay_count: 0,
+                                });
+                            }
                             _ => {}
                         }
                     }
@@ -789,7 +844,7 @@ impl Simulation {
         self.network.send(msg);
     }
 
-    fn inject_timeouts(&mut self) {
+   /* fn inject_timeouts(&mut self) {
         let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
         for node_id in node_ids {
@@ -807,7 +862,7 @@ impl Simulation {
             //self.metrics.timeouts_triggered += 1;
             self.network.send(timeout);
         }
-    }
+    }*/
 
     fn apply_action(&mut self, msg: &Message, action: NodeAction) {
         match action {
@@ -1084,6 +1139,27 @@ impl Simulation {
 
             NodeAction::ActivateRaftConfig { new_node_count: _ } => {
                 self.metrics.raft_config_activated = true;
+            }
+
+            NodeAction::BroadcastPrepareFrom { from, ballot } => {
+
+                println!(
+                    "[RETRY-BROADCAST] proposer={} ballot={}",
+                    from,
+                    ballot
+                );
+                                self.metrics.paxos_retries += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
+                self.broadcast(Message {
+                    from,
+                    to: 0,
+                    round: msg.round + 1,
+                    msg_type: MessageType::Prepare { ballot },
+                    payload: String::from("prepare"),
+                    value: VoteValue::Yes,
+                    delay_count: msg.delay_count,
+                });
             }
         }
     }

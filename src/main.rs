@@ -9,6 +9,7 @@ mod scheduler;
 mod simulation;
 mod state;
 mod trace;
+mod multi_paxos;
 
 use simulation::Simulation;
 //use std::env;

@@ -54,6 +54,12 @@ pub enum NodeAction {
         ballot: u64,
     },
 
+
+    BroadcastPrepareFrom {
+        from: u64,
+        ballot: u64,
+    },
+
     RecordChosen {
         value: String,
     },

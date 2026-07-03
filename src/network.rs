@@ -141,7 +141,7 @@ impl Network {
                 Box::new(ProgressAwareQuorumDelayScheduler::new(
                     max_delay,
                     quorum_size,
-                    5,
+                    2,
                     seed,
                 ))
             }
@@ -149,7 +149,7 @@ impl Network {
             "uniform-active-budget-delay" => {
                 Box::new(UniformActiveBudgetDelayScheduler::new(
                     max_delay,
-                    5,
+                    2,
                     seed,
                 ))
             }
@@ -157,7 +157,7 @@ impl Network {
             "phase-balanced-budget-delay" => {
                 Box::new(PhaseBalancedBudgetDelayScheduler::new(
                     max_delay,
-                    5,
+                    2,
                     seed,
                 ))
             }
