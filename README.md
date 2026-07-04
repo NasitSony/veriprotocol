@@ -1,31 +1,85 @@
 # VeriProtocol
 
-VeriProtocol is a scheduler-aware consensus simulation framework for studying how message delivery policies affect consensus progress, decision latency, and communication behavior.
+VeriProtocol is a scheduler-aware consensus experimentation framework for studying how message scheduling policies influence the progress, latency, retries, and resilience of distributed consensus protocols under deterministic simulations.
 
-## Current Status
+The framework provides a reproducible environment for implementing consensus protocols, designing adversarial message schedulers, and evaluating protocol behavior under different delay models.
 
-- 4-node consensus simulator
-- Protocol abstraction
-- Simple Proposal -> Vote -> Commit protocol
-- Pluggable schedulers
-- Reproducible seeded experiments
-- Metrics and findings documentation
+## Features
 
-## Supported Schedulers
+* Deterministic event-driven simulation
+* Pluggable consensus protocol architecture
+* Pluggable scheduler/adversary framework
+* Seeded, reproducible experiments
+* Configurable timeout and retry models
+* Comprehensive execution metrics
+* Experiment automation for large parameter sweeps
 
-- FIFO
-- Random
-- DelayNode
-- DelayProposal
-- DelayVote
-- DelayCommit
-- BoundedDelay
-- ProbabilisticDelay
-- QuorumBlocking
+## Implemented Protocols
 
-## Example
+* Simple Proposal → Vote → Commit protocol
+* Single-Proposer Paxos
+* Partial-timeout Paxos model
+
+## Scheduler Policies
+
+### Baseline
+
+* FIFO
+* Random
+
+### Delay-Based
+
+* DelayNode
+* DelayProposal
+* DelayVote
+* DelayCommit
+* BoundedDelay
+* ProbabilisticDelay
+
+### Adversarial
+
+* QuorumBlocking
+* Uniform Budget Delay
+* Uniform Active Budget Delay
+* Phase-Balanced Budget Delay
+* Progress-Aware Quorum Delay
+
+## Metrics
+
+VeriProtocol records protocol behavior including:
+
+* Scheduler steps
+* Messages sent and delivered
+* Timeout events
+* Retry count
+* Ballot progression
+* Decision latency
+* Safety violations
+* Critical message delays
+
+## Running Experiments
 
 ```bash
 cargo run -- fifo
+
 cargo run -- random 10 42
-cargo run -- quorum-block
+
+cargo run -- quorum-blocking
+
+cargo run -- progress-aware-quorum-delay
+```
+
+## Current Research
+
+Current experiments investigate how adversarial message schedulers affect Paxos progress under bounded delay budgets and per-message delay limits. The framework has been used to compare active-ballot, phase-balanced, and quorum-aware scheduling strategies under deterministic simulations.
+
+## Roadmap
+
+* Multi-Paxos
+* Raft
+* PBFT
+* HotStuff
+* Byzantine fault injection
+* Adaptive adversarial schedulers
+* Network partition and recovery models
+* Large-scale benchmarking
