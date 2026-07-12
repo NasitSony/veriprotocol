@@ -3,6 +3,24 @@ use crate::node::{Node, NodeAction};
 use crate::protocol::Protocol;
 use std::collections::{HashMap, HashSet};
 
+// Proposer lifecycle:
+//
+// WaitingForPromises
+//   -> quorum Promise
+//   -> WaitingForAccepted
+//
+// WaitingForAccepted
+//   -> quorum Accepted
+//   -> Decided
+//
+// WaitingForPromises / WaitingForAccepted
+//   -> timeout or higher-ballot NACK
+//   -> retry with next owned ballot
+//
+// Any phase
+//   -> max retries exceeded
+//   -> Idle
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MultiPaxosPhase {
     Idle,
@@ -66,7 +84,7 @@ impl MultiPaxosProtocol {
         Self {
             proposers,
             quorum_size,
-            phase_timeout: 12,
+            phase_timeout,
             max_retries: 10,
         }
     }
@@ -79,9 +97,12 @@ impl MultiPaxosProtocol {
     }
 
 
-    fn retry_proposer(&mut self, proposer_id: u64) -> Option<NodeAction> {
+    fn retry_proposer(
+        &mut self,
+        proposer_id: u64,
+        observed_ballot: Option<u64>,
+    ) -> Option<NodeAction> {
         let ballot_stride = self.proposers.len() as u64;
-
         let proposer = self.proposers.get_mut(&proposer_id)?;
 
         if proposer.phase == MultiPaxosPhase::Decided {
@@ -95,7 +116,18 @@ impl MultiPaxosProtocol {
             return None;
         }
 
-        proposer.current_ballot += ballot_stride;
+        proposer.current_ballot = match observed_ballot {
+            Some(promised) => {
+                let mut next = proposer.current_ballot + ballot_stride;
+
+                while next <= promised {
+                    next += ballot_stride;
+                }
+
+                next
+            }
+            None => proposer.current_ballot + ballot_stride,
+        };
 
         proposer.promises_by_ballot.clear();
         proposer.accepted_by_ballot.clear();
@@ -270,7 +302,7 @@ impl Protocol for MultiPaxosProtocol {
                 ballot,
                 promised_ballot,
             } => {
-                let proposer = match self.proposers.get_mut(&msg.to) {
+                let proposer = match self.proposers.get(&msg.to) {
                     Some(p) => p,
                     None => return vec![],
                 };
@@ -279,30 +311,13 @@ impl Protocol for MultiPaxosProtocol {
                     return vec![];
                 }
 
-                if *promised_ballot >= proposer.current_ballot {
-                    proposer.retry_count += 1;
-
-                    if proposer.retry_count > self.max_retries {
-                        proposer.phase = MultiPaxosPhase::Idle;
-                        return vec![];
-                    }
-
-                    proposer.current_ballot = promised_ballot + 1;
-                    proposer.promises_by_ballot.clear();
-                    proposer.accepted_by_ballot.clear();
-                    proposer.accept_request_sent.clear();
-                    proposer.highest_accepted_ballot = None;
-                    proposer.chosen_value = proposer.proposed_value.clone();
-                    proposer.phase = MultiPaxosPhase::WaitingForPromises;
-                    proposer.phase_elapsed = 0;
-
-                    return vec![NodeAction::BroadcastPrepareFrom {
-                        from: proposer.proposer_id,
-                        ballot: proposer.current_ballot,
-                    }];
+                if *promised_ballot < proposer.current_ballot {
+                    return vec![];
                 }
 
-                vec![]
+                self.retry_proposer(msg.to, Some(*promised_ballot))
+                    .into_iter()
+                    .collect()
             }
 
             _ => vec![],
@@ -325,21 +340,6 @@ impl Protocol for MultiPaxosProtocol {
 
         let proposer_ids: Vec<u64> = self.proposers.keys().copied().collect();
         
-        for (id, proposer) in &self.proposers {
-
-            println!(
-                "elapsed={} timeout={}",
-                proposer.phase_elapsed,
-                self.phase_timeout
-            );
-
-            println!(
-                "id={} phase={:?} elapsed={}",
-                id,
-                proposer.phase,
-                proposer.phase_elapsed
-            );
-        }
 
         for proposer_id in proposer_ids {
             let should_retry = {
@@ -365,7 +365,7 @@ impl Protocol for MultiPaxosProtocol {
                     self.proposers[&proposer_id].phase,
                 );
 
-                if let Some(action) = self.retry_proposer(proposer_id) {
+                if let Some(action) = self.retry_proposer(proposer_id, None) {
                     actions.push(action);
                 }
             }
