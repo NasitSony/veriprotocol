@@ -96,7 +96,6 @@ impl MultiPaxosProtocol {
         }
     }
 
-
     fn retry_proposer(
         &mut self,
         proposer_id: u64,
@@ -142,6 +141,224 @@ impl MultiPaxosProtocol {
             ballot: proposer.current_ballot,
         })
     }
+
+    /// PREPARE
+    ///
+    /// - Reject ballots lower than the acceptor's promised ballot.
+    /// - Otherwise update the promised ballot.
+    /// - Return the acceptor's previously accepted ballot/value.
+    fn handle_prepare(&mut self, node: &mut Node, msg: &Message, ballot: u64) -> Vec<NodeAction> {
+        if ballot >= node.promised_ballot {
+            node.promised_ballot = ballot;
+
+            vec![NodeAction::SendPromise {
+                to: msg.from,
+                ballot,
+                accepted_ballot: node.accepted_ballot,
+                accepted_value: node.accepted_value.clone(),
+            }]
+        } else {
+            vec![NodeAction::SendNack {
+                to: msg.from,
+                ballot,
+                promised_ballot: node.promised_ballot,
+            }]
+        }
+    }
+
+    /// PROMISE
+    ///
+    /// - Count Promises only for the proposer's current ballot.
+    /// - Ignore duplicate Promises from the same acceptor.
+    /// - Adopt the value associated with the highest accepted ballot.
+    /// - Broadcast AcceptRequest once Promise quorum is reached.
+    fn handle_promise(
+        &mut self,
+        msg: &Message,
+        ballot: u64,
+        accepted_ballot: Option<u64>,
+        accepted_value: Option<String>,
+    ) -> Vec<NodeAction> {
+        let quorum_size = self.quorum_size;
+
+        let proposer = match self.proposers.get_mut(&msg.to) {
+            Some(proposer) => proposer,
+            None => return vec![],
+        };
+
+        if ballot != proposer.current_ballot {
+            return vec![];
+        }
+
+        proposer
+            .promises_by_ballot
+            .entry(ballot)
+            .or_insert_with(HashSet::new)
+            .insert(msg.from);
+
+        // Paxos value-adoption rule:
+        // adopt the value associated with the highest accepted ballot
+        // reported by the Promise quorum.
+        if let (Some(previous_ballot), Some(previous_value)) = (accepted_ballot, accepted_value) {
+            let should_adopt = proposer
+                .highest_accepted_ballot
+                .map(|highest| previous_ballot > highest)
+                .unwrap_or(true);
+
+            if should_adopt {
+                proposer.highest_accepted_ballot = Some(previous_ballot);
+                proposer.chosen_value = previous_value;
+            }
+        }
+
+        let promise_count = proposer
+            .promises_by_ballot
+            .get(&ballot)
+            .map(HashSet::len)
+            .unwrap_or(0);
+
+        println!(
+            "[MULTI-PAXOS-PROMISE] proposer={} ballot={} count={} quorum={}",
+            proposer.proposer_id, ballot, promise_count, quorum_size
+        );
+
+        if promise_count < quorum_size {
+            return vec![];
+        }
+
+        // Prevent duplicate AcceptRequest broadcasts if additional Promises
+        // arrive after quorum has already been reached.
+        if !proposer.accept_request_sent.insert(ballot) {
+            return vec![];
+        }
+
+        proposer.phase = MultiPaxosPhase::WaitingForAccepted;
+        proposer.phase_elapsed = 0;
+
+        vec![NodeAction::BroadcastAcceptRequest {
+            ballot,
+            value: proposer.chosen_value.clone(),
+        }]
+    }
+
+    /// ACCEPT REQUEST
+    ///
+    /// - Reject ballots below the acceptor's promised ballot.
+    /// - Otherwise promise the ballot and accept the proposed value.
+    /// - Reply Accepted to the requesting proposer.
+    fn handle_accept_request(
+        &mut self,
+        node: &mut Node,
+        msg: &Message,
+        ballot: u64,
+        value: String,
+    ) -> Vec<NodeAction> {
+        if ballot >= node.promised_ballot {
+            node.promised_ballot = ballot;
+            node.accepted_ballot = Some(ballot);
+            node.accepted_value = Some(value.clone());
+
+            vec![NodeAction::SendAccepted {
+                to: msg.from,
+                ballot,
+                value,
+            }]
+        } else {
+            vec![NodeAction::SendNack {
+                to: msg.from,
+                ballot,
+                promised_ballot: node.promised_ballot,
+            }]
+        }
+    }
+
+    /// ACCEPTED
+    ///
+    /// - Count Accepted messages only for the proposer's current ballot.
+    /// - Ignore duplicate acknowledgements from the same acceptor.
+    /// - Mark the value chosen after quorum.
+    fn handle_accepted(
+        &mut self,
+        node: &mut Node,
+        msg: &Message,
+        ballot: u64,
+        value: String,
+    ) -> Vec<NodeAction> {
+        let quorum_size = self.quorum_size;
+
+        let proposer = match self.proposers.get_mut(&msg.to) {
+            Some(proposer) => proposer,
+            None => return vec![],
+        };
+
+        if ballot != proposer.current_ballot {
+            return vec![];
+        }
+
+        proposer
+            .accepted_by_ballot
+            .entry(ballot)
+            .or_insert_with(HashSet::new)
+            .insert(msg.from);
+
+        let accepted_count = proposer
+            .accepted_by_ballot
+            .get(&ballot)
+            .map(HashSet::len)
+            .unwrap_or(0);
+
+        println!(
+            "[MULTI-PAXOS-ACCEPTED] proposer={} ballot={} count={} quorum={}",
+            proposer.proposer_id, ballot, accepted_count, quorum_size
+        );
+
+        if accepted_count < quorum_size {
+            return vec![];
+        }
+
+        if proposer.phase == MultiPaxosPhase::Decided {
+            return vec![];
+        }
+
+        proposer.phase = MultiPaxosPhase::Decided;
+        proposer.phase_elapsed = 0;
+
+        if node.decided.is_none() {
+            node.decided = Some(VoteValue::Yes);
+        }
+
+        vec![NodeAction::RecordChosen { value }]
+    }
+
+    /// NACK
+    ///
+    /// - Ignore NACKs for stale proposer ballots.
+    /// - Ignore NACKs that do not reveal a higher promised ballot.
+    /// - Retry using the next ballot owned by this proposer that is strictly
+    ///   greater than the observed promised ballot.
+    fn handle_nack(&mut self, msg: &Message, ballot: u64, promised_ballot: u64) -> Vec<NodeAction> {
+        let current_ballot = match self.proposers.get(&msg.to) {
+            Some(proposer) => proposer.current_ballot,
+            None => return vec![],
+        };
+
+        if ballot != current_ballot {
+            return vec![];
+        }
+
+        if promised_ballot < current_ballot {
+            return vec![];
+        }
+
+        println!(
+            "[MULTI-PAXOS-NACK] proposer={} ballot={} promised_ballot={}",
+            msg.to, ballot, promised_ballot
+        );
+
+        self.retry_proposer(msg.to, Some(promised_ballot))
+            .into_iter()
+            .collect()
+    }
 }
 
 impl Protocol for MultiPaxosProtocol {
@@ -151,181 +368,32 @@ impl Protocol for MultiPaxosProtocol {
 
     fn handle_message(&mut self, node: &mut Node, msg: &Message) -> Vec<NodeAction> {
         match &msg.msg_type {
-            MessageType::Prepare { ballot } => {
-                if *ballot >= node.promised_ballot {
-                    node.promised_ballot = *ballot;
-
-                    vec![NodeAction::SendPromise {
-                        to: msg.from,
-                        ballot: *ballot,
-                        accepted_ballot: node.accepted_ballot,
-                        accepted_value: node.accepted_value.clone(),
-                    }]
-                } else {
-                    vec![NodeAction::SendNack {
-                        to: msg.from,
-                        ballot: *ballot,
-                        promised_ballot: node.promised_ballot,
-                    }]
-                }
-            }
-
-            MessageType::AcceptRequest { ballot, value } => {
-                if *ballot >= node.promised_ballot {
-                    node.promised_ballot = *ballot;
-                    node.accepted_ballot = Some(*ballot);
-                    node.accepted_value = Some(value.clone());
-
-                    vec![NodeAction::SendAccepted {
-                        to: msg.from,
-                        ballot: *ballot,
-                        value: value.clone(),
-                    }]
-                } else {
-                    vec![NodeAction::SendNack {
-                        to: msg.from,
-                        ballot: *ballot,
-                        promised_ballot: node.promised_ballot,
-                    }]
-                }
-            }
+            MessageType::Prepare { ballot } => self.handle_prepare(node, msg, *ballot),
 
             MessageType::Promise {
                 ballot,
                 accepted_ballot,
                 accepted_value,
-            } => {
-                let proposer = match self.proposers.get_mut(&msg.to) {
-                    Some(p) => p,
-                    None => return vec![],
-                };
+            } => self.handle_promise(msg, *ballot, *accepted_ballot, accepted_value.clone()),
 
-                println!(
-                    "PROMISE proposer={} msg.to={} ballot={} current_ballot={}",
-                    proposer.proposer_id,
-                    msg.to,
-                    ballot,
-                    proposer.current_ballot
-                );
-
-                if *ballot != proposer.current_ballot {
-                    return vec![];
-                }
-
-                proposer
-                    .promises_by_ballot
-                    .entry(*ballot)
-                    .or_insert_with(HashSet::new)
-                    .insert(msg.from);
-
-                if let (Some(ab), Some(av)) = (accepted_ballot, accepted_value) {
-                    if proposer.highest_accepted_ballot.is_none()
-                        || *ab > proposer.highest_accepted_ballot.unwrap()
-                    {
-                        proposer.highest_accepted_ballot = Some(*ab);
-                        proposer.chosen_value = av.clone();
-                    }
-                }
-
-                let promise_count = proposer
-                    .promises_by_ballot
-                    .get(ballot)
-                    .map(|s| s.len())
-                    .unwrap_or(0);
-
-                    println!(
-                        "ballot={} promise_count={}",
-                        ballot,
-                        promise_count
-                    );
-
-
-                    println!(
-                        "quorum={} accept_sent={}",
-                        self.quorum_size,
-                        proposer.accept_request_sent.contains(ballot)
-                    );
-
-                if promise_count >= self.quorum_size
-                    && !proposer.accept_request_sent.contains(ballot)
-                {
-                    proposer.accept_request_sent.insert(*ballot);
-                    proposer.phase = MultiPaxosPhase::WaitingForAccepted;
-                    proposer.phase_elapsed = 0;
-
-                    let value = proposer.chosen_value.clone();
-
-                    return vec![NodeAction::BroadcastAcceptRequest {
-                        ballot: *ballot,
-                        value,
-                    }];
-                }
-
-                vec![]
+            MessageType::AcceptRequest { ballot, value } => {
+                self.handle_accept_request(node, msg, *ballot, value.clone())
             }
 
             MessageType::Accepted { ballot, value } => {
-                let proposer = match self.proposers.get_mut(&msg.to) {
-                    Some(p) => p,
-                    None => return vec![],
-                };
-
-                if *ballot != proposer.current_ballot {
-                    return vec![];
-                }
-
-                proposer
-                    .accepted_by_ballot
-                    .entry(*ballot)
-                    .or_insert_with(HashSet::new)
-                    .insert(msg.from);
-
-                let accepted_count = proposer
-                    .accepted_by_ballot
-                    .get(ballot)
-                    .map(|s| s.len())
-                    .unwrap_or(0);
-
-                if accepted_count >= self.quorum_size && node.decided.is_none() {
-                    node.decided = Some(VoteValue::Yes);
-                    proposer.phase = MultiPaxosPhase::Decided;
-
-                    return vec![NodeAction::RecordChosen {
-                        value: value.clone(),
-                    }];
-                }
-
-                vec![]
+                self.handle_accepted(node, msg, *ballot, value.clone())
             }
 
             MessageType::Nack {
                 ballot,
                 promised_ballot,
-            } => {
-                let proposer = match self.proposers.get(&msg.to) {
-                    Some(p) => p,
-                    None => return vec![],
-                };
-
-                if *ballot != proposer.current_ballot {
-                    return vec![];
-                }
-
-                if *promised_ballot < proposer.current_ballot {
-                    return vec![];
-                }
-
-                self.retry_proposer(msg.to, Some(*promised_ballot))
-                    .into_iter()
-                    .collect()
-            }
+            } => self.handle_nack(msg, *ballot, *promised_ballot),
 
             _ => vec![],
         }
     }
 
     fn on_tick(&mut self) -> Vec<NodeAction> {
-
         if self
             .proposers
             .values()
@@ -334,20 +402,16 @@ impl Protocol for MultiPaxosProtocol {
             return vec![];
         }
 
-        
-
         let mut actions = Vec::new();
 
         let proposer_ids: Vec<u64> = self.proposers.keys().copied().collect();
-        
 
         for proposer_id in proposer_ids {
             let should_retry = {
                 let proposer = self.proposers.get_mut(&proposer_id).unwrap();
 
                 match proposer.phase {
-                    MultiPaxosPhase::WaitingForPromises
-                    | MultiPaxosPhase::WaitingForAccepted => {
+                    MultiPaxosPhase::WaitingForPromises | MultiPaxosPhase::WaitingForAccepted => {
                         proposer.phase_elapsed += 1;
                         proposer.phase_elapsed >= self.phase_timeout
                     }
@@ -357,7 +421,6 @@ impl Protocol for MultiPaxosProtocol {
             };
 
             if should_retry {
-                
                 println!(
                     "[MULTI-PAXOS-TIMEOUT] proposer={} ballot={} phase={:?}",
                     proposer_id,
@@ -373,5 +436,4 @@ impl Protocol for MultiPaxosProtocol {
 
         actions
     }
-
 }
