@@ -1,6 +1,8 @@
 use crate::basic_paxos::BasicPaxosProtocol;
+use crate::basic_paxos::PaxosPhase;
 use crate::message::{Message, MessageType, VoteValue};
 use crate::metrics::Metrics;
+use crate::multi_paxos::MultiPaxosProtocol;
 use crate::network::Network;
 use crate::node::RaftRole;
 use crate::node::{Node, NodeAction};
@@ -8,16 +10,14 @@ use crate::protocol::{Protocol, SimpleConsensusProtocol, TimeoutProtocol, TwoPha
 use crate::raft::RaftProtocol;
 use crate::scheduler::SchedulerOutcome;
 use crate::trace::{Config, TraceEvent, trace};
-use crate::basic_paxos::PaxosPhase;
-use crate::multi_paxos::MultiPaxosProtocol;
 
 pub struct Simulation {
     pub network: Network,
     nodes: Vec<Node>,
     pub metrics: Metrics,
     pub config: Config,
-   // pub timeout_injected: bool,
-   // pub timeout_threshold: u64,
+    // pub timeout_injected: bool,
+    // pub timeout_threshold: u64,
     protocol_name: String,
 
     // pub protocol: SimpleConsensusProtocol,
@@ -84,7 +84,7 @@ impl Simulation {
                     .with_quorum_size(quorum_size),
             ),
 
-           "paxos-partial-timeout" => Box::new(
+            "paxos-partial-timeout" => Box::new(
                 BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
                     .with_quorum_size(quorum_size)
                     .with_phase(PaxosPhase::WaitingForPromises)
@@ -135,10 +135,7 @@ impl Simulation {
                     .with_quorum_size(quorum_size),
             ),
 
-            "multi-paxos" => Box::new(MultiPaxosProtocol::new(
-                quorum_size,
-                timeout_threshold,
-            )),
+            "multi-paxos" => Box::new(MultiPaxosProtocol::new(quorum_size, timeout_threshold)),
 
             "raft-election" => Box::new(RaftProtocol::new(quorum_size)),
 
@@ -153,7 +150,13 @@ impl Simulation {
         };
 
         Self {
-            network: Network::new(scheduler_name, seed, max_delay, delay_probability, quorum_size),
+            network: Network::new(
+                scheduler_name,
+                seed,
+                max_delay,
+                delay_probability,
+                quorum_size,
+            ),
             nodes, //vec![Node::new(1), Node::new(2), Node::new(3), Node::new(4)],
             metrics: Metrics::new(),
             config: Config {
@@ -163,11 +166,11 @@ impl Simulation {
                 print_decisions: true,
             },
             protocol,
-           // timeout_injected: false,
-           // timeout_threshold: timeout_threshold,
+            // timeout_injected: false,
+            // timeout_threshold: timeout_threshold,
             protocol_name: protocol_name.to_string(),
             node_count,
-           // last_timeout_step: 0,
+            // last_timeout_step: 0,
         }
     }
 
@@ -302,8 +305,6 @@ impl Simulation {
                 }
             }
         } else if self.protocol_name == "paxos-partial-timeout" {
-            
-
             self.broadcast(Message {
                 from: 1,
                 to: 0,
@@ -537,7 +538,6 @@ impl Simulation {
                 value: VoteValue::Yes,
                 delay_count: 0,
             });
-
         } else if self.protocol_name == "raft-leader-crash" {
             // First election: node 1 becomes leader in term 1.
             self.broadcast(Message {
@@ -665,8 +665,6 @@ impl Simulation {
 
         while self.metrics.scheduler_steps < max_steps {
             match self.network.deliver_next() {
-               
-
                 SchedulerOutcome::Deliver(msg) => {
                     println!(
                         "[step={}] DELIVER from={} to={} type={:?} queue_len={}",
@@ -679,8 +677,6 @@ impl Simulation {
 
                     self.metrics.scheduler_steps += 1;
                     self.metrics.messages_delivered += 1;
-
-                    
 
                     trace(
                         &self.config,
@@ -728,7 +724,8 @@ impl Simulation {
 
                                 self.metrics.timeouts_triggered += 1;
                                 self.metrics.paxos_retries += 1;
-                                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+                                self.metrics.max_ballot_seen =
+                                    self.metrics.max_ballot_seen.max(ballot);
 
                                 self.broadcast(Message {
                                     from,
@@ -738,6 +735,22 @@ impl Simulation {
                                     payload: String::from("prepare"),
                                     value: VoteValue::Yes,
                                     delay_count: 0,
+                                });
+                            }
+
+                            NodeAction::SendMPPromise {
+                                to,
+                                ballot,
+                                accepted,
+                            } => {
+                                self.send_to(Message {
+                                    from: msg.to,
+                                    to,
+                                    round: msg.round + 1,
+                                    msg_type: MessageType::MPPromise { ballot, accepted },
+                                    payload: String::from("mp-promise"),
+                                    value: msg.value.clone(),
+                                    delay_count: msg.delay_count,
                                 });
                             }
                             _ => {}
@@ -751,8 +764,6 @@ impl Simulation {
                         break;
                     }
                 }
-
-              
 
                 SchedulerOutcome::Delay => {
                     self.metrics.scheduler_steps += 1;
@@ -844,7 +855,7 @@ impl Simulation {
         self.network.send(msg);
     }
 
-   /* fn inject_timeouts(&mut self) {
+    /* fn inject_timeouts(&mut self) {
         let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
 
         for node_id in node_ids {
@@ -1000,6 +1011,22 @@ impl Simulation {
                 });
             }
 
+            NodeAction::SendMPPromise {
+                to,
+                ballot,
+                accepted,
+            } => {
+                self.send_to(Message {
+                    from: msg.to,
+                    to,
+                    round: msg.round + 1,
+                    msg_type: MessageType::MPPromise { ballot, accepted },
+                    payload: String::from("mp-promise"),
+                    value: msg.value.clone(),
+                    delay_count: msg.delay_count,
+                });
+            }
+
             NodeAction::RecordChosen { value } => {
                 self.metrics.chosen_values.insert(value);
 
@@ -1142,13 +1169,8 @@ impl Simulation {
             }
 
             NodeAction::BroadcastPrepareFrom { from, ballot } => {
-
-                println!(
-                    "[RETRY-BROADCAST] proposer={} ballot={}",
-                    from,
-                    ballot
-                );
-                                self.metrics.paxos_retries += 1;
+                println!("[RETRY-BROADCAST] proposer={} ballot={}", from, ballot);
+                self.metrics.paxos_retries += 1;
                 self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
 
                 self.broadcast(Message {

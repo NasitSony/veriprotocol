@@ -1,6 +1,7 @@
 mod basic_paxos;
 mod message;
 mod metrics;
+mod multi_paxos;
 mod network;
 mod node;
 mod protocol;
@@ -9,7 +10,6 @@ mod scheduler;
 mod simulation;
 mod state;
 mod trace;
-mod multi_paxos;
 
 use simulation::Simulation;
 //use std::env;

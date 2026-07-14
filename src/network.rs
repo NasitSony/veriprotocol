@@ -1,16 +1,18 @@
 use crate::message::Message;
 use crate::scheduler::{
-    BoundedDelayLeaderScheduler, BoundedDelayScheduler, CommitDelayScheduler,
-    CriticalMessageDelayScheduler, DelayLeaderScheduler, DelayScheduler, FifoScheduler,
-    PaxosBallotOverlapScheduler, PaxosGapOneBacklogScheduler, PaxosGapOneScheduler,
-    PaxosOverlapScheduler, PaxosProgressScheduler, PaxosRetryAdversaryScheduler,
-    PaxosRetryScheduler, ProbabilisticDelayScheduler, ProposalDelayScheduler,
-    QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome,
-    TargetedBudgetDelayScheduler, TimeoutFirstScheduler, UniformBudgetDelayScheduler,
-    VoteDelayScheduler, InterleavedUniformBudgetDelayScheduler, InterleavedTargetedBudgetDelayScheduler,
-    InterleavedProgressTargetedBudgetDelayScheduler, ProbInterleavedUniformBudgetDelayScheduler, ProbInterleavedTargetedBudgetDelayScheduler,
-    DeadlineAwareQuorumDelayScheduler, BoundedQuorumUsefulDelayScheduler, ProgressAwareQuorumDelayScheduler, UniformActiveBudgetDelayScheduler,
-    UniformCappedBudgetDelayScheduler, PhaseBalancedBudgetDelayScheduler,
+    BoundedDelayLeaderScheduler, BoundedDelayScheduler, BoundedQuorumUsefulDelayScheduler,
+    CommitDelayScheduler, CriticalMessageDelayScheduler, DeadlineAwareQuorumDelayScheduler,
+    DelayLeaderScheduler, DelayScheduler, FifoScheduler,
+    InterleavedProgressTargetedBudgetDelayScheduler, InterleavedTargetedBudgetDelayScheduler,
+    InterleavedUniformBudgetDelayScheduler, PaxosBallotOverlapScheduler,
+    PaxosGapOneBacklogScheduler, PaxosGapOneScheduler, PaxosOverlapScheduler,
+    PaxosProgressScheduler, PaxosRetryAdversaryScheduler, PaxosRetryScheduler,
+    PhaseBalancedBudgetDelayScheduler, ProbInterleavedTargetedBudgetDelayScheduler,
+    ProbInterleavedUniformBudgetDelayScheduler, ProbabilisticDelayScheduler,
+    ProgressAwareQuorumDelayScheduler, ProposalDelayScheduler, QuorumBlockingScheduler,
+    RandomScheduler, Scheduler, SchedulerOutcome, TargetedBudgetDelayScheduler,
+    TimeoutFirstScheduler, UniformActiveBudgetDelayScheduler, UniformBudgetDelayScheduler,
+    UniformCappedBudgetDelayScheduler, VoteDelayScheduler,
 };
 
 use std::collections::HashMap;
@@ -22,7 +24,13 @@ pub struct Network {
 }
 
 impl Network {
-    pub fn new(scheduler_name: &str, seed: u64, max_delay: usize, delay_probability: f64, quorum_size: usize) -> Self {
+    pub fn new(
+        scheduler_name: &str,
+        seed: u64,
+        max_delay: usize,
+        delay_probability: f64,
+        quorum_size: usize,
+    ) -> Self {
         let scheduler: Box<dyn Scheduler> = match scheduler_name {
             "fifo" => Box::new(FifoScheduler::new()),
             "random" => Box::new(RandomScheduler::new(seed)),
@@ -102,7 +110,6 @@ impl Network {
 
             "targeted-budget-delay" => Box::new(TargetedBudgetDelayScheduler::new(max_delay)),
 
-
             "interleaved-uniform-budget-delay" => {
                 Box::new(InterleavedUniformBudgetDelayScheduler::new(max_delay, 2))
             }
@@ -111,63 +118,55 @@ impl Network {
                 Box::new(InterleavedTargetedBudgetDelayScheduler::new(max_delay, 2))
             }
 
-            "interleaved-progress-targeted-budget-delay" => {
-                Box::new(InterleavedProgressTargetedBudgetDelayScheduler::new(max_delay, 2))
-            }
+            "interleaved-progress-targeted-budget-delay" => Box::new(
+                InterleavedProgressTargetedBudgetDelayScheduler::new(max_delay, 2),
+            ),
 
-            "prob-interleaved-uniform-budget-delay" => {
-                Box::new(ProbInterleavedUniformBudgetDelayScheduler::new(max_delay, delay_probability, seed))
-            }
+            "prob-interleaved-uniform-budget-delay" => Box::new(
+                ProbInterleavedUniformBudgetDelayScheduler::new(max_delay, delay_probability, seed),
+            ),
 
             "prob-interleaved-targeted-budget-delay" => {
-                Box::new(ProbInterleavedTargetedBudgetDelayScheduler::new(max_delay, delay_probability, seed))
+                Box::new(ProbInterleavedTargetedBudgetDelayScheduler::new(
+                    max_delay,
+                    delay_probability,
+                    seed,
+                ))
             }
 
-            "deadline-aware-quorum-delay" => {
-                Box::new(DeadlineAwareQuorumDelayScheduler::new(max_delay, quorum_size, seed))
-            }
+            "deadline-aware-quorum-delay" => Box::new(DeadlineAwareQuorumDelayScheduler::new(
+                max_delay,
+                quorum_size,
+                seed,
+            )),
 
             "bounded-quorum-useful-delay" => {
                 Box::new(BoundedQuorumUsefulDelayScheduler::new(
                     max_delay,
                     quorum_size,
-                    5,      // max_consecutive_delay
+                    5, // max_consecutive_delay
                     1,
                     seed,
                 ))
             }
 
-            "progress-aware-quorum-delay" => {
-                Box::new(ProgressAwareQuorumDelayScheduler::new(
-                    max_delay,
-                    quorum_size,
-                    2,
-                    seed,
-                ))
-            }
+            "progress-aware-quorum-delay" => Box::new(ProgressAwareQuorumDelayScheduler::new(
+                max_delay,
+                quorum_size,
+                2,
+                seed,
+            )),
 
             "uniform-active-budget-delay" => {
-                Box::new(UniformActiveBudgetDelayScheduler::new(
-                    max_delay,
-                    2,
-                    seed,
-                ))
+                Box::new(UniformActiveBudgetDelayScheduler::new(max_delay, 2, seed))
             }
 
             "phase-balanced-budget-delay" => {
-                Box::new(PhaseBalancedBudgetDelayScheduler::new(
-                    max_delay,
-                    2,
-                    seed,
-                ))
+                Box::new(PhaseBalancedBudgetDelayScheduler::new(max_delay, 2, seed))
             }
 
             "uniform-capped-budget-delay" => {
-                Box::new(UniformCappedBudgetDelayScheduler::new(
-                    max_delay,
-                    2,
-                    seed,
-                ))
+                Box::new(UniformCappedBudgetDelayScheduler::new(max_delay, 2, seed))
             }
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);

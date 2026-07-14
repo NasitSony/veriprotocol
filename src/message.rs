@@ -67,6 +67,34 @@ pub enum MessageType {
         success: bool,
         new_node_count: usize,
     },
+
+    MPPrepare {
+        ballot: u64,
+    },
+
+    MPPromise {
+        ballot: u64,
+        accepted: Vec<AcceptedSlot>,
+    },
+
+    MPAcceptRequest {
+        ballot: u64,
+        slot: u64,
+        value: String,
+    },
+
+    MPAccepted {
+        ballot: u64,
+        slot: u64,
+        value: String,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AcceptedSlot {
+    pub slot: u64,
+    pub ballot: u64,
+    pub value: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

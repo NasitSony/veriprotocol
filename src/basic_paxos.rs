@@ -90,7 +90,6 @@ impl BasicPaxosProtocol {
 }
 
 impl BasicPaxosProtocol {
-    
     pub fn enter_phase(&mut self, phase: PaxosPhase) {
         self.phase = phase;
         self.phase_elapsed = 0;
@@ -194,7 +193,7 @@ impl BasicPaxosProtocol {
         self
     }
 
-   fn retry_with_higher_ballot_at_least(&mut self, min_ballot: u64) -> Option<NodeAction> {
+    fn retry_with_higher_ballot_at_least(&mut self, min_ballot: u64) -> Option<NodeAction> {
         if self.phase == PaxosPhase::Decided {
             return None;
         }
@@ -222,8 +221,6 @@ impl BasicPaxosProtocol {
     fn retry_with_higher_ballot(&mut self) -> Option<NodeAction> {
         self.retry_with_higher_ballot_at_least(self.current_ballot)
     }
-
-    
 
     fn value_for_ballot(&self, ballot: u64) -> String {
         self.proposed_values_by_ballot

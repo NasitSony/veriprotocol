@@ -1,10 +1,9 @@
 use crate::message::{Message, MessageType, VoteValue};
+use rand::Rng;
 use rand::RngExt;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
 use std::collections::{HashMap, HashSet};
-use rand::Rng;
-
 
 pub enum SchedulerOutcome {
     Deliver(Message),
@@ -1367,7 +1366,7 @@ impl UniformBudgetDelayScheduler {
         }
     }
 
-   /* pub fn total_budget(&self) -> usize {
+    /* pub fn total_budget(&self) -> usize {
         self.total_budget
     }
 
@@ -1528,7 +1527,7 @@ impl Scheduler for TargetedBudgetDelayScheduler {
     }
 }
 pub struct InterleavedUniformBudgetDelayScheduler {
-   // total_budget: usize,
+    // total_budget: usize,
     remaining_budget: usize,
     spent_budget: usize,
     delay_every: usize,
@@ -1538,7 +1537,7 @@ pub struct InterleavedUniformBudgetDelayScheduler {
 impl InterleavedUniformBudgetDelayScheduler {
     pub fn new(total_budget: usize, delay_every: usize) -> Self {
         Self {
-          //  total_budget,
+            //  total_budget,
             remaining_budget: total_budget,
             spent_budget: 0,
             delay_every,
@@ -1589,10 +1588,8 @@ impl Scheduler for InterleavedUniformBudgetDelayScheduler {
     }
 }
 
-
-
 pub struct InterleavedTargetedBudgetDelayScheduler {
-  //  total_budget: usize,
+    //  total_budget: usize,
     remaining_budget: usize,
     spent_budget: usize,
     delay_every: usize,
@@ -1602,7 +1599,7 @@ pub struct InterleavedTargetedBudgetDelayScheduler {
 impl InterleavedTargetedBudgetDelayScheduler {
     pub fn new(total_budget: usize, delay_every: usize) -> Self {
         Self {
-          //  total_budget,
+            //  total_budget,
             remaining_budget: total_budget,
             spent_budget: 0,
             delay_every,
@@ -1623,9 +1620,7 @@ impl InterleavedTargetedBudgetDelayScheduler {
     fn is_critical(msg: &Message) -> bool {
         matches!(
             msg.msg_type,
-            MessageType::Promise { .. }
-                | MessageType::Accepted { .. }
-                | MessageType::Nack { .. }
+            MessageType::Promise { .. } | MessageType::Accepted { .. } | MessageType::Nack { .. }
         )
     }
 }
@@ -1662,7 +1657,7 @@ impl Scheduler for InterleavedTargetedBudgetDelayScheduler {
 }
 
 pub struct InterleavedProgressTargetedBudgetDelayScheduler {
-   // total_budget: usize,
+    // total_budget: usize,
     remaining_budget: usize,
     spent_budget: usize,
     delay_every: usize,
@@ -1672,7 +1667,7 @@ pub struct InterleavedProgressTargetedBudgetDelayScheduler {
 impl InterleavedProgressTargetedBudgetDelayScheduler {
     pub fn new(total_budget: usize, delay_every: usize) -> Self {
         Self {
-           // total_budget,
+            // total_budget,
             remaining_budget: total_budget,
             spent_budget: 0,
             delay_every,
@@ -1762,11 +1757,10 @@ impl Scheduler for ProbInterleavedUniformBudgetDelayScheduler {
             return SchedulerOutcome::Empty;
         }
 
-       //et mut rng = rand::rng();
+        //et mut rng = rand::rng();
 
         let should_delay =
-            self.remaining_budget > 0 &&
-            self.rng.random_bool(self.delay_probability);
+            self.remaining_budget > 0 && self.rng.random_bool(self.delay_probability);
 
         if should_delay {
             self.spend_one();
@@ -1799,12 +1793,6 @@ pub struct ProbInterleavedTargetedBudgetDelayScheduler {
     rng: rand::rngs::StdRng,
 }
 
-
-
-
-
-
-
 impl ProbInterleavedTargetedBudgetDelayScheduler {
     pub fn new(total_budget: usize, delay_probability: f64, seed: u64) -> Self {
         Self {
@@ -1823,15 +1811,11 @@ impl ProbInterleavedTargetedBudgetDelayScheduler {
     fn is_critical(msg: &Message) -> bool {
         matches!(
             msg.msg_type,
-            MessageType::Promise { .. }
-                | MessageType::Accepted { .. }
+            MessageType::Promise { .. } | MessageType::Accepted { .. }
         )
     }
 
-   fn random_critical_index(
-        queue: &[Message],
-        rng: &mut impl rand::Rng,
-    ) -> Option<usize> {
+    fn random_critical_index(queue: &[Message], rng: &mut impl rand::Rng) -> Option<usize> {
         let critical_indices: Vec<usize> = queue
             .iter()
             .enumerate()
@@ -1858,10 +1842,9 @@ impl Scheduler for ProbInterleavedTargetedBudgetDelayScheduler {
         if queue.is_empty() {
             return SchedulerOutcome::Empty;
         }
-        
+
         let should_delay =
-            self.remaining_budget > 0 &&
-            self.rng.random_bool(self.delay_probability);
+            self.remaining_budget > 0 && self.rng.random_bool(self.delay_probability);
 
         if should_delay {
             self.spend_one();
@@ -1896,7 +1879,7 @@ pub struct DeadlineAwareQuorumDelayScheduler {
     remaining_budget: usize,
     spent_budget: usize,
     quorum_size: usize,
-  //  rng: StdRng,
+    //  rng: StdRng,
 }
 
 impl DeadlineAwareQuorumDelayScheduler {
@@ -1905,7 +1888,7 @@ impl DeadlineAwareQuorumDelayScheduler {
             remaining_budget: total_budget,
             spent_budget: 0,
             quorum_size,
-           // rng: StdRng::seed_from_u64(seed),
+            // rng: StdRng::seed_from_u64(seed),
         }
     }
 
@@ -1922,11 +1905,7 @@ impl DeadlineAwareQuorumDelayScheduler {
         matches!(msg.msg_type, MessageType::Accepted { .. })
     }
 
-    fn count_deliverable_before_idx<F>(
-        queue: &[Message],
-        idx: usize,
-        predicate: F,
-    ) -> usize
+    fn count_deliverable_before_idx<F>(queue: &[Message], idx: usize, predicate: F) -> usize
     where
         F: Fn(&Message) -> bool,
     {
@@ -1937,8 +1916,7 @@ impl DeadlineAwareQuorumDelayScheduler {
         for (idx, msg) in queue.iter().enumerate() {
             match msg.msg_type {
                 MessageType::Promise { .. } => {
-                    let before =
-                        Self::count_deliverable_before_idx(queue, idx, Self::is_promise);
+                    let before = Self::count_deliverable_before_idx(queue, idx, Self::is_promise);
 
                     if before + 1 >= self.quorum_size {
                         return Some(idx);
@@ -1946,8 +1924,7 @@ impl DeadlineAwareQuorumDelayScheduler {
                 }
 
                 MessageType::Accepted { .. } => {
-                    let before =
-                        Self::count_deliverable_before_idx(queue, idx, Self::is_accepted);
+                    let before = Self::count_deliverable_before_idx(queue, idx, Self::is_accepted);
 
                     if before + 1 >= self.quorum_size {
                         return Some(idx);
@@ -2044,8 +2021,7 @@ impl BoundedQuorumUsefulDelayScheduler {
 
     fn can_delay(&self, msg: &Message) -> bool {
         let key = Self::message_key(msg);
-        self.consecutive_delay.get(&key).copied().unwrap_or(0)
-            < self.max_consecutive_delay
+        self.consecutive_delay.get(&key).copied().unwrap_or(0) < self.max_consecutive_delay
     }
 
     fn record_delay(&mut self, msg: &Message) {
@@ -2055,9 +2031,7 @@ impl BoundedQuorumUsefulDelayScheduler {
 
         println!(
             "[CAP-TRACE] key={} count={} max={}",
-            key,
-            count,
-            self.max_consecutive_delay
+            key, count, self.max_consecutive_delay
         );
     }
 
@@ -2081,8 +2055,6 @@ impl BoundedQuorumUsefulDelayScheduler {
         queue.iter().filter_map(Self::ballot).max()
     }
 
-    
-
     fn count_before<F>(queue: &[Message], idx: usize, pred: F) -> usize
     where
         F: Fn(&Message) -> bool,
@@ -2099,10 +2071,9 @@ impl BoundedQuorumUsefulDelayScheduler {
         for (idx, msg) in queue.iter().enumerate() {
             match msg.msg_type {
                 MessageType::Promise { ballot, .. } if ballot == latest => {
-                    let before =
-                       Self::count_before(queue, idx, |m|
-                            Self::is_promise_for(m, latest, proposer_id)
-                        );
+                    let before = Self::count_before(queue, idx, |m| {
+                        Self::is_promise_for(m, latest, proposer_id)
+                    });
 
                     if before < self.quorum_size && self.can_delay(msg) {
                         candidates.push(idx);
@@ -2110,10 +2081,9 @@ impl BoundedQuorumUsefulDelayScheduler {
                 }
 
                 MessageType::Accepted { ballot, .. } if ballot == latest => {
-                    let before =
-                       Self::count_before(queue, idx, |m|
-                            Self::is_accepted_for(m, latest, proposer_id)
-                        );
+                    let before = Self::count_before(queue, idx, |m| {
+                        Self::is_accepted_for(m, latest, proposer_id)
+                    });
 
                     if before < self.quorum_size && self.can_delay(msg) {
                         candidates.push(idx);
@@ -2167,9 +2137,7 @@ impl Scheduler for BoundedQuorumUsefulDelayScheduler {
         if matches!(msg.msg_type, MessageType::Promise { .. }) {
             println!(
                 "[BOUNDED-QUORUM-USEFUL-DELIVER] from={} to={} type={:?}",
-                msg.from,
-                msg.to,
-                msg.msg_type
+                msg.from, msg.to, msg.msg_type
             );
         }
 
@@ -2229,9 +2197,7 @@ impl ProgressAwareQuorumDelayScheduler {
 
         println!(
             "[PROGRESS-CAP] key={} count={} max={}",
-            key,
-            count,
-            self.max_consecutive_delay
+            key, count, self.max_consecutive_delay
         );
     }
 
@@ -2354,19 +2320,19 @@ impl Scheduler for ProgressAwareQuorumDelayScheduler {
         let msg = queue.remove(0);
         self.record_delivery(&msg);
 
-        if matches!(msg.msg_type, MessageType::Promise { .. } | MessageType::Accepted { .. }) {
+        if matches!(
+            msg.msg_type,
+            MessageType::Promise { .. } | MessageType::Accepted { .. }
+        ) {
             println!(
                 "[PROGRESS-QUORUM-DELIVER] from={} to={} type={:?}",
-                msg.from,
-                msg.to,
-                msg.msg_type
+                msg.from, msg.to, msg.msg_type
             );
         }
 
         SchedulerOutcome::Deliver(msg)
     }
 }
-
 
 pub struct UniformActiveBudgetDelayScheduler {
     remaining_budget: usize,
@@ -2377,11 +2343,7 @@ pub struct UniformActiveBudgetDelayScheduler {
 }
 
 impl UniformActiveBudgetDelayScheduler {
-    pub fn new(
-        total_budget: usize,
-        max_consecutive_delay: u64,
-        seed: u64,
-    ) -> Self {
+    pub fn new(total_budget: usize, max_consecutive_delay: u64, seed: u64) -> Self {
         Self {
             remaining_budget: total_budget,
             spent_budget: 0,
@@ -2413,9 +2375,7 @@ impl UniformActiveBudgetDelayScheduler {
 
         println!(
             "[UNIFORM-ACTIVE-CAP] key={} count={} max={}",
-            key,
-            count,
-            self.max_consecutive_delay
+            key, count, self.max_consecutive_delay
         );
     }
 
@@ -2538,9 +2498,7 @@ impl UniformCappedBudgetDelayScheduler {
 
         println!(
             "[UNIFORM-CAPPED-CAP] key={} count={} max={}",
-            key,
-            count,
-            self.max_consecutive_delay
+            key, count, self.max_consecutive_delay
         );
     }
 
@@ -2553,13 +2511,11 @@ impl UniformCappedBudgetDelayScheduler {
         let candidates: Vec<usize> = queue
             .iter()
             .enumerate()
-            .filter_map(|(idx, msg)| {
-                if self.can_delay(msg) {
-                    Some(idx)
-                } else {
-                    None
-                }
-            })
+            .filter_map(
+                |(idx, msg)| {
+                    if self.can_delay(msg) { Some(idx) } else { None }
+                },
+            )
             .collect();
 
         if candidates.is_empty() {
@@ -2614,11 +2570,7 @@ pub struct PhaseBalancedBudgetDelayScheduler {
 }
 
 impl PhaseBalancedBudgetDelayScheduler {
-    pub fn new(
-        total_budget: usize,
-        max_consecutive_delay: u64,
-        seed: u64,
-    ) -> Self {
+    pub fn new(total_budget: usize, max_consecutive_delay: u64, seed: u64) -> Self {
         Self {
             remaining_budget: total_budget,
             spent_budget: 0,
@@ -2650,9 +2602,7 @@ impl PhaseBalancedBudgetDelayScheduler {
 
         println!(
             "[PHASE-BALANCED-CAP] key={} count={} max={}",
-            key,
-            count,
-            self.max_consecutive_delay
+            key, count, self.max_consecutive_delay
         );
     }
 
@@ -2695,9 +2645,7 @@ impl PhaseBalancedBudgetDelayScheduler {
             .iter()
             .enumerate()
             .filter_map(|(idx, msg)| {
-                if Self::ballot(msg) == Some(latest)
-                    && Self::is_phase1(msg)
-                    && self.can_delay(msg)
+                if Self::ballot(msg) == Some(latest) && Self::is_phase1(msg) && self.can_delay(msg)
                 {
                     Some(idx)
                 } else {
@@ -2712,9 +2660,7 @@ impl PhaseBalancedBudgetDelayScheduler {
             .iter()
             .enumerate()
             .filter_map(|(idx, msg)| {
-                if Self::ballot(msg) == Some(latest)
-                    && Self::is_phase2(msg)
-                    && self.can_delay(msg)
+                if Self::ballot(msg) == Some(latest) && Self::is_phase2(msg) && self.can_delay(msg)
                 {
                     Some(idx)
                 } else {
