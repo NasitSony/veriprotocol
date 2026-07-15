@@ -8,6 +8,7 @@ mod protocol;
 mod raft;
 mod scheduler;
 mod simulation;
+mod stable_multi_paxos;
 mod state;
 mod trace;
 

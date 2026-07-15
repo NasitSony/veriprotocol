@@ -669,6 +669,7 @@ impl Simulation {
             .filter(|node| node.decided.is_some())
             .count() as u64;
 
+        self.validate_protocol();
         self.metrics.print();
     }
 
@@ -1247,6 +1248,33 @@ impl Simulation {
                     .chosen_values
                     .insert(format!("slot{}={}", slot, value));
             }
+
+            NodeAction::BroadcastMPPrepare { from, ballot } => {
+                self.broadcast(Message {
+                    from,
+                    to: 0,
+                    round: msg.round + 1,
+                    msg_type: MessageType::MPPrepare { ballot },
+                    payload: "mp-prepare".to_string(),
+                    value: msg.value.clone(),
+                    delay_count: msg.delay_count,
+                });
+            }
+        }
+    }
+
+    fn validate_protocol(&self) {
+        assert!(
+            !self.metrics.safety_violation,
+            "Safety violation detected"
+        );
+
+        if self.protocol_name == "stable-multi-paxos" {
+            assert_eq!(
+                self.metrics.chosen_values.len(),
+                3,
+                "Expected three chosen Multi-Paxos slots"
+            );
         }
     }
 
@@ -1324,4 +1352,6 @@ impl Simulation {
             _ => {}
         }
     }
+
+
 }

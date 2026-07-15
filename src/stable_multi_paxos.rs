@@ -65,6 +65,23 @@ impl StableMultiPaxos {
             next_slot: 4,
         }
     }
+
+    pub fn become_leader(&mut self, leader_id: u64, ballot: u64) {
+        self.leader_id = leader_id;
+        self.ballot = ballot;
+        self.phase = LeaderPhase::Preparing;
+
+        self.promises.clear();
+        self.recovered.clear();
+        self.accepted.clear();
+    }
+
+    pub fn start_prepare(&self) -> NodeAction {
+        NodeAction::BroadcastMPPrepare {
+            from: self.leader_id,
+            ballot: self.ballot,
+        }
+    }
 }
 
 impl StableMultiPaxos {
@@ -656,5 +673,134 @@ mod tests {
         });
 
         assert_eq!(slot4, Some((1, "v4".to_string())));
+    }
+
+    #[test]
+    fn new_leader_recovers_previous_slot() {
+        let mut protocol = StableMultiPaxos::new(3);
+
+        // Simulate a conflicting fresh proposal already known to the protocol.
+        // The recovered value must override it.
+        protocol
+            .proposals
+            .insert(1, "conflicting-new-value".to_string());
+
+        // Node 2 becomes the new leader at a higher ballot.
+        protocol.become_leader(2, 2);
+
+        assert_eq!(protocol.leader_id, 2);
+        assert_eq!(protocol.ballot, 2);
+        assert_eq!(protocol.phase, LeaderPhase::Preparing);
+        assert!(protocol.promises.is_empty());
+        assert!(protocol.recovered.is_empty());
+        assert!(protocol.accepted.is_empty());
+
+        let mut leader_node = Node::new(2);
+
+        let promise_1 = Message {
+            from: 1,
+            to: 2,
+            round: 0,
+            msg_type: MessageType::MPPromise {
+                ballot: 2,
+                accepted: vec![AcceptedSlot {
+                    slot: 1,
+                    ballot: 1,
+                    value: "v1".to_string(),
+                }],
+            },
+            payload: String::new(),
+            value: VoteValue::Yes,
+            delay_count: 0,
+        };
+
+        let promise_2 = Message {
+            from: 2,
+            to: 2,
+            round: 0,
+            msg_type: MessageType::MPPromise {
+                ballot: 2,
+                accepted: vec![AcceptedSlot {
+                    slot: 1,
+                    ballot: 1,
+                    value: "v1".to_string(),
+                }],
+            },
+            payload: String::new(),
+            value: VoteValue::Yes,
+            delay_count: 0,
+        };
+
+        let promise_3 = Message {
+            from: 3,
+            to: 2,
+            round: 0,
+            msg_type: MessageType::MPPromise {
+                ballot: 2,
+                accepted: vec![],
+            },
+            payload: String::new(),
+            value: VoteValue::Yes,
+            delay_count: 0,
+        };
+
+        // Fewer than a quorum: no Phase 2 actions yet.
+        assert!(
+            protocol
+                .handle_message(&mut leader_node, &promise_1)
+                .is_empty()
+        );
+
+        assert!(
+            protocol
+                .handle_message(&mut leader_node, &promise_2)
+                .is_empty()
+        );
+
+        // The third unique Promise completes the quorum.
+        let actions = protocol.handle_message(&mut leader_node, &promise_3);
+
+        assert_eq!(protocol.phase, LeaderPhase::Active);
+        assert_eq!(protocol.leader_id, 2);
+        assert_eq!(protocol.ballot, 2);
+
+        // The recovered value must replace the conflicting fresh value.
+        assert_eq!(protocol.proposals.get(&1).map(String::as_str), Some("v1"));
+
+        assert_eq!(protocol.recovered[&1].ballot, 1);
+        assert_eq!(protocol.recovered[&1].value, "v1");
+
+        let recovered_slot_action = actions.iter().find(|action| {
+            matches!(
+                action,
+                NodeAction::BroadcastMPAcceptRequest {
+                    ballot: 2,
+                    slot: 1,
+                    value,
+                } if value == "v1"
+            )
+        });
+
+        assert!(
+            recovered_slot_action.is_some(),
+            "new leader must re-propose the recovered value for slot 1"
+        );
+
+        // Ensure the conflicting value is never sent for slot 1.
+        let conflicting_action = actions.iter().find(|action| {
+            matches!(
+                action,
+                NodeAction::BroadcastMPAcceptRequest {
+                    slot: 1,
+                    value,
+                    ..
+                } if value == "conflicting-new-value"
+            )
+        });
+
+        assert!(
+            conflicting_action.is_none(),
+            "new leader must not overwrite a previously accepted slot"
+        );
     }
 }

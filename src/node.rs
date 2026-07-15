@@ -146,6 +146,11 @@ pub enum NodeAction {
         slot: u64,
         value: String,
     },
+
+    BroadcastMPPrepare {
+        from: u64,
+        ballot: u64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

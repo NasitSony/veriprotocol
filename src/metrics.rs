@@ -52,6 +52,12 @@ pub struct Metrics {
 
     pub reached_step_cap: bool,
     pub max_steps: u64,
+
+    pub MPPrepare: u64,
+    pub MPPromise: u64,
+    pub MPAcceptRequest: u64,
+    pub MPAccepted: u64,
+    pub ChosenSlots: u64,
 }
 
 impl Metrics {
@@ -106,6 +112,12 @@ impl Metrics {
 
             reached_step_cap: false,
             max_steps: 0,
+
+            MPPrepare: 0,
+            MPPromise: 0,
+            MPAcceptRequest: 0,
+            MPAccepted: 0,
+            ChosenSlots: 0,
         }
     }
 }
@@ -170,5 +182,12 @@ impl Metrics {
             "Delayed Messages Released: {}",
             self.delayed_messages_released
         );
+        
+        println!("Multi-paxos Prepare Messages: {}", self.MPPrepare);
+        println!("Multi-paxos Promise Messages: {}", self.MPPromise);
+        println!("Multi-paxos Accept Requests: {}", self.MPAcceptRequest);
+        println!("Multi-paxos Accepted Messages: {}", self.MPAccepted);
+        println!("Multi-paxos ChosenSlots Messages: {}", self.ChosenSlots);
+
     }
 }
