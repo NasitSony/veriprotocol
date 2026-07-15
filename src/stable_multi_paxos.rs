@@ -32,6 +32,8 @@ pub struct StableMultiPaxos {
 
     // slot -> highest-ballot accepted value learned during Phase 1
     pub recovered: HashMap<u64, AcceptedSlot>,
+
+    pub next_slot: u64,
 }
 
 impl StableMultiPaxos {
@@ -59,6 +61,8 @@ impl StableMultiPaxos {
             chosen: HashMap::new(),
 
             recovered: HashMap::new(),
+
+            next_slot: 4,
         }
     }
 }
@@ -237,6 +241,45 @@ impl StableMultiPaxos {
                 }
             })
             .collect()
+    }
+
+    pub fn propose_value(&mut self, value: String) -> Vec<NodeAction> {
+        let slot = self.next_slot;
+        self.next_slot += 1;
+
+        self.proposals.insert(slot, value.clone());
+
+        match self.phase {
+            LeaderPhase::Preparing => {
+                // Phase 1 is not complete yet.
+                // Keep the proposal queued; handle_promise() will include it later.
+                vec![]
+            }
+
+            LeaderPhase::Active => {
+                // Stable leader can skip Phase 1 and immediately run Phase 2.
+                vec![NodeAction::BroadcastMPAcceptRequest {
+                    ballot: self.ballot,
+                    slot,
+                    value,
+                }]
+            }
+        }
+    }
+
+    pub fn propose_at_slot(&mut self, slot: u64, value: String) -> Vec<NodeAction> {
+        self.next_slot = self.next_slot.max(slot + 1);
+        self.proposals.insert(slot, value.clone());
+
+        if self.phase != LeaderPhase::Active {
+            return vec![];
+        }
+
+        vec![NodeAction::BroadcastMPAcceptRequest {
+            ballot: self.ballot,
+            slot,
+            value,
+        }]
     }
 }
 
@@ -527,5 +570,91 @@ mod tests {
 
         assert_eq!(protocol.promises.len(), 1);
         assert_eq!(protocol.phase, LeaderPhase::Preparing);
+    }
+
+    #[test]
+    fn proposal_before_phase1_is_queued() {
+        let mut protocol = StableMultiPaxos::new(3);
+
+        let actions = protocol.propose_value("v4".to_string());
+
+        assert!(actions.is_empty());
+        assert_eq!(protocol.proposals.get(&4).map(String::as_str), Some("v4"));
+        assert_eq!(protocol.next_slot, 5);
+    }
+
+    #[test]
+    fn active_leader_skips_phase1_for_new_proposal() {
+        let mut protocol = StableMultiPaxos::new(3);
+        protocol.phase = LeaderPhase::Active;
+
+        let actions = protocol.propose_value("v4".to_string());
+
+        assert_eq!(actions.len(), 1);
+
+        match &actions[0] {
+            NodeAction::BroadcastMPAcceptRequest {
+                ballot,
+                slot,
+                value,
+            } => {
+                assert_eq!(*ballot, 1);
+                assert_eq!(*slot, 4);
+                assert_eq!(value, "v4");
+            }
+
+            other => panic!("unexpected action: {:?}", other),
+        }
+
+        assert_eq!(protocol.proposals.get(&4).map(String::as_str), Some("v4"));
+    }
+
+    #[test]
+    fn queued_proposal_is_sent_after_phase1_completes() {
+        let mut protocol = StableMultiPaxos::new(3);
+        let mut leader_node = Node::new(1);
+
+        assert!(protocol.propose_value("v4".to_string()).is_empty());
+
+        let promises = [2_u64, 3, 4].map(|from| Message {
+            from,
+            to: 1,
+            round: 0,
+            msg_type: MessageType::MPPromise {
+                ballot: 1,
+                accepted: vec![],
+            },
+            payload: String::new(),
+            value: VoteValue::Yes,
+            delay_count: 0,
+        });
+
+        assert!(
+            protocol
+                .handle_message(&mut leader_node, &promises[0])
+                .is_empty()
+        );
+
+        assert!(
+            protocol
+                .handle_message(&mut leader_node, &promises[1])
+                .is_empty()
+        );
+
+        let actions = protocol.handle_message(&mut leader_node, &promises[2]);
+
+        assert_eq!(protocol.phase, LeaderPhase::Active);
+
+        let slot4 = actions.iter().find_map(|action| match action {
+            NodeAction::BroadcastMPAcceptRequest {
+                ballot,
+                slot,
+                value,
+            } if *slot == 4 => Some((*ballot, value.clone())),
+
+            _ => None,
+        });
+
+        assert_eq!(slot4, Some((1, "v4".to_string())));
     }
 }
