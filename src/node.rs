@@ -128,6 +128,24 @@ pub enum NodeAction {
         ballot: u64,
         accepted: Vec<AcceptedSlot>,
     },
+
+    BroadcastMPAcceptRequest {
+        ballot: u64,
+        slot: u64,
+        value: String,
+    },
+
+    SendMPAccepted {
+        to: u64,
+        ballot: u64,
+        slot: u64,
+        value: String,
+    },
+
+    RecordMPChosen {
+        slot: u64,
+        value: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

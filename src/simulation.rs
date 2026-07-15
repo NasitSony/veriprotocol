@@ -9,6 +9,7 @@ use crate::node::{Node, NodeAction};
 use crate::protocol::{Protocol, SimpleConsensusProtocol, TimeoutProtocol, TwoPhaseProtocol};
 use crate::raft::RaftProtocol;
 use crate::scheduler::SchedulerOutcome;
+use crate::stable_multi_paxos::StableMultiPaxos;
 use crate::trace::{Config, TraceEvent, trace};
 
 pub struct Simulation {
@@ -136,6 +137,8 @@ impl Simulation {
             ),
 
             "multi-paxos" => Box::new(MultiPaxosProtocol::new(quorum_size, timeout_threshold)),
+
+            "stable-multi-paxos" => Box::new(StableMultiPaxos::new(quorum_size)),
 
             "raft-election" => Box::new(RaftProtocol::new(quorum_size)),
 
@@ -492,6 +495,16 @@ impl Simulation {
                     new_node_count: self.node_count + 2,
                 },
                 payload: String::from("membership-change"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+        } else if self.protocol_name == "stable-multi-paxos" {
+            self.broadcast(Message {
+                from: 1,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::MPPrepare { ballot: 1 },
+                payload: "mp-prepare".to_string(),
                 value: VoteValue::Yes,
                 delay_count: 0,
             });
@@ -1182,6 +1195,57 @@ impl Simulation {
                     value: VoteValue::Yes,
                     delay_count: msg.delay_count,
                 });
+            }
+
+            NodeAction::BroadcastMPAcceptRequest {
+                ballot,
+                slot,
+                value,
+            } => {
+                self.broadcast(Message {
+                    from: msg.to,
+                    to: 0,
+                    round: msg.round + 1,
+                    msg_type: MessageType::MPAcceptRequest {
+                        ballot,
+                        slot,
+                        value,
+                    },
+                    payload: "mp-accept-request".to_string(),
+                    value: msg.value.clone(),
+                    delay_count: msg.delay_count,
+                });
+            }
+
+            NodeAction::SendMPAccepted {
+                to,
+                ballot,
+                slot,
+                value,
+            } => {
+                self.send_to(Message {
+                    from: msg.to,
+                    to,
+                    round: msg.round + 1,
+                    msg_type: MessageType::MPAccepted {
+                        ballot,
+                        slot,
+                        value,
+                    },
+                    payload: "mp-accepted".to_string(),
+                    value: msg.value.clone(),
+                    delay_count: msg.delay_count,
+                });
+            }
+
+            NodeAction::RecordMPChosen { slot, value } => {
+                println!("[MULTI-PAXOS-CHOSEN] slot={} value={}", slot, value);
+
+                // Temporary behavior until metrics become slot-aware.
+                self.metrics.decisions += 1;
+                self.metrics
+                    .chosen_values
+                    .insert(format!("slot{}={}", slot, value));
             }
         }
     }
