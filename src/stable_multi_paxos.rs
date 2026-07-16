@@ -34,6 +34,9 @@ pub struct StableMultiPaxos {
     pub recovered: HashMap<u64, AcceptedSlot>,
 
     pub next_slot: u64,
+
+    pub heartbeat_interval: u64,
+    pub heartbeat_elapsed: u64,
 }
 
 impl StableMultiPaxos {
@@ -63,6 +66,9 @@ impl StableMultiPaxos {
             recovered: HashMap::new(),
 
             next_slot: 4,
+
+            heartbeat_interval: 5,
+            heartbeat_elapsed: 0,
         }
     }
 
@@ -298,6 +304,22 @@ impl StableMultiPaxos {
             value,
         }]
     }
+
+    fn handle_heartbeat(
+        &mut self,
+        node: &mut Node,
+        ballot: u64,
+        leader_id: u64,
+    ) -> Vec<NodeAction> {
+        if ballot < node.promised_ballot {
+            return vec![];
+        }
+
+        node.promised_ballot = ballot;
+        node.leader = leader_id;
+
+        vec![]
+    }
 }
 
 impl Protocol for StableMultiPaxos {
@@ -325,8 +347,31 @@ impl Protocol for StableMultiPaxos {
                 value,
             } => self.handle_accepted(node, msg, *ballot, *slot, value),
 
+            MessageType::MPHeartbeat { ballot, leader_id } => {
+                self.handle_heartbeat(node, *ballot, *leader_id)
+            }
+
             _ => vec![],
         }
+    }
+
+    fn on_tick(&mut self) -> Vec<NodeAction> {
+        if self.phase != LeaderPhase::Active {
+            return vec![];
+        }
+
+        self.heartbeat_elapsed += 1;
+
+        if self.heartbeat_elapsed < self.heartbeat_interval {
+            return vec![];
+        }
+
+        self.heartbeat_elapsed = 0;
+
+        vec![NodeAction::BroadcastMPHeartbeat {
+            leader_id: self.leader_id,
+            ballot: self.ballot,
+        }]
     }
 }
 

@@ -151,6 +151,11 @@ pub enum NodeAction {
         from: u64,
         ballot: u64,
     },
+
+    BroadcastMPHeartbeat {
+        leader_id: u64,
+        ballot: u64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -675,6 +675,7 @@ impl Simulation {
 
     fn deliver_all_messages(&mut self) {
         let max_steps: u64 = 5000;
+        let heartbeat_test_steps = 100;
         self.metrics.max_steps = max_steps;
 
         while self.metrics.scheduler_steps < max_steps {
@@ -815,6 +816,13 @@ impl Simulation {
                     let actions = self.protocol.on_tick();
 
                     if actions.is_empty() {
+                        if self.protocol_name == "stable-multi-paxos" {
+                            if self.metrics.scheduler_steps >= heartbeat_test_steps {
+                                break;
+                            }
+                            continue;
+                        }
+
                         break;
                     }
 
@@ -836,7 +844,8 @@ impl Simulation {
                                     delay_count: 0,
                                 });
                             }
-                            _ => {}
+
+                            action => self.apply_tick_action(action),
                         }
                     }
 
@@ -868,26 +877,6 @@ impl Simulation {
         self.metrics.messages_sent += 1;
         self.network.send(msg);
     }
-
-    /* fn inject_timeouts(&mut self) {
-        let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
-
-        for node_id in node_ids {
-            let timeout = Message {
-                from: 0,
-                to: node_id,
-                round: 0,
-                msg_type: MessageType::Timeout,
-                payload: String::from("timeout"),
-                value: VoteValue::Yes,
-                delay_count: 0,
-            };
-
-            self.metrics.messages_sent += 1;
-            //self.metrics.timeouts_triggered += 1;
-            self.network.send(timeout);
-        }
-    }*/
 
     fn apply_action(&mut self, msg: &Message, action: NodeAction) {
         match action {
@@ -1260,14 +1249,41 @@ impl Simulation {
                     delay_count: msg.delay_count,
                 });
             }
+
+            NodeAction::BroadcastMPHeartbeat { leader_id, ballot } => {
+                self.broadcast(Message {
+                    from: leader_id,
+                    to: 0,
+                    round: msg.round + 1,
+                    msg_type: MessageType::MPHeartbeat { ballot, leader_id },
+                    payload: "mp-heartbeat".to_string(),
+                    value: msg.value.clone(),
+                    delay_count: msg.delay_count,
+                });
+            }
+        }
+    }
+
+    fn apply_tick_action(&mut self, action: NodeAction) {
+        match action {
+            NodeAction::BroadcastMPHeartbeat { leader_id, ballot } => {
+                self.broadcast(Message {
+                    from: leader_id,
+                    to: 0,
+                    round: 0,
+                    msg_type: MessageType::MPHeartbeat { ballot, leader_id },
+                    payload: "mp-heartbeat".to_string(),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+
+            _ => {}
         }
     }
 
     fn validate_protocol(&self) {
-        assert!(
-            !self.metrics.safety_violation,
-            "Safety violation detected"
-        );
+        assert!(!self.metrics.safety_violation, "Safety violation detected");
 
         if self.protocol_name == "stable-multi-paxos" {
             assert_eq!(
@@ -1352,6 +1368,4 @@ impl Simulation {
             _ => {}
         }
     }
-
-
 }

@@ -88,6 +88,11 @@ pub enum MessageType {
         slot: u64,
         value: String,
     },
+
+    MPHeartbeat {
+        ballot: u64,
+        leader_id: u64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
