@@ -53,11 +53,12 @@ pub struct Metrics {
     pub reached_step_cap: bool,
     pub max_steps: u64,
 
-    pub MPPrepare: u64,
-    pub MPPromise: u64,
-    pub MPAcceptRequest: u64,
-    pub MPAccepted: u64,
-    pub ChosenSlots: u64,
+    pub multi_paxos_prepare_messages: u64,
+    pub multi_paxos_promise_messages: u64,
+    pub multi_paxos_accept_requests: u64,
+    pub multi_paxos_accepted_messages: u64,
+    pub multi_paxos_heartbeat_messages: u64,
+    pub multi_paxos_chosen_slots: u64,
 }
 
 impl Metrics {
@@ -113,11 +114,12 @@ impl Metrics {
             reached_step_cap: false,
             max_steps: 0,
 
-            MPPrepare: 0,
-            MPPromise: 0,
-            MPAcceptRequest: 0,
-            MPAccepted: 0,
-            ChosenSlots: 0,
+            multi_paxos_prepare_messages: 0,
+            multi_paxos_promise_messages: 0,
+            multi_paxos_accept_requests: 0,
+            multi_paxos_accepted_messages: 0,
+            multi_paxos_heartbeat_messages: 0,
+            multi_paxos_chosen_slots: 0,
         }
     }
 }
@@ -135,7 +137,8 @@ impl Metrics {
         );
         println!(
             "Undelivered Messages At Decision: {}",
-            self.messages_sent_until_decision - self.messages_delivered_until_decision
+            self.messages_sent_until_decision
+                .saturating_sub(self.messages_delivered_until_decision)
         );
         println!("Timeout triggered: {}", self.timeouts_triggered);
         println!("View changes: {}", self.view_changes);
@@ -182,12 +185,35 @@ impl Metrics {
             "Delayed Messages Released: {}",
             self.delayed_messages_released
         );
-        
-        println!("Multi-paxos Prepare Messages: {}", self.MPPrepare);
-        println!("Multi-paxos Promise Messages: {}", self.MPPromise);
-        println!("Multi-paxos Accept Requests: {}", self.MPAcceptRequest);
-        println!("Multi-paxos Accepted Messages: {}", self.MPAccepted);
-        println!("Multi-paxos ChosenSlots Messages: {}", self.ChosenSlots);
 
+        println!(
+            "Multi-paxos Prepare Messages: {}",
+            self.multi_paxos_prepare_messages
+        );
+
+        println!(
+            "Multi-paxos Promise Messages: {}",
+            self.multi_paxos_promise_messages
+        );
+
+        println!(
+            "Multi-paxos Accept Requests: {}",
+            self.multi_paxos_accept_requests
+        );
+
+        println!(
+            "Multi-paxos Accepted Messages: {}",
+            self.multi_paxos_accepted_messages
+        );
+
+        println!(
+            "Multi-paxos Heartbeat Messages: {}",
+            self.multi_paxos_heartbeat_messages
+        );
+
+        println!(
+            "Multi-paxos Chosen Slots: {}",
+            self.multi_paxos_chosen_slots
+        );
     }
 }

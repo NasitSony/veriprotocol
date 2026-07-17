@@ -670,6 +670,9 @@ impl Simulation {
             .count() as u64;
 
         self.validate_protocol();
+
+        self.metrics.multi_paxos_chosen_slots =
+          self.metrics.chosen_values.len() as u64;
         self.metrics.print();
     }
 
@@ -678,7 +681,26 @@ impl Simulation {
         let heartbeat_test_steps = 100;
         self.metrics.max_steps = max_steps;
 
-        while self.metrics.scheduler_steps < max_steps {
+        loop {
+            if self.protocol_name == "stable-multi-paxos"
+                && self.metrics.scheduler_steps >= heartbeat_test_steps
+            {
+                println!(
+                    "[SIM] Stable Multi-Paxos observation window complete at step {}",
+                    self.metrics.scheduler_steps
+                );
+                break;
+            }
+
+            if self.metrics.scheduler_steps >= max_steps {
+                println!(
+                    "[SIM] Reached step cap: {}. Treating as non-terminating within measurement bound.",
+                    max_steps
+                );
+
+                self.metrics.reached_step_cap = true;
+                break;
+            }
             match self.network.deliver_next() {
                 SchedulerOutcome::Deliver(msg) => {
                     println!(
@@ -691,7 +713,7 @@ impl Simulation {
                     );
 
                     self.metrics.scheduler_steps += 1;
-                    self.metrics.messages_delivered += 1;
+                    // self.metrics.messages_delivered += 1;
 
                     trace(
                         &self.config,
@@ -699,6 +721,7 @@ impl Simulation {
                         &format!("{} -> {}", msg.from, msg.to),
                     );
 
+                    self.metrics.messages_delivered += 1;
                     self.count_message_metrics(&msg);
 
                     for node in &mut self.nodes {
@@ -713,63 +736,10 @@ impl Simulation {
                         }
                     }
 
-                    let tick_actions = self.protocol.on_tick();
+                    let tick_actions = self.collect_tick_actions();
 
                     for action in tick_actions {
-                        match action {
-                            NodeAction::BroadcastPrepare { ballot } => {
-                                self.metrics.timeouts_triggered += 1;
-                                self.metrics.paxos_retries += 1;
-                                self.metrics.max_ballot_seen =
-                                    self.metrics.max_ballot_seen.max(ballot);
-
-                                self.broadcast(Message {
-                                    from: 1,
-                                    to: 0,
-                                    round: 0,
-                                    msg_type: MessageType::Prepare { ballot },
-                                    payload: String::from("prepare"),
-                                    value: VoteValue::Yes,
-                                    delay_count: 0,
-                                });
-                            }
-
-                            NodeAction::BroadcastPrepareFrom { from, ballot } => {
-                                println!("[RETRY-BROADCAST] proposer={} ballot={}", from, ballot);
-
-                                self.metrics.timeouts_triggered += 1;
-                                self.metrics.paxos_retries += 1;
-                                self.metrics.max_ballot_seen =
-                                    self.metrics.max_ballot_seen.max(ballot);
-
-                                self.broadcast(Message {
-                                    from,
-                                    to: 0,
-                                    round: 0,
-                                    msg_type: MessageType::Prepare { ballot },
-                                    payload: String::from("prepare"),
-                                    value: VoteValue::Yes,
-                                    delay_count: 0,
-                                });
-                            }
-
-                            NodeAction::SendMPPromise {
-                                to,
-                                ballot,
-                                accepted,
-                            } => {
-                                self.send_to(Message {
-                                    from: msg.to,
-                                    to,
-                                    round: msg.round + 1,
-                                    msg_type: MessageType::MPPromise { ballot, accepted },
-                                    payload: String::from("mp-promise"),
-                                    value: msg.value.clone(),
-                                    delay_count: msg.delay_count,
-                                });
-                            }
-                            _ => {}
-                        }
+                        self.apply_tick_action(action);
                     }
 
                     if self.nodes.iter().all(|node| node.decided.is_some()) {
@@ -783,28 +753,10 @@ impl Simulation {
                 SchedulerOutcome::Delay => {
                     self.metrics.scheduler_steps += 1;
 
-                    let actions = self.protocol.on_tick();
+                    let actions = self.collect_tick_actions();
 
                     for action in actions {
-                        match action {
-                            NodeAction::BroadcastPrepare { ballot } => {
-                                self.metrics.timeouts_triggered += 1;
-                                self.metrics.paxos_retries += 1;
-                                self.metrics.max_ballot_seen =
-                                    self.metrics.max_ballot_seen.max(ballot);
-
-                                self.broadcast(Message {
-                                    from: 1,
-                                    to: 0,
-                                    round: 0,
-                                    msg_type: MessageType::Prepare { ballot },
-                                    payload: String::from("prepare"),
-                                    value: VoteValue::Yes,
-                                    delay_count: 0,
-                                });
-                            }
-                            _ => {}
-                        }
+                        self.apply_tick_action(action);
                     }
 
                     continue;
@@ -813,13 +765,10 @@ impl Simulation {
                 SchedulerOutcome::Empty => {
                     self.metrics.scheduler_steps += 1;
 
-                    let actions = self.protocol.on_tick();
+                    let actions = self.collect_tick_actions();
 
                     if actions.is_empty() {
                         if self.protocol_name == "stable-multi-paxos" {
-                            if self.metrics.scheduler_steps >= heartbeat_test_steps {
-                                break;
-                            }
                             continue;
                         }
 
@@ -827,26 +776,7 @@ impl Simulation {
                     }
 
                     for action in actions {
-                        match action {
-                            NodeAction::BroadcastPrepare { ballot } => {
-                                self.metrics.timeouts_triggered += 1;
-                                self.metrics.paxos_retries += 1;
-                                self.metrics.max_ballot_seen =
-                                    self.metrics.max_ballot_seen.max(ballot);
-
-                                self.broadcast(Message {
-                                    from: 1,
-                                    to: 0,
-                                    round: 0,
-                                    msg_type: MessageType::Prepare { ballot },
-                                    payload: String::from("prepare"),
-                                    value: VoteValue::Yes,
-                                    delay_count: 0,
-                                });
-                            }
-
-                            action => self.apply_tick_action(action),
-                        }
+                        self.apply_tick_action(action);
                     }
 
                     continue;
@@ -1239,14 +1169,19 @@ impl Simulation {
             }
 
             NodeAction::BroadcastMPPrepare { from, ballot } => {
+                println!("[MP-LEADER-ELECTION] leader={} ballot={}", from, ballot);
+
+                self.metrics.view_changes += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
                 self.broadcast(Message {
                     from,
                     to: 0,
-                    round: msg.round + 1,
+                    round: 0,
                     msg_type: MessageType::MPPrepare { ballot },
                     payload: "mp-prepare".to_string(),
-                    value: msg.value.clone(),
-                    delay_count: msg.delay_count,
+                    value: VoteValue::Yes,
+                    delay_count: 0,
                 });
             }
 
@@ -1266,6 +1201,40 @@ impl Simulation {
 
     fn apply_tick_action(&mut self, action: NodeAction) {
         match action {
+            NodeAction::BroadcastPrepare { ballot } => {
+                self.metrics.timeouts_triggered += 1;
+                self.metrics.paxos_retries += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
+                self.broadcast(Message {
+                    from: 1,
+                    to: 0,
+                    round: 0,
+                    msg_type: MessageType::Prepare { ballot },
+                    payload: "prepare".to_string(),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+
+            NodeAction::BroadcastPrepareFrom { from, ballot } => {
+                println!("[RETRY-BROADCAST] proposer={} ballot={}", from, ballot);
+
+                self.metrics.timeouts_triggered += 1;
+                self.metrics.paxos_retries += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
+                self.broadcast(Message {
+                    from,
+                    to: 0,
+                    round: 0,
+                    msg_type: MessageType::Prepare { ballot },
+                    payload: "prepare".to_string(),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+
             NodeAction::BroadcastMPHeartbeat { leader_id, ballot } => {
                 self.broadcast(Message {
                     from: leader_id,
@@ -1273,6 +1242,23 @@ impl Simulation {
                     round: 0,
                     msg_type: MessageType::MPHeartbeat { ballot, leader_id },
                     payload: "mp-heartbeat".to_string(),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+
+            NodeAction::BroadcastMPPrepare { from, ballot } => {
+                println!("[MP-LEADER-ELECTION] leader={} ballot={}", from, ballot);
+
+                self.metrics.view_changes += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
+                self.broadcast(Message {
+                    from,
+                    to: 0,
+                    round: 0,
+                    msg_type: MessageType::MPPrepare { ballot },
+                    payload: "mp-prepare".to_string(),
                     value: VoteValue::Yes,
                     delay_count: 0,
                 });
@@ -1350,6 +1336,7 @@ impl Simulation {
 
             MessageType::AppendResponse { success, .. } => {
                 self.metrics.append_response_messages += 1;
+
                 if *success {
                     self.metrics.heartbeat_successes += 1;
                 } else {
@@ -1365,7 +1352,93 @@ impl Simulation {
                 self.metrics.raft_config_acks += 1;
             }
 
+            MessageType::MPPrepare { ballot } => {
+                self.metrics.multi_paxos_prepare_messages += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(*ballot);
+            }
+
+            MessageType::MPPromise { ballot, .. } => {
+                self.metrics.multi_paxos_promise_messages += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(*ballot);
+            }
+
+            MessageType::MPAcceptRequest { ballot, .. } => {
+                self.metrics.multi_paxos_accept_requests += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(*ballot);
+            }
+
+            MessageType::MPAccepted { ballot, .. } => {
+                self.metrics.multi_paxos_accepted_messages += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(*ballot);
+            }
+
+            MessageType::MPHeartbeat { ballot, .. } => {
+                self.metrics.multi_paxos_heartbeat_messages += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(*ballot);
+            }
+
             _ => {}
         }
+    }
+
+    fn tick_mp_follower_timers(&mut self) -> Vec<NodeAction> {
+        if self.protocol_name != "stable-multi-paxos" {
+            return vec![];
+        }
+
+        let node_count = self.nodes.len() as u64;
+        let mut timed_out_candidate: Option<(u64, u64)> = None;
+
+        for node in &mut self.nodes {
+            if node.id == node.leader {
+                node.mp_heartbeat_age = 0;
+                continue;
+            }
+
+            node.mp_heartbeat_age += 1;
+
+            if node.mp_heartbeat_age < node.mp_election_timeout {
+                continue;
+            }
+
+            let expected_candidate = if node.leader >= node_count {
+                1
+            } else {
+                node.leader + 1
+            };
+
+            if node.id != expected_candidate {
+                continue;
+            }
+
+            node.mp_heartbeat_age = 0;
+
+            timed_out_candidate = Some((node.id, node.promised_ballot));
+
+            break;
+        }
+
+        match timed_out_candidate {
+            Some((candidate_id, observed_ballot)) => {
+                println!(
+                    "[MP-FOLLOWER-TIMEOUT] candidate={} observed_ballot={}",
+                    candidate_id, observed_ballot
+                );
+
+                self.protocol
+                    .on_follower_timeout(candidate_id, observed_ballot)
+            }
+
+            None => vec![],
+        }
+    }
+
+    fn collect_tick_actions(&mut self) -> Vec<NodeAction> {
+        let mut actions = self.protocol.on_tick();
+
+        let follower_actions = self.tick_mp_follower_timers();
+        actions.extend(follower_actions);
+
+        actions
     }
 }

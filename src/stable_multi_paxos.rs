@@ -75,11 +75,19 @@ impl StableMultiPaxos {
     pub fn become_leader(&mut self, leader_id: u64, ballot: u64) {
         self.leader_id = leader_id;
         self.ballot = ballot;
+
         self.phase = LeaderPhase::Preparing;
 
         self.promises.clear();
         self.recovered.clear();
         self.accepted.clear();
+
+        self.heartbeat_elapsed = 0;
+
+        // Keep:
+        // - proposals
+        // - chosen
+        // - next_slot
     }
 
     pub fn start_prepare(&self) -> NodeAction {
@@ -317,6 +325,7 @@ impl StableMultiPaxos {
 
         node.promised_ballot = ballot;
         node.leader = leader_id;
+        node.mp_heartbeat_age = 0;
 
         vec![]
     }
@@ -329,7 +338,14 @@ impl Protocol for StableMultiPaxos {
 
     fn handle_message(&mut self, node: &mut Node, msg: &Message) -> Vec<NodeAction> {
         match &msg.msg_type {
-            MessageType::MPPrepare { ballot } => self.handle_prepare(node, msg, *ballot),
+            MessageType::MPPrepare { ballot } => {
+                if *ballot >= node.promised_ballot {
+                    node.leader = msg.from;
+                    node.mp_heartbeat_age = 0;
+                }
+
+                self.handle_prepare(node, msg, *ballot)
+            }
 
             MessageType::MPPromise { ballot, accepted } => {
                 self.handle_promise(node, msg, *ballot, accepted)
@@ -339,7 +355,14 @@ impl Protocol for StableMultiPaxos {
                 ballot,
                 slot,
                 value,
-            } => self.handle_accept_request(node, msg, *ballot, *slot, value),
+            } => {
+                if *ballot >= node.promised_ballot {
+                    node.leader = msg.from;
+                    node.mp_heartbeat_age = 0;
+                }
+
+                self.handle_accept_request(node, msg, *ballot, *slot, value)
+            }
 
             MessageType::MPAccepted {
                 ballot,
@@ -371,6 +394,17 @@ impl Protocol for StableMultiPaxos {
         vec![NodeAction::BroadcastMPHeartbeat {
             leader_id: self.leader_id,
             ballot: self.ballot,
+        }]
+    }
+
+    fn on_follower_timeout(&mut self, candidate_id: u64, observed_ballot: u64) -> Vec<NodeAction> {
+        let next_ballot = self.ballot.max(observed_ballot) + 1;
+
+        self.become_leader(candidate_id, next_ballot);
+
+        vec![NodeAction::BroadcastMPPrepare {
+            from: candidate_id,
+            ballot: next_ballot,
         }]
     }
 }
