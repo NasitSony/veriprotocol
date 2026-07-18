@@ -671,8 +671,7 @@ impl Simulation {
 
         self.validate_protocol();
 
-        self.metrics.multi_paxos_chosen_slots =
-          self.metrics.chosen_values.len() as u64;
+        self.metrics.multi_paxos_chosen_slots = self.metrics.chosen_values.len() as u64;
         self.metrics.print();
     }
 
@@ -1236,6 +1235,18 @@ impl Simulation {
             }
 
             NodeAction::BroadcastMPHeartbeat { leader_id, ballot } => {
+                const FAILED_LEADER: u64 = 1;
+                const FAILURE_STEP: u64 = 40;
+
+                if leader_id == FAILED_LEADER && self.metrics.scheduler_steps >= FAILURE_STEP {
+                    println!(
+                        "[MP-LEADER-FAILURE] suppressing leader={} heartbeat at step={}",
+                        leader_id, self.metrics.scheduler_steps
+                    );
+
+                    return;
+                }
+
                 self.broadcast(Message {
                     from: leader_id,
                     to: 0,
