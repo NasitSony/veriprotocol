@@ -688,6 +688,9 @@ impl Simulation {
                     "[SIM] Stable Multi-Paxos observation window complete at step {}",
                     self.metrics.scheduler_steps
                 );
+
+                self.verify_stable_multi_paxos_recovery();
+
                 break;
             }
 
@@ -1451,5 +1454,58 @@ impl Simulation {
         actions.extend(follower_actions);
 
         actions
+    }
+
+    fn verify_stable_multi_paxos_recovery(&mut self) {
+        println!("[MP-VERIFY] Starting recovery verification");
+
+        let expected = ["slot1=v1", "slot2=v2", "slot3=v3"];
+        let mut recovery_ok = true;
+
+        for expected_entry in expected {
+            if !self.metrics.chosen_values.contains(expected_entry) {
+                println!("[MP-VERIFY] Missing recovered value: {expected_entry}");
+                recovery_ok = false;
+            }
+        }
+
+        if self.metrics.chosen_values.len() != expected.len() {
+            println!(
+                "[MP-VERIFY] Unexpected chosen-value count: expected={} actual={}",
+                expected.len(),
+                self.metrics.chosen_values.len()
+            );
+            recovery_ok = false;
+        }
+
+        if self.metrics.safety_violation {
+            println!("[MP-VERIFY] Safety violation detected");
+            recovery_ok = false;
+        }
+
+        if self.metrics.view_changes < 1 {
+            println!(
+                "[MP-VERIFY] No failover occurred: view_changes={}",
+                self.metrics.view_changes
+            );
+            recovery_ok = false;
+        }
+
+        if self.metrics.max_ballot_seen < 2 {
+            println!(
+                "[MP-VERIFY] Ballot did not advance: max_ballot_seen={}",
+                self.metrics.max_ballot_seen
+            );
+            recovery_ok = false;
+        }
+
+        if recovery_ok {
+            println!(
+                "[MP-VERIFY] Recovery successful: 3 slots preserved, ballot={}, view_changes={}",
+                self.metrics.max_ballot_seen, self.metrics.view_changes
+            );
+        } else {
+            println!("[MP-VERIFY] Recovery FAILED");
+        }
     }
 }
