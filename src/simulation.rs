@@ -677,7 +677,7 @@ impl Simulation {
 
     fn deliver_all_messages(&mut self) {
         let max_steps: u64 = 5000;
-        let heartbeat_test_steps = 100;
+        let heartbeat_test_steps = 200;
         self.metrics.max_steps = max_steps;
 
         loop {
@@ -715,7 +715,24 @@ impl Simulation {
                     );
 
                     self.metrics.scheduler_steps += 1;
-                    // self.metrics.messages_delivered += 1;
+
+                    if let MessageType::MPHeartbeat { ballot, leader_id } = &msg.msg_type {
+                        if self.metrics.mp_recovery_completed_step.is_none()
+                            && *ballot >= 2
+                            && *leader_id != 1
+                        {
+                            let recovery_step = self.metrics.scheduler_steps;
+
+                            self.metrics.mp_recovery_completed_step = Some(recovery_step);
+
+                            println!(
+                                "[MP-RECOVERY] completed_at_step={} ballot={} leader={}",
+                                recovery_step,
+                                ballot,
+                                leader_id
+                            );
+                        }
+                    }
 
                     trace(
                         &self.config,
@@ -747,7 +764,8 @@ impl Simulation {
                     if self.nodes.iter().all(|node| node.decided.is_some()) {
                         self.metrics.messages_delivered_until_decision =
                             self.metrics.messages_delivered;
-                        self.metrics.messages_sent_until_decision = self.metrics.messages_sent;
+                        self.metrics.messages_sent_until_decision =
+                            self.metrics.messages_sent;
                         break;
                     }
                 }
@@ -1165,6 +1183,7 @@ impl Simulation {
 
                 // Temporary behavior until metrics become slot-aware.
                 self.metrics.decisions += 1;
+
                 self.metrics
                     .chosen_values
                     .insert(format!("slot{}={}", slot, value));
@@ -1188,6 +1207,7 @@ impl Simulation {
             }
 
             NodeAction::BroadcastMPHeartbeat { leader_id, ballot } => {
+
                 self.broadcast(Message {
                     from: leader_id,
                     to: 0,

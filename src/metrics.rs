@@ -59,6 +59,7 @@ pub struct Metrics {
     pub multi_paxos_accepted_messages: u64,
     pub multi_paxos_heartbeat_messages: u64,
     pub multi_paxos_chosen_slots: u64,
+    pub mp_recovery_completed_step: Option<u64>,
 }
 
 impl Metrics {
@@ -120,6 +121,7 @@ impl Metrics {
             multi_paxos_accepted_messages: 0,
             multi_paxos_heartbeat_messages: 0,
             multi_paxos_chosen_slots: 0,
+            mp_recovery_completed_step: None,
         }
     }
 }
@@ -214,6 +216,11 @@ impl Metrics {
         println!(
             "Multi-paxos Chosen Slots: {}",
             self.multi_paxos_chosen_slots
+        );
+
+        println!(
+            "Multi-paxos Recovery Completed Step: {:?}",
+            self.mp_recovery_completed_step
         );
     }
 }

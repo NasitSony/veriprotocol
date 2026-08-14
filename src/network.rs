@@ -4,15 +4,15 @@ use crate::scheduler::{
     CommitDelayScheduler, CriticalMessageDelayScheduler, DeadlineAwareQuorumDelayScheduler,
     DelayLeaderScheduler, DelayScheduler, FifoScheduler,
     InterleavedProgressTargetedBudgetDelayScheduler, InterleavedTargetedBudgetDelayScheduler,
-    InterleavedUniformBudgetDelayScheduler, PaxosBallotOverlapScheduler,
-    PaxosGapOneBacklogScheduler, PaxosGapOneScheduler, PaxosOverlapScheduler,
-    PaxosProgressScheduler, PaxosRetryAdversaryScheduler, PaxosRetryScheduler,
-    PhaseBalancedBudgetDelayScheduler, ProbInterleavedTargetedBudgetDelayScheduler,
-    ProbInterleavedUniformBudgetDelayScheduler, ProbabilisticDelayScheduler,
-    ProgressAwareQuorumDelayScheduler, ProposalDelayScheduler, QuorumBlockingScheduler,
-    RandomScheduler, Scheduler, SchedulerOutcome, TargetedBudgetDelayScheduler,
-    TimeoutFirstScheduler, UniformActiveBudgetDelayScheduler, UniformBudgetDelayScheduler,
-    UniformCappedBudgetDelayScheduler, VoteDelayScheduler,
+    InterleavedUniformBudgetDelayScheduler, MPPromiseBudgetDelayScheduler,
+    PaxosBallotOverlapScheduler, PaxosGapOneBacklogScheduler, PaxosGapOneScheduler,
+    PaxosOverlapScheduler, PaxosProgressScheduler, PaxosRetryAdversaryScheduler,
+    PaxosRetryScheduler, PhaseBalancedBudgetDelayScheduler,
+    ProbInterleavedTargetedBudgetDelayScheduler, ProbInterleavedUniformBudgetDelayScheduler,
+    ProbabilisticDelayScheduler, ProgressAwareQuorumDelayScheduler, ProposalDelayScheduler,
+    QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome,
+    TargetedBudgetDelayScheduler, TimeoutFirstScheduler, UniformActiveBudgetDelayScheduler,
+    UniformBudgetDelayScheduler, UniformCappedBudgetDelayScheduler, VoteDelayScheduler,
 };
 
 use std::collections::HashMap;
@@ -168,6 +168,8 @@ impl Network {
             "uniform-capped-budget-delay" => {
                 Box::new(UniformCappedBudgetDelayScheduler::new(max_delay, 2, seed))
             }
+
+            "mp-promise-delay" => Box::new(MPPromiseBudgetDelayScheduler::new(max_delay, 3, seed)),
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);
                 Box::new(FifoScheduler::new())
