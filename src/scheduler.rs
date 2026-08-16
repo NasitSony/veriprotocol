@@ -2769,7 +2769,10 @@ impl MPPromiseBudgetDelayScheduler {
     }
 
     fn is_target(msg: &Message) -> bool {
-        matches!(msg.msg_type, MessageType::MPPromise { .. })
+        matches!(
+            msg.msg_type,
+            MessageType::MPPromise { ballot, .. } if ballot >= 2
+        )
     }
 
     fn can_delay(&self, msg: &Message) -> bool {
@@ -2821,6 +2824,25 @@ impl MPPromiseBudgetDelayScheduler {
         let selected = self.rng.random_range(0..candidates.len());
         Some(candidates[selected])
     }
+
+    pub fn print_summary(&self) {
+        println!(
+            "[MP-PROMISE-SUMMARY] spent={} remaining={} max_consecutive={}",
+            self.spent_budget,
+            self.remaining_budget,
+            self.max_consecutive_delay
+        );
+
+        println!("[MP-PROMISE-SUMMARY] per_message_delay_counts:");
+
+        for (key, count) in &self.consecutive_delay {
+            println!(
+                "[MP-PROMISE-SUMMARY] {} -> {}",
+                key,
+                count
+            );
+        }
+    }
 }
 
 impl Scheduler for MPPromiseBudgetDelayScheduler {
@@ -2837,13 +2859,10 @@ impl Scheduler for MPPromiseBudgetDelayScheduler {
                 self.record_delay(&msg);
 
                 let msg_type = format!("{:?}", msg.msg_type);
-
-                // Move the delayed message to the back of the queue.
                 queue.push(msg);
 
                 println!(
-                    "[MP-PROMISE-BUDGET-DELAY] \
-                     spent={} remaining={} queue_len={} delayed={}",
+                    "[MP-PROMISE-BUDGET-DELAY] spent={} remaining={} queue_len={} delayed={}",
                     self.spent_budget,
                     self.remaining_budget,
                     queue.len(),
@@ -2851,6 +2870,12 @@ impl Scheduler for MPPromiseBudgetDelayScheduler {
                 );
 
                 return SchedulerOutcome::Delay;
+            } else {
+                println!(
+                    "[MP-PROMISE-NO-CANDIDATE] spent={} remaining={}",
+                    self.spent_budget,
+                    self.remaining_budget
+                );
             }
         }
 
