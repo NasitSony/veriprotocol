@@ -73,6 +73,16 @@ impl StableMultiPaxos {
     }
 
     pub fn become_leader(&mut self, leader_id: u64, ballot: u64) {
+        println!(
+            "[MP-BECOME-LEADER] old_leader={} old_ballot={} old_phase={:?} \
+            old_promises={} -> new_leader={} new_ballot={}",
+            self.leader_id,
+            self.ballot,
+            self.phase,
+            self.promises.len(),
+            leader_id,
+            ballot
+        );
         self.leader_id = leader_id;
         self.ballot = ballot;
 
@@ -158,9 +168,27 @@ impl StableMultiPaxos {
         // Learn the highest-ballot accepted value for every reported slot.
         self.record_recovered_slots(accepted);
 
+        println!(
+            "[MP-PROMISE-PROGRESS] protocol_leader={} protocol_ballot={} \
+            msg_ballot={} from={} promises={}/{} phase={:?}",
+            self.leader_id,
+            self.ballot,
+            ballot,
+            msg.from,
+            self.promises.len(),
+            self.quorum_size,
+            self.phase
+        );
         if self.promises.len() < self.quorum_size {
             return vec![];
         }
+
+        println!(
+            "[MP-PHASE-ACTIVE] leader={} ballot={} promises={}",
+            self.leader_id,
+            self.ballot,
+            self.promises.len()
+        );
 
         // Phase 1 has already completed.
         if self.phase == LeaderPhase::Active {
@@ -325,6 +353,12 @@ impl StableMultiPaxos {
 
         node.promised_ballot = ballot;
         node.leader = leader_id;
+
+        println!(
+            "[MP-HEARTBEAT-RESET] node={} from_leader={} ballot={} old_age={}",
+            node.id, leader_id, ballot, node.mp_heartbeat_age
+        );
+
         node.mp_heartbeat_age = 0;
 
         vec![]
@@ -398,6 +432,23 @@ impl Protocol for StableMultiPaxos {
     }
 
     fn on_follower_timeout(&mut self, candidate_id: u64, observed_ballot: u64) -> Vec<NodeAction> {
+        // Do not overwrite an election that is already collecting Promises.
+        if self.phase == LeaderPhase::Preparing {
+            println!(
+                "[MP-TIMEOUT-SUPPRESSED] candidate={} observed_ballot={} \
+                current_leader={} current_ballot={} phase={:?} promises={}/{}",
+                candidate_id,
+                observed_ballot,
+                self.leader_id,
+                self.ballot,
+                self.phase,
+                self.promises.len(),
+                self.quorum_size
+            );
+
+            return vec![];
+        }
+
         let next_ballot = self.ballot.max(observed_ballot) + 1;
 
         self.become_leader(candidate_id, next_ballot);

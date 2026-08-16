@@ -4,15 +4,16 @@ use crate::scheduler::{
     CommitDelayScheduler, CriticalMessageDelayScheduler, DeadlineAwareQuorumDelayScheduler,
     DelayLeaderScheduler, DelayScheduler, FifoScheduler,
     InterleavedProgressTargetedBudgetDelayScheduler, InterleavedTargetedBudgetDelayScheduler,
-    InterleavedUniformBudgetDelayScheduler, MPPrepareBudgetDelayScheduler,
-    MPPromiseBudgetDelayScheduler, PaxosBallotOverlapScheduler, PaxosGapOneBacklogScheduler,
-    PaxosGapOneScheduler, PaxosOverlapScheduler, PaxosProgressScheduler,
-    PaxosRetryAdversaryScheduler, PaxosRetryScheduler, PhaseBalancedBudgetDelayScheduler,
-    ProbInterleavedTargetedBudgetDelayScheduler, ProbInterleavedUniformBudgetDelayScheduler,
-    ProbabilisticDelayScheduler, ProgressAwareQuorumDelayScheduler, ProposalDelayScheduler,
-    QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome,
-    TargetedBudgetDelayScheduler, TimeoutFirstScheduler, UniformActiveBudgetDelayScheduler,
-    UniformBudgetDelayScheduler, UniformCappedBudgetDelayScheduler, VoteDelayScheduler,
+    InterleavedUniformBudgetDelayScheduler, MPAcceptRequestBudgetDelayScheduler,
+    MPPrepareBudgetDelayScheduler, MPPromiseBudgetDelayScheduler, PaxosBallotOverlapScheduler,
+    PaxosGapOneBacklogScheduler, PaxosGapOneScheduler, PaxosOverlapScheduler,
+    PaxosProgressScheduler, PaxosRetryAdversaryScheduler, PaxosRetryScheduler,
+    PhaseBalancedBudgetDelayScheduler, ProbInterleavedTargetedBudgetDelayScheduler,
+    ProbInterleavedUniformBudgetDelayScheduler, ProbabilisticDelayScheduler,
+    ProgressAwareQuorumDelayScheduler, ProposalDelayScheduler, QuorumBlockingScheduler,
+    RandomScheduler, Scheduler, SchedulerOutcome, TargetedBudgetDelayScheduler,
+    TimeoutFirstScheduler, UniformActiveBudgetDelayScheduler, UniformBudgetDelayScheduler,
+    UniformCappedBudgetDelayScheduler, VoteDelayScheduler,
 };
 
 use std::collections::HashMap;
@@ -172,6 +173,10 @@ impl Network {
             "mp-promise-delay" => Box::new(MPPromiseBudgetDelayScheduler::new(max_delay, 3, seed)),
 
             "mp-prepare-delay" => Box::new(MPPrepareBudgetDelayScheduler::new(max_delay, 3, seed)),
+
+            "mp-accept-request-delay" => {
+                Box::new(MPAcceptRequestBudgetDelayScheduler::new(max_delay, 3, seed))
+            }
 
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);

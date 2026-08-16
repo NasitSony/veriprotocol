@@ -677,7 +677,7 @@ impl Simulation {
 
     fn deliver_all_messages(&mut self) {
         let max_steps: u64 = 5000;
-        let heartbeat_test_steps = 200;
+        let heartbeat_test_steps = 400;
         self.metrics.max_steps = max_steps;
 
         loop {
@@ -717,6 +717,8 @@ impl Simulation {
                     self.metrics.scheduler_steps += 1;
 
                     if let MessageType::MPHeartbeat { ballot, leader_id } = &msg.msg_type {
+                        // First recovery attempt:
+                        // record the first heartbeat from any post-failure leader.
                         if self.metrics.mp_recovery_completed_step.is_none()
                             && *ballot >= 2
                             && *leader_id != 1
@@ -727,9 +729,24 @@ impl Simulation {
 
                             println!(
                                 "[MP-RECOVERY] completed_at_step={} ballot={} leader={}",
-                                recovery_step,
-                                ballot,
-                                leader_id
+                                recovery_step, ballot, leader_id
+                            );
+                        }
+
+                        // Stable recovery:
+                        // only a heartbeat from the currently highest ballot qualifies.
+                        // This metric is reset whenever a newer election occurs.
+                        if *ballot == self.metrics.max_ballot_seen
+                            && *leader_id != 1
+                            && self.metrics.mp_stable_recovery_step.is_none()
+                        {
+                            let stable_step = self.metrics.scheduler_steps;
+
+                            self.metrics.mp_stable_recovery_step = Some(stable_step);
+
+                            println!(
+                                "[MP-STABLE-RECOVERY] step={} ballot={} leader={}",
+                                stable_step, ballot, leader_id
                             );
                         }
                     }
@@ -764,8 +781,7 @@ impl Simulation {
                     if self.nodes.iter().all(|node| node.decided.is_some()) {
                         self.metrics.messages_delivered_until_decision =
                             self.metrics.messages_delivered;
-                        self.metrics.messages_sent_until_decision =
-                            self.metrics.messages_sent;
+                        self.metrics.messages_sent_until_decision = self.metrics.messages_sent;
                         break;
                     }
                 }
@@ -1195,6 +1211,11 @@ impl Simulation {
                 self.metrics.view_changes += 1;
                 self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
 
+                self.metrics.mp_last_view_change_step = Some(self.metrics.scheduler_steps);
+
+                // Any earlier "recovery" is invalidated by a newer election.
+                self.metrics.mp_stable_recovery_step = None;
+
                 self.broadcast(Message {
                     from,
                     to: 0,
@@ -1207,7 +1228,6 @@ impl Simulation {
             }
 
             NodeAction::BroadcastMPHeartbeat { leader_id, ballot } => {
-
                 self.broadcast(Message {
                     from: leader_id,
                     to: 0,
@@ -1258,13 +1278,21 @@ impl Simulation {
             }
 
             NodeAction::BroadcastMPHeartbeat { leader_id, ballot } => {
+                println!(
+                    "[MP-HEARTBEAT-GENERATED] step={} leader={} ballot={} queue_len={}",
+                    self.metrics.scheduler_steps,
+                    leader_id,
+                    ballot,
+                    self.network.queue.len()
+                );
+
                 const FAILED_LEADER: u64 = 1;
                 const FAILURE_STEP: u64 = 40;
 
                 if leader_id == FAILED_LEADER && self.metrics.scheduler_steps >= FAILURE_STEP {
                     println!(
-                        "[MP-LEADER-FAILURE] suppressing leader={} heartbeat at step={}",
-                        leader_id, self.metrics.scheduler_steps
+                        "[MP-HEARTBEAT-SUPPRESSED] step={} leader={} ballot={}",
+                        self.metrics.scheduler_steps, leader_id, ballot
                     );
 
                     return;
@@ -1286,6 +1314,10 @@ impl Simulation {
 
                 self.metrics.view_changes += 1;
                 self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
+                self.metrics.mp_last_view_change_step = Some(self.metrics.scheduler_steps);
+
+                self.metrics.mp_stable_recovery_step = None;
 
                 self.broadcast(Message {
                     from,
@@ -1435,11 +1467,35 @@ impl Simulation {
                 continue;
             }
 
-            let expected_candidate = if node.leader >= node_count {
+            println!(
+                "[MP-FOLLOWER-TIMEOUT] step={} candidate={} current_leader={} \
+                promised_ballot={} heartbeat_age={} threshold={}",
+                self.metrics.scheduler_steps,
+                node.id,
+                node.leader,
+                node.promised_ballot,
+                node.mp_heartbeat_age,
+                node.mp_election_timeout
+            );
+
+            const FAILED_LEADER: u64 = 1;
+            const FAILURE_STEP: u64 = 40;
+
+            let mut expected_candidate = if node.leader >= node_count {
                 1
             } else {
                 node.leader + 1
             };
+
+            // After the injected failure, node 1 is permanently unavailable.
+            // Skip it when choosing the next election candidate.
+            if self.metrics.scheduler_steps >= FAILURE_STEP && expected_candidate == FAILED_LEADER {
+                expected_candidate = if FAILED_LEADER >= node_count {
+                    1
+                } else {
+                    FAILED_LEADER + 1
+                };
+            }
 
             if node.id != expected_candidate {
                 continue;
