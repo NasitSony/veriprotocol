@@ -717,6 +717,16 @@ impl Simulation {
                     self.metrics.scheduler_steps += 1;
 
                     if let MessageType::MPHeartbeat { ballot, leader_id } = &msg.msg_type {
+                        let delivered_step = self.metrics.scheduler_steps;
+                        let generated_step = msg.round;
+
+                        let queue_delay = delivered_step.saturating_sub(generated_step);
+
+                        println!(
+                            "[MP-HEARTBEAT-DELIVERY-LAG] leader={} ballot={} \
+                            generated_step={} delivered_step={} lag={}",
+                            leader_id, ballot, generated_step, delivered_step, queue_delay
+                        );
                         // First recovery attempt:
                         // record the first heartbeat from any post-failure leader.
                         if self.metrics.mp_recovery_completed_step.is_none()
@@ -1278,9 +1288,11 @@ impl Simulation {
             }
 
             NodeAction::BroadcastMPHeartbeat { leader_id, ballot } => {
+                let generated_step = self.metrics.scheduler_steps;
+
                 println!(
                     "[MP-HEARTBEAT-GENERATED] step={} leader={} ballot={} queue_len={}",
-                    self.metrics.scheduler_steps,
+                    generated_step,
                     leader_id,
                     ballot,
                     self.network.queue.len()
@@ -1289,10 +1301,10 @@ impl Simulation {
                 const FAILED_LEADER: u64 = 1;
                 const FAILURE_STEP: u64 = 40;
 
-                if leader_id == FAILED_LEADER && self.metrics.scheduler_steps >= FAILURE_STEP {
+                if leader_id == FAILED_LEADER && generated_step >= FAILURE_STEP {
                     println!(
                         "[MP-HEARTBEAT-SUPPRESSED] step={} leader={} ballot={}",
-                        self.metrics.scheduler_steps, leader_id, ballot
+                        generated_step, leader_id, ballot
                     );
 
                     return;
@@ -1301,7 +1313,7 @@ impl Simulation {
                 self.broadcast(Message {
                     from: leader_id,
                     to: 0,
-                    round: 0,
+                    round: generated_step,
                     msg_type: MessageType::MPHeartbeat { ballot, leader_id },
                     payload: "mp-heartbeat".to_string(),
                     value: VoteValue::Yes,
