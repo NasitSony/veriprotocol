@@ -36,6 +36,8 @@ fn main() {
 
     let network_model = args.get(9).map(String::as_str).unwrap_or("global");
 
+    let time_model = args.get(10).map(String::as_str).unwrap_or("event-coupled");
+
     let mut results: Vec<u64> = Vec::new();
 
     for i in 0..runs {
@@ -52,6 +54,7 @@ fn main() {
             node_count,
             delay_probability,
             network_model,
+            time_model,
         );
         sim.run();
 

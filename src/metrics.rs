@@ -63,6 +63,11 @@ pub struct Metrics {
 
     pub mp_last_view_change_step: Option<u64>,
     pub mp_stable_recovery_step: Option<u64>,
+
+    pub logical_ticks: u64,
+
+    pub mp_recovery_completed_tick: Option<u64>,
+    pub mp_stable_recovery_tick: Option<u64>,
 }
 
 impl Metrics {
@@ -127,6 +132,11 @@ impl Metrics {
             mp_recovery_completed_step: None,
             mp_last_view_change_step: None,
             mp_stable_recovery_step: None,
+
+            logical_ticks: 0,
+
+            mp_recovery_completed_tick: None,
+            mp_stable_recovery_tick: None,
         }
     }
 }
@@ -137,6 +147,7 @@ impl Metrics {
         println!("Messages Sent: {}", self.messages_sent);
         println!("Messages Delivered: {}", self.messages_delivered);
         println!("Scheduler Steps: {}", self.scheduler_steps);
+        println!("Logical Ticks: {}", self.logical_ticks);
         println!("Stale Messages Ignored: {}", self.stale_messages_ignored);
         println!(
             "Messages Sent Until Decision: {}",
@@ -231,6 +242,16 @@ impl Metrics {
         println!(
             "Multi-paxos Stable Recovery Step: {:?}",
             self.mp_stable_recovery_step
+        );
+
+        println!(
+            "Multi-paxos Recovery Completed Logical Tick: {:?}",
+            self.mp_recovery_completed_tick
+        );
+
+        println!(
+            "Multi-paxos Stable Recovery Logical Tick: {:?}",
+            self.mp_stable_recovery_tick
         );
     }
 }

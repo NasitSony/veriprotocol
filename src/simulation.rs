@@ -33,6 +33,10 @@ pub struct Simulation {
     pub node_count: usize,
     //pub last_timeout_step: u64,
     pub time_model: TimeModel,
+
+    // Tracks how many scheduler opportunities have happened
+    // inside the current logical round.
+    round_progress: usize,
 }
 
 impl Simulation {
@@ -45,12 +49,18 @@ impl Simulation {
         node_count: usize,
         delay_probability: f64,
         network_model: &str,
+        time_model: &str,
     ) -> Self {
         //let node_count = 4;
 
         let network_model = match network_model {
             "per-sender" => NetworkModel::PerSenderRoundRobin,
             _ => NetworkModel::GlobalQueue,
+        };
+
+        let time_model = match time_model {
+            "round-tick" => TimeModel::RoundTick,
+            _ => TimeModel::EventCoupled,
         };
 
         let nodes: Vec<Node> = (1..=node_count as u64).map(Node::new).collect();
@@ -187,7 +197,9 @@ impl Simulation {
             // timeout_threshold: timeout_threshold,
             protocol_name: protocol_name.to_string(),
             node_count,
-            time_model: TimeModel::EventCoupled,
+            time_model,
+
+            round_progress: 0,
             // last_timeout_step: 0,
         }
     }
@@ -758,6 +770,8 @@ impl Simulation {
                             let recovery_step = self.metrics.scheduler_steps;
 
                             self.metrics.mp_recovery_completed_step = Some(recovery_step);
+                            self.metrics.mp_recovery_completed_tick =
+                                Some(self.metrics.logical_ticks);
 
                             println!(
                                 "[MP-RECOVERY] completed_at_step={} ballot={} leader={}",
@@ -775,6 +789,7 @@ impl Simulation {
                             let stable_step = self.metrics.scheduler_steps;
 
                             self.metrics.mp_stable_recovery_step = Some(stable_step);
+                            self.metrics.mp_stable_recovery_tick = Some(self.metrics.logical_ticks);
 
                             println!(
                                 "[MP-STABLE-RECOVERY] step={} ballot={} leader={}",
@@ -804,7 +819,7 @@ impl Simulation {
                         }
                     }
 
-                    let tick_actions = self.collect_tick_actions();
+                    let tick_actions = self.maybe_advance_time(); //self.collect_tick_actions();
 
                     for action in tick_actions {
                         self.apply_tick_action(action);
@@ -821,7 +836,7 @@ impl Simulation {
                 SchedulerOutcome::Delay => {
                     self.metrics.scheduler_steps += 1;
 
-                    let actions = self.collect_tick_actions();
+                    let actions = self.maybe_advance_time(); //self.collect_tick_actions();
 
                     for action in actions {
                         self.apply_tick_action(action);
@@ -833,7 +848,7 @@ impl Simulation {
                 SchedulerOutcome::Empty => {
                     self.metrics.scheduler_steps += 1;
 
-                    let actions = self.collect_tick_actions();
+                    let actions = self.maybe_advance_time(); //self.collect_tick_actions();
 
                     if actions.is_empty() {
                         if self.protocol_name == "stable-multi-paxos" {
@@ -1247,6 +1262,7 @@ impl Simulation {
 
                 // Any earlier "recovery" is invalidated by a newer election.
                 self.metrics.mp_stable_recovery_step = None;
+                self.metrics.mp_stable_recovery_tick = None;
 
                 self.broadcast(Message {
                     from,
@@ -1352,6 +1368,7 @@ impl Simulation {
                 self.metrics.mp_last_view_change_step = Some(self.metrics.scheduler_steps);
 
                 self.metrics.mp_stable_recovery_step = None;
+                self.metrics.mp_stable_recovery_tick = None;
 
                 self.broadcast(Message {
                     from,
@@ -1554,6 +1571,27 @@ impl Simulation {
             }
 
             None => vec![],
+        }
+    }
+
+    fn maybe_advance_time(&mut self) -> Vec<NodeAction> {
+        match self.time_model {
+            TimeModel::EventCoupled => {
+                self.metrics.logical_ticks += 1;
+                self.collect_tick_actions()
+            }
+
+            TimeModel::RoundTick => {
+                self.round_progress += 1;
+
+                if self.round_progress >= self.node_count {
+                    self.round_progress = 0;
+                    self.metrics.logical_ticks += 1;
+                    self.collect_tick_actions()
+                } else {
+                    vec![]
+                }
+            }
         }
     }
 
