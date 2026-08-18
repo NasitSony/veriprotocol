@@ -3,7 +3,7 @@ use crate::basic_paxos::PaxosPhase;
 use crate::message::{Message, MessageType, VoteValue};
 use crate::metrics::Metrics;
 use crate::multi_paxos::MultiPaxosProtocol;
-use crate::network::Network;
+use crate::network::{Network, NetworkModel};
 use crate::node::RaftRole;
 use crate::node::{Node, NodeAction};
 use crate::protocol::{Protocol, SimpleConsensusProtocol, TimeoutProtocol, TwoPhaseProtocol};
@@ -11,6 +11,12 @@ use crate::raft::RaftProtocol;
 use crate::scheduler::SchedulerOutcome;
 use crate::stable_multi_paxos::StableMultiPaxos;
 use crate::trace::{Config, TraceEvent, trace};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TimeModel {
+    EventCoupled,
+    RoundTick,
+}
 
 pub struct Simulation {
     pub network: Network,
@@ -26,6 +32,7 @@ pub struct Simulation {
 
     pub node_count: usize,
     //pub last_timeout_step: u64,
+    pub time_model: TimeModel,
 }
 
 impl Simulation {
@@ -37,8 +44,14 @@ impl Simulation {
         max_delay: usize,
         node_count: usize,
         delay_probability: f64,
+        network_model: &str,
     ) -> Self {
         //let node_count = 4;
+
+        let network_model = match network_model {
+            "per-sender" => NetworkModel::PerSenderRoundRobin,
+            _ => NetworkModel::GlobalQueue,
+        };
 
         let nodes: Vec<Node> = (1..=node_count as u64).map(Node::new).collect();
 
@@ -159,6 +172,7 @@ impl Simulation {
                 max_delay,
                 delay_probability,
                 quorum_size,
+                network_model,
             ),
             nodes, //vec![Node::new(1), Node::new(2), Node::new(3), Node::new(4)],
             metrics: Metrics::new(),
@@ -173,6 +187,7 @@ impl Simulation {
             // timeout_threshold: timeout_threshold,
             protocol_name: protocol_name.to_string(),
             node_count,
+            time_model: TimeModel::EventCoupled,
             // last_timeout_step: 0,
         }
     }
@@ -711,8 +726,15 @@ impl Simulation {
                         msg.from,
                         msg.to,
                         msg.msg_type,
-                        self.network.queue.len()
+                        self.network.queue_len()
                     );
+
+                    if self.protocol_name == "stable-multi-paxos" {
+                        println!(
+                            "[MP-DELIVERY-CLASSIFY] step={} from={} to={} type={:?}",
+                            self.metrics.scheduler_steps, msg.from, msg.to, msg.msg_type
+                        );
+                    }
 
                     self.metrics.scheduler_steps += 1;
 
@@ -1295,7 +1317,7 @@ impl Simulation {
                     generated_step,
                     leader_id,
                     ballot,
-                    self.network.queue.len()
+                    self.network.queue_len()
                 );
 
                 const FAILED_LEADER: u64 = 1;

@@ -34,6 +34,8 @@ fn main() {
 
     let delay_probability: f64 = args.get(8).and_then(|s| s.parse().ok()).unwrap_or(0.5);
 
+    let network_model = args.get(9).map(String::as_str).unwrap_or("global");
+
     let mut results: Vec<u64> = Vec::new();
 
     for i in 0..runs {
@@ -49,6 +51,7 @@ fn main() {
             max_delay as usize,
             node_count,
             delay_probability,
+            network_model,
         );
         sim.run();
 

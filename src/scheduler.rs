@@ -1,4 +1,5 @@
 use crate::message::{Message, MessageType, VoteValue};
+
 use rand::Rng;
 use rand::RngExt;
 use rand::SeedableRng;

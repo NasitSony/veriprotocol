@@ -19,9 +19,24 @@ use crate::scheduler::{
 use std::collections::HashMap;
 //pub scheduler: FifoScheduler,
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NetworkModel {
+    GlobalQueue,
+    PerSenderRoundRobin,
+}
+
 pub struct Network {
+    // Existing model.
     pub queue: Vec<Message>,
+
+    // Challenge model: one outbound queue per sender.
+    pub sender_queues: HashMap<u64, Vec<Message>>,
+
     pub scheduler: Box<dyn Scheduler>,
+    pub model: NetworkModel,
+
+    // Used only by PerSenderRoundRobin.
+    next_sender: u64,
 }
 
 impl Network {
@@ -31,6 +46,7 @@ impl Network {
         max_delay: usize,
         delay_probability: f64,
         quorum_size: usize,
+        model: NetworkModel,
     ) -> Self {
         let scheduler: Box<dyn Scheduler> = match scheduler_name {
             "fifo" => Box::new(FifoScheduler::new()),
@@ -186,24 +202,78 @@ impl Network {
 
         Self {
             queue: Vec::new(),
+            sender_queues: HashMap::new(),
             scheduler,
+            model,
+            next_sender: 1,
         }
     }
 
     pub fn send(&mut self, msg: Message) {
-        /*trace(
-            &self.config,
-            TraceEvent::Decision,
-            &format!("{} -> {}", msg.from, msg.to),
-        );
-        println!(
-            "Message sent: {} -> {}, type: {:?}, value: {:?}",
-            msg.from, msg.to, msg.msg_type, msg.value
-        );*/
-        self.queue.push(msg);
+        match self.model {
+            NetworkModel::GlobalQueue => {
+                self.queue.push(msg);
+            }
+
+            NetworkModel::PerSenderRoundRobin => {
+                self.sender_queues.entry(msg.from).or_default().push(msg);
+            }
+        }
     }
 
     pub fn deliver_next(&mut self) -> SchedulerOutcome {
-        self.scheduler.choose_next(&mut self.queue)
+        match self.model {
+            NetworkModel::GlobalQueue => self.scheduler.choose_next(&mut self.queue),
+
+            NetworkModel::PerSenderRoundRobin => {
+                if self.sender_queues.values().all(|q| q.is_empty()) {
+                    return SchedulerOutcome::Empty;
+                }
+
+                let mut sender_ids: Vec<u64> = self.sender_queues.keys().copied().collect();
+                sender_ids.sort_unstable();
+
+                if sender_ids.is_empty() {
+                    return SchedulerOutcome::Empty;
+                }
+
+                for _ in 0..sender_ids.len() {
+                    let sender = self.next_sender;
+
+                    self.next_sender += 1;
+
+                    let max_sender = *sender_ids.last().unwrap();
+                    if self.next_sender > max_sender {
+                        self.next_sender = 1;
+                    }
+
+                    if let Some(queue) = self.sender_queues.get_mut(&sender) {
+                        if !queue.is_empty() {
+                            return self.scheduler.choose_next(queue);
+                        }
+                    }
+                }
+
+                // Fallback in case sender IDs are not contiguous.
+                for sender in sender_ids {
+                    if let Some(queue) = self.sender_queues.get_mut(&sender) {
+                        if !queue.is_empty() {
+                            self.next_sender = sender + 1;
+                            return self.scheduler.choose_next(queue);
+                        }
+                    }
+                }
+
+                SchedulerOutcome::Empty
+            }
+        }
+    }
+
+    pub fn queue_len(&self) -> usize {
+        match self.model {
+            NetworkModel::GlobalQueue => self.queue.len(),
+
+            NetworkModel::PerSenderRoundRobin => self.sender_queues.values().map(|q| q.len()).sum(),
+        }
     }
 }
