@@ -1519,9 +1519,10 @@ impl Simulation {
             }
 
             println!(
-                "[MP-FOLLOWER-TIMEOUT] step={} candidate={} current_leader={} \
+                "[MP-FOLLOWER-TIMEOUT] step={} logical_tick={} candidate={} current_leader={} \
                 promised_ballot={} heartbeat_age={} threshold={}",
                 self.metrics.scheduler_steps,
+                self.metrics.logical_ticks,
                 node.id,
                 node.leader,
                 node.promised_ballot,
