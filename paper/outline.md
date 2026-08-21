@@ -11,7 +11,7 @@ However, when timeout progression was decoupled from individual scheduler events
 ## 2. Research Question
 
 To what extent can the time semantics of an adversarial consensus simulator alter conclusions about protocol liveness?
-
+ 
 ## 3. Simulator and Time Models
 
 VeriProtocol is a deterministic consensus simulation framework in which protocol messages are placed into a simulated network and delivered according to a configurable scheduler. The scheduler can perturb execution by delaying or selecting protocol messages, while seeded executions provide reproducible schedules for controlled comparisons.
@@ -23,6 +23,8 @@ This study considers stable Multi-Paxos with leader failure and recovery. Follow
 ### RoundTick. Protocol time is decoupled from individual scheduler events. For a configuration with N nodes, one logical tick occurs after N scheduler opportunities. Failure-detector and heartbeat timers advance only on these logical ticks. RoundTick is not intended as an exact model of physical wall-clock time; rather, it provides a controlled abstraction in which timeout progression is no longer directly proportional to individual scheduler-event count.
 
 This distinction allows us to hold the protocol, scheduler, network model, workload, and random seed fixed while changing the semantics by which scheduler progress is translated into protocol time.
+
+RoundTick preserves timeout-driven elections. In addition to the expected election following leader failure, we performed a controlled confirmation experiment in which a live leader's heartbeat was withheld from a follower for sufficiently many logical ticks to reach the configured timeout threshold. The follower subsequently initiated an additional valid election. Thus, RoundTick does not disable elections; rather, it decouples timeout progression from individual scheduler events. Scheduler activity alone is therefore insufficient to accelerate the failure detector, while heartbeat unavailability sustained until the logical timeout threshold is reached can still cause it to expire.
 
 ## 4. Experimental Setup
 
@@ -67,6 +69,30 @@ We additionally evaluated representative configurations for N=3 and N=7. No addi
 The RoundTick result does not imply that adversarial delay has no effect. Recovery latency still changes with K. Rather, the qualitative effect changes: bounded message delay can slow recovery without necessarily inducing additional valid leader elections. This distinction suggests that the earlier leadership-instability result was produced by the interaction between adversarial scheduling and event-coupled timeout progression, rather than by the targeted message delay alone.
 
 ## 6. Matched-Trace Mechanism
+
+
+The matched execution highlights that the difference is not simply a reduction in scheduler activity. In the seed-42 comparison, EventCoupled reached stable recovery at scheduler step 176 after an additional election raised the ballot to 3. RoundTick, by contrast, required 191 scheduler steps to reach stable recovery but advanced through only 38 logical ticks and remained at ballot 2. Thus, RoundTick performed more raw scheduler work before stable recovery while avoiding the additional election. This contrast isolates the mechanism: under EventCoupled, scheduler activity itself contributes directly to timeout progression, whereas under RoundTick the same activity does not imply an equivalent amount of elapsed protocol time.
+
+The heartbeat-withholding control distinguishes decoupling from suppression. When a ballot-2 heartbeat from the live recovery leader was deliberately withheld from a follower until its timeout threshold was reached under RoundTick, the follower initiated an additional valid election and the execution advanced to ballot 3. RoundTick therefore does not prevent adversarially induced elections. Instead, it requires heartbeat unavailability to persist across sufficient logical time, rather than allowing scheduler activity alone to accelerate timeout expiration.
+
+EventCoupled + scheduler activity
+        ↓
+timeout state advances with events
+        ↓
+spurious additional election
+
+RoundTick + scheduler activity
+        ↓
+insufficient logical timeout duration
+        ↓
+no additional election
+
+RoundTick + heartbeat withheld
+for full logical timeout duration
+        ↓
+timeout expires
+        ↓
+valid additional election
 
 ## 7. Methodological Implications
 
