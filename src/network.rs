@@ -5,15 +5,15 @@ use crate::scheduler::{
     DelayLeaderScheduler, DelayScheduler, FifoScheduler,
     InterleavedProgressTargetedBudgetDelayScheduler, InterleavedTargetedBudgetDelayScheduler,
     InterleavedUniformBudgetDelayScheduler, MPAcceptRequestBudgetDelayScheduler,
-    MPPrepareBudgetDelayScheduler, MPPromiseBudgetDelayScheduler, PaxosBallotOverlapScheduler,
-    PaxosGapOneBacklogScheduler, PaxosGapOneScheduler, PaxosOverlapScheduler,
-    PaxosProgressScheduler, PaxosRetryAdversaryScheduler, PaxosRetryScheduler,
-    PhaseBalancedBudgetDelayScheduler, ProbInterleavedTargetedBudgetDelayScheduler,
-    ProbInterleavedUniformBudgetDelayScheduler, ProbabilisticDelayScheduler,
-    ProgressAwareQuorumDelayScheduler, ProposalDelayScheduler, QuorumBlockingScheduler,
-    RandomScheduler, Scheduler, SchedulerOutcome, TargetedBudgetDelayScheduler,
-    TimeoutFirstScheduler, UniformActiveBudgetDelayScheduler, UniformBudgetDelayScheduler,
-    UniformCappedBudgetDelayScheduler, VoteDelayScheduler,
+    MPHeartbeatBudgetDelayScheduler, MPPrepareBudgetDelayScheduler, MPPromiseBudgetDelayScheduler,
+    PaxosBallotOverlapScheduler, PaxosGapOneBacklogScheduler, PaxosGapOneScheduler,
+    PaxosOverlapScheduler, PaxosProgressScheduler, PaxosRetryAdversaryScheduler,
+    PaxosRetryScheduler, PhaseBalancedBudgetDelayScheduler,
+    ProbInterleavedTargetedBudgetDelayScheduler, ProbInterleavedUniformBudgetDelayScheduler,
+    ProbabilisticDelayScheduler, ProgressAwareQuorumDelayScheduler, ProposalDelayScheduler,
+    QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome,
+    TargetedBudgetDelayScheduler, TimeoutFirstScheduler, UniformActiveBudgetDelayScheduler,
+    UniformBudgetDelayScheduler, UniformCappedBudgetDelayScheduler, VoteDelayScheduler,
 };
 
 use std::collections::HashMap;
@@ -193,6 +193,8 @@ impl Network {
             "mp-accept-request-delay" => {
                 Box::new(MPAcceptRequestBudgetDelayScheduler::new(max_delay, 3, seed))
             }
+
+            "mp-heartbeat-delay" => Box::new(MPHeartbeatBudgetDelayScheduler::new(max_delay)),
 
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);

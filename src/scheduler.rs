@@ -3134,3 +3134,56 @@ impl Scheduler for MPAcceptRequestBudgetDelayScheduler {
         SchedulerOutcome::Deliver(msg)
     }
 }
+
+pub struct MPHeartbeatBudgetDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+}
+
+impl MPHeartbeatBudgetDelayScheduler {
+    pub fn new(total_budget: usize) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+        }
+    }
+
+    fn is_target(msg: &Message) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::MPHeartbeat {
+                ballot: 2,
+                leader_id: 2
+            }
+        ) && msg.to == 3
+    }
+}
+
+impl Scheduler for MPHeartbeatBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(index) = queue.iter().position(Self::is_target) {
+                let msg = queue.remove(index);
+
+                self.remaining_budget -= 1;
+                self.spent_budget += 1;
+
+                println!(
+                    "[MP-HEARTBEAT-BUDGET-DELAY] spent={} remaining={} \
+                     from={} to={} type={:?}",
+                    self.spent_budget, self.remaining_budget, msg.from, msg.to, msg.msg_type
+                );
+
+                queue.push(msg);
+
+                return SchedulerOutcome::Delay;
+            }
+        }
+
+        SchedulerOutcome::Deliver(queue.remove(0))
+    }
+}
