@@ -1,0 +1,8 @@
+N,K,time_model,network_model,runs,unstable_runs,instability_rate,avg_view_changes,max_view_changes,max_ballot,stable_recovery_observed,avg_stable_recovery_tick
+5,0,event-coupled,per-sender,20,0,0.00,1.00,1,2,20,123.00
+5,6,event-coupled,per-sender,20,1,5.00,1.05,2,3,,127.80
+5,8,event-coupled,per-sender,20,8,40.00,2.50,8,9,,153.88
+5,10,event-coupled,per-sender,20,10,50.00,2.30,5,6,,193.60
+5,11,event-coupled,per-sender,20,15,75.00,2.95,4,5,,231.05
+5,12,event-coupled,per-sender,20,17,85.00,3.05,8,9,19,221.58
+5,14,event-coupled,per-sender,20,20,100.00,4.10,8,9,14,224.36
