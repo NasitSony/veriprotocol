@@ -189,7 +189,8 @@ impl Node {
             raft_current_term: 0,
             raft_voted_for: None,
             raft_election_age: 0,
-            raft_election_timeout: 20,
+            //raft_election_timeout: 20,
+            raft_election_timeout: 20 + (id - 1) * 2,
 
             mp_heartbeat_age: 0,
             mp_election_timeout: 20,

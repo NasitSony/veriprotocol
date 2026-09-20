@@ -42,6 +42,7 @@ impl Protocol for RaftProtocol {
 
                 if vote_granted {
                     node.raft_voted_for = Some(*candidate_id);
+                    node.raft_election_age = 0;
                 }
 
                 vec![NodeAction::SendVoteResponse {
@@ -52,11 +53,24 @@ impl Protocol for RaftProtocol {
             }
 
             MessageType::VoteResponse { term, vote_granted } => {
+                if *term > node.raft_current_term {
+                    node.raft_current_term = *term;
+                    node.raft_role = RaftRole::Follower;
+                    node.raft_voted_for = None;
+                    node.raft_election_age = 0;
+                    return vec![];
+                }
+
+                if *term < node.raft_current_term {
+                    return vec![];
+                }
+
                 if !*vote_granted {
                     return vec![];
                 }
 
                 let votes = self.votes_by_term.entry(*term).or_insert_with(HashSet::new);
+
 
                 votes.insert(msg.from);
 
@@ -74,19 +88,27 @@ impl Protocol for RaftProtocol {
                 vec![]
             }
 
-            MessageType::AppendResponse {
-                term: _,
-                success: _,
-            } => {
+            MessageType::AppendResponse { term, success: _ } => {
+                if *term > node.raft_current_term {
+                    node.raft_current_term = *term;
+                    node.raft_role = RaftRole::Follower;
+                    node.raft_voted_for = None;
+                    node.raft_election_age = 0;
+                }
+
                 vec![]
             }
 
             MessageType::AppendEntries { term, leader_id } => {
                 if *term >= node.raft_current_term {
                     node.raft_current_term = *term;
-                    node.raft_role = RaftRole::Follower;
-                    node.raft_voted_for = None;
-                    node.raft_election_age = 0;
+
+                    if node.id != *leader_id {
+                        node.raft_role = RaftRole::Follower;
+                        node.raft_voted_for = None;
+                        node.raft_election_age = 0;
+                    }
+
                     self.leader_id = Some(*leader_id);
 
                     return vec![NodeAction::SendAppendResponse {

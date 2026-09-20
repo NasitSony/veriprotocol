@@ -13,7 +13,7 @@ use crate::scheduler::{
     ProbabilisticDelayScheduler, ProgressAwareQuorumDelayScheduler, ProposalDelayScheduler,
     QuorumBlockingScheduler, RandomScheduler, Scheduler, SchedulerOutcome,
     TargetedBudgetDelayScheduler, TimeoutFirstScheduler, UniformActiveBudgetDelayScheduler,
-    UniformBudgetDelayScheduler, UniformCappedBudgetDelayScheduler, VoteDelayScheduler,
+    UniformBudgetDelayScheduler, UniformCappedBudgetDelayScheduler, VoteDelayScheduler, RaftHeartbeatBudgetDelayScheduler,
 };
 
 use std::collections::HashMap;
@@ -195,6 +195,10 @@ impl Network {
             }
 
             "mp-heartbeat-delay" => Box::new(MPHeartbeatBudgetDelayScheduler::new(max_delay)),
+
+            "raft-heartbeat-delay" => {
+                Box::new(RaftHeartbeatBudgetDelayScheduler::new(max_delay))
+            }
 
             _ => {
                 println!("Unknown scheduler {}, using fifo", scheduler_name);

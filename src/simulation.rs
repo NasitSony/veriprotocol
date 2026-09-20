@@ -825,6 +825,7 @@ impl Simulation {
 
                     for node in &mut self.nodes {
                         if node.id == msg.to {
+
                             let actions = self.protocol.handle_message(node, &msg);
 
                             for action in actions {
@@ -1399,6 +1400,30 @@ impl Simulation {
                 });
             }
 
+            NodeAction::BroadcastAppendEntries { term, leader_id } => {
+                self.broadcast(Message {
+                    from: leader_id,
+                    to: 0,
+                    round: self.metrics.scheduler_steps,
+                    msg_type: MessageType::AppendEntries { term, leader_id },
+                    payload: "append-entries".to_string(),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+
+            NodeAction::BroadcastRequestVote { term, candidate_id } => {
+                self.broadcast(Message {
+                    from: candidate_id,
+                    to: 0,
+                    round: self.metrics.scheduler_steps,
+                    msg_type: MessageType::RequestVote { term, candidate_id },
+                    payload: "request-vote".to_string(),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+
             _ => {}
         }
     }
@@ -1605,7 +1630,17 @@ impl Simulation {
             return vec![];
         };
 
+
+
         self.raft_heartbeat_age += 1;
+
+        println!(
+            "[RAFT-HEARTBEAT-TICK] logical_tick={} leader={} term={} heartbeat_age={}",
+            self.metrics.logical_ticks,
+            leader.id,
+            leader.raft_current_term,
+            self.raft_heartbeat_age
+        );
 
         if self.raft_heartbeat_age < 5 {
             return vec![];
@@ -1635,6 +1670,8 @@ impl Simulation {
             if node.raft_election_age < node.raft_election_timeout {
                 continue;
             }
+
+            self.metrics.timeouts_triggered += 1;
 
             let candidate_id = node.id;
             let new_term = node.raft_current_term + 1;
@@ -1689,9 +1726,6 @@ impl Simulation {
 
         let mp_actions = self.tick_mp_follower_timers();
         actions.extend(mp_actions);
-
-        let raft_actions = self.tick_raft_follower_timers();
-        actions.extend(raft_actions);
 
         let raft_heartbeat_actions = self.tick_raft_heartbeat();
         actions.extend(raft_heartbeat_actions);
