@@ -1,0 +1,8 @@
+N,K,time_model,network_model,runs,unstable_runs,instability_rate,avg_view_changes,max_view_changes,max_ballot,stable_recovery_observed,avg_stable_recovery_tick
+5,0,round-tick,per-sender,20,0,0.00,1.00,1,2,20,35.00
+5,6,round-tick,per-sender,20,0,0.00,1.00,1,2,20,36.60
+5,8,round-tick,per-sender,20,0,0.00,1.00,1,2,20,37.00
+5,10,round-tick,per-sender,20,0,0.00,1.00,1,2,20,37.05
+5,11,round-tick,per-sender,20,0,0.00,1.00,1,2,20,37.35
+5,12,round-tick,per-sender,20,0,0.00,1.00,1,2,20,37.75
+5,14,round-tick,per-sender,20,0,0.00,1.00,1,2,20,38.00
