@@ -86,6 +86,7 @@ impl Protocol for RaftProtocol {
                     node.raft_current_term = *term;
                     node.raft_role = RaftRole::Follower;
                     node.raft_voted_for = None;
+                    node.raft_election_age = 0;
                     self.leader_id = Some(*leader_id);
 
                     return vec![NodeAction::SendAppendResponse {

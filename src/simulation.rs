@@ -37,6 +37,8 @@ pub struct Simulation {
     // Tracks how many scheduler opportunities have happened
     // inside the current logical round.
     round_progress: usize,
+    // Raft leader heartbeat cadence in logical time.
+    raft_heartbeat_age: u64,
 }
 
 impl Simulation {
@@ -200,6 +202,8 @@ impl Simulation {
             time_model,
 
             round_progress: 0,
+            
+            raft_heartbeat_age: 0,
             // last_timeout_step: 0,
         }
     }
@@ -721,6 +725,18 @@ impl Simulation {
                 break;
             }
 
+            if self.protocol_name == "raft-election"
+                && self.metrics.scheduler_steps >= heartbeat_test_steps
+            {
+                println!(
+                    "[SIM] Raft observation window complete at step {} logical_tick={}",
+                    self.metrics.scheduler_steps,
+                    self.metrics.logical_ticks
+                );
+                break;
+            }
+
+
             if self.metrics.scheduler_steps >= max_steps {
                 println!(
                     "[SIM] Reached step cap: {}. Treating as non-terminating within measurement bound.",
@@ -851,7 +867,9 @@ impl Simulation {
                     let actions = self.maybe_advance_time(); //self.collect_tick_actions();
 
                     if actions.is_empty() {
-                        if self.protocol_name == "stable-multi-paxos" {
+                        if self.protocol_name == "stable-multi-paxos"
+                            || self.protocol_name == "raft-election"
+                        {
                             continue;
                         }
 
@@ -1575,6 +1593,76 @@ impl Simulation {
         }
     }
 
+    fn tick_raft_heartbeat(&mut self) -> Vec<NodeAction> {
+        if !self.protocol_name.starts_with("raft-") {
+            return vec![];
+        }
+
+        let leader = self.nodes.iter().find(|n| n.raft_role == RaftRole::Leader);
+
+        let Some(leader) = leader else {
+            self.raft_heartbeat_age = 0;
+            return vec![];
+        };
+
+        self.raft_heartbeat_age += 1;
+
+        if self.raft_heartbeat_age < 5 {
+            return vec![];
+        }
+
+        self.raft_heartbeat_age = 0;
+
+        vec![NodeAction::BroadcastAppendEntries {
+            term: leader.raft_current_term,
+            leader_id: leader.id,
+        }]
+    }
+
+    fn tick_raft_follower_timers(&mut self) -> Vec<NodeAction> {
+        if !self.protocol_name.starts_with("raft-") {
+            return vec![];
+        }
+
+        for node in &mut self.nodes {
+            if node.raft_role == RaftRole::Leader {
+                node.raft_election_age = 0;
+                continue;
+            }
+
+            node.raft_election_age += 1;
+
+            if node.raft_election_age < node.raft_election_timeout {
+                continue;
+            }
+
+            let candidate_id = node.id;
+            let new_term = node.raft_current_term + 1;
+
+            println!(
+                "[RAFT-ELECTION-TIMEOUT] step={} logical_tick={} candidate={} term={} age={} threshold={}",
+                self.metrics.scheduler_steps,
+                self.metrics.logical_ticks,
+                candidate_id,
+                new_term,
+                node.raft_election_age,
+                node.raft_election_timeout
+            );
+
+            node.raft_election_age = 0;
+            node.raft_current_term = new_term;
+            node.raft_role = RaftRole::Candidate;
+            node.raft_voted_for = Some(candidate_id);
+
+            return vec![NodeAction::BroadcastRequestVote {
+                term: new_term,
+                candidate_id,
+            }];
+        }
+
+        vec![]
+    }
+
     fn maybe_advance_time(&mut self) -> Vec<NodeAction> {
         match self.time_model {
             TimeModel::EventCoupled => {
@@ -1599,8 +1687,17 @@ impl Simulation {
     fn collect_tick_actions(&mut self) -> Vec<NodeAction> {
         let mut actions = self.protocol.on_tick();
 
-        let follower_actions = self.tick_mp_follower_timers();
-        actions.extend(follower_actions);
+        let mp_actions = self.tick_mp_follower_timers();
+        actions.extend(mp_actions);
+
+        let raft_actions = self.tick_raft_follower_timers();
+        actions.extend(raft_actions);
+
+        let raft_heartbeat_actions = self.tick_raft_heartbeat();
+        actions.extend(raft_heartbeat_actions);
+
+        let raft_actions = self.tick_raft_follower_timers();
+        actions.extend(raft_actions);
 
         actions
     }

@@ -25,6 +25,8 @@ pub struct Node {
     pub raft_role: RaftRole,
     pub raft_current_term: u64,
     pub raft_voted_for: Option<u64>,
+    pub raft_election_age: u64,
+    pub raft_election_timeout: u64,
 
     pub mp_heartbeat_age: u64,
     pub mp_election_timeout: u64,
@@ -186,6 +188,8 @@ impl Node {
             raft_role: RaftRole::Follower,
             raft_current_term: 0,
             raft_voted_for: None,
+            raft_election_age: 0,
+            raft_election_timeout: 20,
 
             mp_heartbeat_age: 0,
             mp_election_timeout: 20,
