@@ -1,0 +1,100 @@
+
+=== Run 1 ===
+Nodes: 5
+Quorum: 3
+Simulation starting
+[step=0] DELIVER from=1 to=1 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=0 timeout=20 ballot=1 promises=0 accepted=0
+[step=1] DELIVER from=1 to=2 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=1 timeout=20 ballot=1 promises=0 accepted=0
+[step=2] DELIVER from=1 to=3 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=2 timeout=20 ballot=1 promises=0 accepted=0
+[step=3] DELIVER from=1 to=4 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=3 timeout=20 ballot=1 promises=0 accepted=0
+[step=4] DELIVER from=1 to=5 type=Prepare { ballot: 1 } queue_len=4
+[PAXOS-TICK] phase=WaitingForPromises elapsed=4 timeout=20 ballot=1 promises=0 accepted=0
+[PROGRESS-QUORUM-DELIVER] from=1 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[step=5] DELIVER from=1 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=4
+[PROMISE-TRACE] from=1 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=5 timeout=20 ballot=1 promises=1 accepted=0
+[PROGRESS-QUORUM-DELIVER] from=2 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[step=6] DELIVER from=2 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=3
+[PROMISE-TRACE] from=2 received_ballot=1 current_ballot=1 match=true
+[PAXOS-TICK] phase=WaitingForPromises elapsed=6 timeout=20 ballot=1 promises=2 accepted=0
+[PROGRESS-CAP] key=3-1-Promise { ballot: 1, accepted_ballot: None, accepted_value: None } count=1 limit=2 max=5
+[PROGRESS-QUORUM-DELAY] spent=1 remaining=2 queue_len=3 delayed=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=7 timeout=20 ballot=1 promises=2 accepted=0
+[PROGRESS-CAP] key=5-1-Promise { ballot: 1, accepted_ballot: None, accepted_value: None } count=1 limit=4 max=5
+[PROGRESS-QUORUM-DELAY] spent=2 remaining=1 queue_len=3 delayed=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=8 timeout=20 ballot=1 promises=2 accepted=0
+[PROGRESS-CAP] key=4-1-Promise { ballot: 1, accepted_ballot: None, accepted_value: None } count=1 limit=2 max=5
+[PROGRESS-QUORUM-DELAY] spent=3 remaining=0 queue_len=3 delayed=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[PAXOS-TICK] phase=WaitingForPromises elapsed=9 timeout=20 ballot=1 promises=2 accepted=0
+[PROGRESS-QUORUM-DELIVER] from=3 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[step=10] DELIVER from=3 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=2
+[PROMISE-TRACE] from=3 received_ballot=1 current_ballot=1 match=true
+[PAXOS-QUORUM-PROMISE] ballot=1 count=3 quorum=3 current=1
+[PROGRESS-QUORUM-DELIVER] from=5 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[step=11] DELIVER from=5 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=6
+[PROMISE-TRACE] from=5 received_ballot=1 current_ballot=1 match=true
+[PROGRESS-QUORUM-DELIVER] from=4 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None }
+[step=12] DELIVER from=4 to=1 type=Promise { ballot: 1, accepted_ballot: None, accepted_value: None } queue_len=5
+[PROMISE-TRACE] from=4 received_ballot=1 current_ballot=1 match=true
+[step=13] DELIVER from=1 to=1 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(1, v1)
+[step=14] DELIVER from=1 to=2 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(1, v1)
+[step=15] DELIVER from=1 to=3 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(1, v1)
+[step=16] DELIVER from=1 to=4 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(1, v1)
+[step=17] DELIVER from=1 to=5 type=AcceptRequest { ballot: 1, value: "v1" } queue_len=4
+Broadcasting AcceptRequest(1, v1)
+[PROGRESS-QUORUM-DELIVER] from=1 to=1 type=Accepted { ballot: 1, value: "v1" }
+[step=18] DELIVER from=1 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=4
+[PROGRESS-QUORUM-DELIVER] from=2 to=1 type=Accepted { ballot: 1, value: "v1" }
+[step=19] DELIVER from=2 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=3
+[PROGRESS-QUORUM-DELIVER] from=3 to=1 type=Accepted { ballot: 1, value: "v1" }
+[step=20] DELIVER from=3 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=2
+[PAXOS-QUORUM-ACCEPTED] ballot=1 count=3 quorum=3 current=1
+[PROGRESS-QUORUM-DELIVER] from=4 to=1 type=Accepted { ballot: 1, value: "v1" }
+[step=21] DELIVER from=4 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=1
+[PROGRESS-QUORUM-DELIVER] from=5 to=1 type=Accepted { ballot: 1, value: "v1" }
+[step=22] DELIVER from=5 to=1 type=Accepted { ballot: 1, value: "v1" } queue_len=0
+
+=== Metrics ===
+Messages Sent: 20
+Messages Delivered: 20
+Scheduler Steps: 24
+Stale Messages Ignored: 0
+Messages Sent Until Decision: 0
+Undelivered Messages At Decision: 0
+Timeout triggered: 0
+View changes: 0
+Decisions: 1
+Prepare Messages: 5
+Promise Messages: 5
+Accept Requests: 5
+Accepted Messages: 5
+Raft Leader Elected: false
+Raft Leader Id: None
+Raft Election Count: 0
+AppendEntries Messages: 0
+AppendResponse Messages: 0
+Heartbeat Successes: 0
+Heartbeat Rejections: 0
+Raft Config Changes: 0
+Raft Config Acks: 0
+Raft Config Activated: false
+Nack Messages: 0
+Paxos Retries: 0
+Max Ballot Seen: 0
+Reached Step Cap: false
+Max Steps: 5000
+Membership Changes: 0
+Membership Acks: 0
+Chosen Values: {"v1"}
+Safety Violation: false
+Paxos Retry Exhausted: false
+Critical Messages Delayed: 0
+Delayed Messages Released: 0

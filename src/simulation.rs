@@ -1,29 +1,44 @@
 use crate::basic_paxos::BasicPaxosProtocol;
+use crate::basic_paxos::PaxosPhase;
 use crate::message::{Message, MessageType, VoteValue};
 use crate::metrics::Metrics;
-use crate::network::Network;
+use crate::multi_paxos::MultiPaxosProtocol;
+use crate::network::{Network, NetworkModel};
 use crate::node::RaftRole;
 use crate::node::{Node, NodeAction};
 use crate::protocol::{Protocol, SimpleConsensusProtocol, TimeoutProtocol, TwoPhaseProtocol};
 use crate::raft::RaftProtocol;
 use crate::scheduler::SchedulerOutcome;
+use crate::stable_multi_paxos::StableMultiPaxos;
 use crate::trace::{Config, TraceEvent, trace};
-use crate::basic_paxos::PaxosPhase;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TimeModel {
+    EventCoupled,
+    RoundTick,
+}
 
 pub struct Simulation {
     pub network: Network,
     nodes: Vec<Node>,
     pub metrics: Metrics,
     pub config: Config,
-    pub timeout_injected: bool,
-    pub timeout_threshold: u64,
+    // pub timeout_injected: bool,
+    // pub timeout_threshold: u64,
     protocol_name: String,
 
     // pub protocol: SimpleConsensusProtocol,
     pub protocol: Box<dyn Protocol>,
 
     pub node_count: usize,
-    pub last_timeout_step: u64,
+    //pub last_timeout_step: u64,
+    pub time_model: TimeModel,
+
+    // Tracks how many scheduler opportunities have happened
+    // inside the current logical round.
+    round_progress: usize,
+    // Raft leader heartbeat cadence in logical time.
+    raft_heartbeat_age: u64,
 }
 
 impl Simulation {
@@ -35,8 +50,20 @@ impl Simulation {
         max_delay: usize,
         node_count: usize,
         delay_probability: f64,
+        network_model: &str,
+        time_model: &str,
     ) -> Self {
         //let node_count = 4;
+
+        let network_model = match network_model {
+            "per-sender" => NetworkModel::PerSenderRoundRobin,
+            _ => NetworkModel::GlobalQueue,
+        };
+
+        let time_model = match time_model {
+            "round-tick" => TimeModel::RoundTick,
+            _ => TimeModel::EventCoupled,
+        };
 
         let nodes: Vec<Node> = (1..=node_count as u64).map(Node::new).collect();
 
@@ -83,7 +110,7 @@ impl Simulation {
                     .with_quorum_size(quorum_size),
             ),
 
-           "paxos-partial-timeout" => Box::new(
+            "paxos-partial-timeout" => Box::new(
                 BasicPaxosProtocol::new_with_proposer(1, 1, "v1".to_string())
                     .with_quorum_size(quorum_size)
                     .with_phase(PaxosPhase::WaitingForPromises)
@@ -134,6 +161,10 @@ impl Simulation {
                     .with_quorum_size(quorum_size),
             ),
 
+            "multi-paxos" => Box::new(MultiPaxosProtocol::new(quorum_size, timeout_threshold)),
+
+            "stable-multi-paxos" => Box::new(StableMultiPaxos::new(quorum_size)),
+
             "raft-election" => Box::new(RaftProtocol::new(quorum_size)),
 
             "raft-leader-crash" => Box::new(RaftProtocol::new(quorum_size)),
@@ -147,7 +178,14 @@ impl Simulation {
         };
 
         Self {
-            network: Network::new(scheduler_name, seed, max_delay, delay_probability),
+            network: Network::new(
+                scheduler_name,
+                seed,
+                max_delay,
+                delay_probability,
+                quorum_size,
+                network_model,
+            ),
             nodes, //vec![Node::new(1), Node::new(2), Node::new(3), Node::new(4)],
             metrics: Metrics::new(),
             config: Config {
@@ -157,17 +195,22 @@ impl Simulation {
                 print_decisions: true,
             },
             protocol,
-            timeout_injected: false,
-            timeout_threshold: timeout_threshold,
+            // timeout_injected: false,
+            // timeout_threshold: timeout_threshold,
             protocol_name: protocol_name.to_string(),
             node_count,
-            last_timeout_step: 0,
+            time_model,
+
+            round_progress: 0,
+            
+            raft_heartbeat_age: 0,
+            // last_timeout_step: 0,
         }
     }
 
-    fn quorum_size(&self) -> usize {
+    /*fn quorum_size(&self) -> usize {
         (self.nodes.len() / 2) + 1
-    }
+    }*/
 
     pub fn run(&mut self) {
         println!("Simulation starting");
@@ -296,28 +339,6 @@ impl Simulation {
                 }
             }
         } else if self.protocol_name == "paxos-partial-timeout" {
-            // Send Prepare(1) only to 2 nodes, not quorum.
-            // This creates an incomplete initial ballot.
-           /* self.network.send(Message {
-                from: 1,
-                to: 2,
-                round: 0,
-                msg_type: MessageType::Prepare { ballot: 1 },
-                payload: String::from("prepare"),
-                value: VoteValue::Yes,
-                delay_count: 0,
-            });
-
-            self.network.send(Message {
-                from: 1,
-                to: 3,
-                round: 0,
-                msg_type: MessageType::Prepare { ballot: 1 },
-                payload: String::from("prepare"),
-                value: VoteValue::Yes,
-                delay_count: 0,
-            });*/
-
             self.broadcast(Message {
                 from: 1,
                 to: 0,
@@ -508,6 +529,16 @@ impl Simulation {
                 value: VoteValue::Yes,
                 delay_count: 0,
             });
+        } else if self.protocol_name == "stable-multi-paxos" {
+            self.broadcast(Message {
+                from: 1,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::MPPrepare { ballot: 1 },
+                payload: "mp-prepare".to_string(),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
         } else if self.protocol_name == "raft-election" {
             self.broadcast(Message {
                 from: 1,
@@ -518,6 +549,36 @@ impl Simulation {
                     candidate_id: 1,
                 },
                 payload: String::from("request-vote"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+        } else if self.protocol_name == "multi-paxos" {
+            self.broadcast(Message {
+                from: 1,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 1 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+
+            self.broadcast(Message {
+                from: 2,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 2 },
+                payload: String::from("prepare"),
+                value: VoteValue::Yes,
+                delay_count: 0,
+            });
+
+            self.broadcast(Message {
+                from: 3,
+                to: 0,
+                round: 0,
+                msg_type: MessageType::Prepare { ballot: 3 },
+                payload: String::from("prepare"),
                 value: VoteValue::Yes,
                 delay_count: 0,
             });
@@ -639,17 +700,53 @@ impl Simulation {
             .filter(|node| node.decided.is_some())
             .count() as u64;
 
+        self.validate_protocol();
+
+        self.metrics.multi_paxos_chosen_slots = self.metrics.chosen_values.len() as u64;
         self.metrics.print();
     }
 
     fn deliver_all_messages(&mut self) {
-        let max_steps: u64 = 1000;
+        let max_steps: u64 = 5000;
+        let heartbeat_test_steps = 400;
         self.metrics.max_steps = max_steps;
 
-        while self.metrics.scheduler_steps < max_steps {
-            match self.network.deliver_next() {
-               
+        loop {
+            if self.protocol_name == "stable-multi-paxos"
+                && self.metrics.scheduler_steps >= heartbeat_test_steps
+            {
+                println!(
+                    "[SIM] Stable Multi-Paxos observation window complete at step {}",
+                    self.metrics.scheduler_steps
+                );
 
+                self.verify_stable_multi_paxos_recovery();
+
+                break;
+            }
+
+            if self.protocol_name == "raft-election"
+                && self.metrics.scheduler_steps >= heartbeat_test_steps
+            {
+                println!(
+                    "[SIM] Raft observation window complete at step {} logical_tick={}",
+                    self.metrics.scheduler_steps,
+                    self.metrics.logical_ticks
+                );
+                break;
+            }
+
+
+            if self.metrics.scheduler_steps >= max_steps {
+                println!(
+                    "[SIM] Reached step cap: {}. Treating as non-terminating within measurement bound.",
+                    max_steps
+                );
+
+                self.metrics.reached_step_cap = true;
+                break;
+            }
+            match self.network.deliver_next() {
                 SchedulerOutcome::Deliver(msg) => {
                     println!(
                         "[step={}] DELIVER from={} to={} type={:?} queue_len={}",
@@ -657,13 +754,65 @@ impl Simulation {
                         msg.from,
                         msg.to,
                         msg.msg_type,
-                        self.network.queue.len()
+                        self.network.queue_len()
                     );
 
-                    self.metrics.scheduler_steps += 1;
-                    self.metrics.messages_delivered += 1;
+                    if self.protocol_name == "stable-multi-paxos" {
+                        println!(
+                            "[MP-DELIVERY-CLASSIFY] step={} from={} to={} type={:?}",
+                            self.metrics.scheduler_steps, msg.from, msg.to, msg.msg_type
+                        );
+                    }
 
-                    
+                    self.metrics.scheduler_steps += 1;
+
+                    if let MessageType::MPHeartbeat { ballot, leader_id } = &msg.msg_type {
+                        let delivered_step = self.metrics.scheduler_steps;
+                        let generated_step = msg.round;
+
+                        let queue_delay = delivered_step.saturating_sub(generated_step);
+
+                        println!(
+                            "[MP-HEARTBEAT-DELIVERY-LAG] leader={} ballot={} \
+                            generated_step={} delivered_step={} lag={}",
+                            leader_id, ballot, generated_step, delivered_step, queue_delay
+                        );
+                        // First recovery attempt:
+                        // record the first heartbeat from any post-failure leader.
+                        if self.metrics.mp_recovery_completed_step.is_none()
+                            && *ballot >= 2
+                            && *leader_id != 1
+                        {
+                            let recovery_step = self.metrics.scheduler_steps;
+
+                            self.metrics.mp_recovery_completed_step = Some(recovery_step);
+                            self.metrics.mp_recovery_completed_tick =
+                                Some(self.metrics.logical_ticks);
+
+                            println!(
+                                "[MP-RECOVERY] completed_at_step={} ballot={} leader={}",
+                                recovery_step, ballot, leader_id
+                            );
+                        }
+
+                        // Stable recovery:
+                        // only a heartbeat from the currently highest ballot qualifies.
+                        // This metric is reset whenever a newer election occurs.
+                        if *ballot == self.metrics.max_ballot_seen
+                            && *leader_id != 1
+                            && self.metrics.mp_stable_recovery_step.is_none()
+                        {
+                            let stable_step = self.metrics.scheduler_steps;
+
+                            self.metrics.mp_stable_recovery_step = Some(stable_step);
+                            self.metrics.mp_stable_recovery_tick = Some(self.metrics.logical_ticks);
+
+                            println!(
+                                "[MP-STABLE-RECOVERY] step={} ballot={} leader={}",
+                                stable_step, ballot, leader_id
+                            );
+                        }
+                    }
 
                     trace(
                         &self.config,
@@ -671,6 +820,7 @@ impl Simulation {
                         &format!("{} -> {}", msg.from, msg.to),
                     );
 
+                    self.metrics.messages_delivered += 1;
                     self.count_message_metrics(&msg);
 
                     for node in &mut self.nodes {
@@ -685,28 +835,10 @@ impl Simulation {
                         }
                     }
 
-                    let tick_actions = self.protocol.on_tick();
+                    let tick_actions = self.maybe_advance_time(); //self.collect_tick_actions();
 
                     for action in tick_actions {
-                        match action {
-                            NodeAction::BroadcastPrepare { ballot } => {
-                                self.metrics.timeouts_triggered += 1;
-                                self.metrics.paxos_retries += 1;
-                                self.metrics.max_ballot_seen =
-                                    self.metrics.max_ballot_seen.max(ballot);
-
-                                self.broadcast(Message {
-                                    from: 1,
-                                    to: 0,
-                                    round: 0,
-                                    msg_type: MessageType::Prepare { ballot },
-                                    payload: String::from("prepare"),
-                                    value: VoteValue::Yes,
-                                    delay_count: 0,
-                                });
-                            }
-                            _ => {}
-                        }
+                        self.apply_tick_action(action);
                     }
 
                     if self.nodes.iter().all(|node| node.decided.is_some()) {
@@ -717,33 +849,13 @@ impl Simulation {
                     }
                 }
 
-              
-
                 SchedulerOutcome::Delay => {
                     self.metrics.scheduler_steps += 1;
 
-                    let actions = self.protocol.on_tick();
+                    let actions = self.maybe_advance_time(); //self.collect_tick_actions();
 
                     for action in actions {
-                        match action {
-                            NodeAction::BroadcastPrepare { ballot } => {
-                                self.metrics.timeouts_triggered += 1;
-                                self.metrics.paxos_retries += 1;
-                                self.metrics.max_ballot_seen =
-                                    self.metrics.max_ballot_seen.max(ballot);
-
-                                self.broadcast(Message {
-                                    from: 1,
-                                    to: 0,
-                                    round: 0,
-                                    msg_type: MessageType::Prepare { ballot },
-                                    payload: String::from("prepare"),
-                                    value: VoteValue::Yes,
-                                    delay_count: 0,
-                                });
-                            }
-                            _ => {}
-                        }
+                        self.apply_tick_action(action);
                     }
 
                     continue;
@@ -752,32 +864,20 @@ impl Simulation {
                 SchedulerOutcome::Empty => {
                     self.metrics.scheduler_steps += 1;
 
-                    let actions = self.protocol.on_tick();
+                    let actions = self.maybe_advance_time(); //self.collect_tick_actions();
 
                     if actions.is_empty() {
+                        if self.protocol_name == "stable-multi-paxos"
+                            || self.protocol_name == "raft-election"
+                        {
+                            continue;
+                        }
+
                         break;
                     }
 
                     for action in actions {
-                        match action {
-                            NodeAction::BroadcastPrepare { ballot } => {
-                                self.metrics.timeouts_triggered += 1;
-                                self.metrics.paxos_retries += 1;
-                                self.metrics.max_ballot_seen =
-                                    self.metrics.max_ballot_seen.max(ballot);
-
-                                self.broadcast(Message {
-                                    from: 1,
-                                    to: 0,
-                                    round: 0,
-                                    msg_type: MessageType::Prepare { ballot },
-                                    payload: String::from("prepare"),
-                                    value: VoteValue::Yes,
-                                    delay_count: 0,
-                                });
-                            }
-                            _ => {}
-                        }
+                        self.apply_tick_action(action);
                     }
 
                     continue;
@@ -807,26 +907,6 @@ impl Simulation {
     fn send_to(&mut self, msg: Message) {
         self.metrics.messages_sent += 1;
         self.network.send(msg);
-    }
-
-    fn inject_timeouts(&mut self) {
-        let node_ids: Vec<u64> = self.nodes.iter().map(|node| node.id).collect();
-
-        for node_id in node_ids {
-            let timeout = Message {
-                from: 0,
-                to: node_id,
-                round: 0,
-                msg_type: MessageType::Timeout,
-                payload: String::from("timeout"),
-                value: VoteValue::Yes,
-                delay_count: 0,
-            };
-
-            self.metrics.messages_sent += 1;
-            //self.metrics.timeouts_triggered += 1;
-            self.network.send(timeout);
-        }
     }
 
     fn apply_action(&mut self, msg: &Message, action: NodeAction) {
@@ -960,6 +1040,22 @@ impl Simulation {
                         value: value.clone(),
                     },
                     payload: String::from("accepted"),
+                    value: msg.value.clone(),
+                    delay_count: msg.delay_count,
+                });
+            }
+
+            NodeAction::SendMPPromise {
+                to,
+                ballot,
+                accepted,
+            } => {
+                self.send_to(Message {
+                    from: msg.to,
+                    to,
+                    round: msg.round + 1,
+                    msg_type: MessageType::MPPromise { ballot, accepted },
+                    payload: String::from("mp-promise"),
                     value: msg.value.clone(),
                     delay_count: msg.delay_count,
                 });
@@ -1105,6 +1201,217 @@ impl Simulation {
             NodeAction::ActivateRaftConfig { new_node_count: _ } => {
                 self.metrics.raft_config_activated = true;
             }
+
+            NodeAction::BroadcastPrepareFrom { from, ballot } => {
+                println!("[RETRY-BROADCAST] proposer={} ballot={}", from, ballot);
+                self.metrics.paxos_retries += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
+                self.broadcast(Message {
+                    from,
+                    to: 0,
+                    round: msg.round + 1,
+                    msg_type: MessageType::Prepare { ballot },
+                    payload: String::from("prepare"),
+                    value: VoteValue::Yes,
+                    delay_count: msg.delay_count,
+                });
+            }
+
+            NodeAction::BroadcastMPAcceptRequest {
+                ballot,
+                slot,
+                value,
+            } => {
+                self.broadcast(Message {
+                    from: msg.to,
+                    to: 0,
+                    round: msg.round + 1,
+                    msg_type: MessageType::MPAcceptRequest {
+                        ballot,
+                        slot,
+                        value,
+                    },
+                    payload: "mp-accept-request".to_string(),
+                    value: msg.value.clone(),
+                    delay_count: msg.delay_count,
+                });
+            }
+
+            NodeAction::SendMPAccepted {
+                to,
+                ballot,
+                slot,
+                value,
+            } => {
+                self.send_to(Message {
+                    from: msg.to,
+                    to,
+                    round: msg.round + 1,
+                    msg_type: MessageType::MPAccepted {
+                        ballot,
+                        slot,
+                        value,
+                    },
+                    payload: "mp-accepted".to_string(),
+                    value: msg.value.clone(),
+                    delay_count: msg.delay_count,
+                });
+            }
+
+            NodeAction::RecordMPChosen { slot, value } => {
+                println!("[MULTI-PAXOS-CHOSEN] slot={} value={}", slot, value);
+
+                // Temporary behavior until metrics become slot-aware.
+                self.metrics.decisions += 1;
+
+                self.metrics
+                    .chosen_values
+                    .insert(format!("slot{}={}", slot, value));
+            }
+
+            NodeAction::BroadcastMPPrepare { from, ballot } => {
+                println!("[MP-LEADER-ELECTION] leader={} ballot={}", from, ballot);
+
+                self.metrics.view_changes += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
+                self.metrics.mp_last_view_change_step = Some(self.metrics.scheduler_steps);
+
+                // Any earlier "recovery" is invalidated by a newer election.
+                self.metrics.mp_stable_recovery_step = None;
+                self.metrics.mp_stable_recovery_tick = None;
+
+                self.broadcast(Message {
+                    from,
+                    to: 0,
+                    round: 0,
+                    msg_type: MessageType::MPPrepare { ballot },
+                    payload: "mp-prepare".to_string(),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+
+            NodeAction::BroadcastMPHeartbeat { leader_id, ballot } => {
+                self.broadcast(Message {
+                    from: leader_id,
+                    to: 0,
+                    round: msg.round + 1,
+                    msg_type: MessageType::MPHeartbeat { ballot, leader_id },
+                    payload: "mp-heartbeat".to_string(),
+                    value: msg.value.clone(),
+                    delay_count: msg.delay_count,
+                });
+            }
+        }
+    }
+
+    fn apply_tick_action(&mut self, action: NodeAction) {
+        match action {
+            NodeAction::BroadcastPrepare { ballot } => {
+                self.metrics.timeouts_triggered += 1;
+                self.metrics.paxos_retries += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
+                self.broadcast(Message {
+                    from: 1,
+                    to: 0,
+                    round: 0,
+                    msg_type: MessageType::Prepare { ballot },
+                    payload: "prepare".to_string(),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+
+            NodeAction::BroadcastPrepareFrom { from, ballot } => {
+                println!("[RETRY-BROADCAST] proposer={} ballot={}", from, ballot);
+
+                self.metrics.timeouts_triggered += 1;
+                self.metrics.paxos_retries += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
+                self.broadcast(Message {
+                    from,
+                    to: 0,
+                    round: 0,
+                    msg_type: MessageType::Prepare { ballot },
+                    payload: "prepare".to_string(),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+
+            NodeAction::BroadcastMPHeartbeat { leader_id, ballot } => {
+                let generated_step = self.metrics.scheduler_steps;
+
+                println!(
+                    "[MP-HEARTBEAT-GENERATED] step={} leader={} ballot={} queue_len={}",
+                    generated_step,
+                    leader_id,
+                    ballot,
+                    self.network.queue_len()
+                );
+
+                const FAILED_LEADER: u64 = 1;
+                const FAILURE_STEP: u64 = 40;
+
+                if leader_id == FAILED_LEADER && generated_step >= FAILURE_STEP {
+                    println!(
+                        "[MP-HEARTBEAT-SUPPRESSED] step={} leader={} ballot={}",
+                        generated_step, leader_id, ballot
+                    );
+
+                    return;
+                }
+
+                self.broadcast(Message {
+                    from: leader_id,
+                    to: 0,
+                    round: generated_step,
+                    msg_type: MessageType::MPHeartbeat { ballot, leader_id },
+                    payload: "mp-heartbeat".to_string(),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+
+            NodeAction::BroadcastMPPrepare { from, ballot } => {
+                println!("[MP-LEADER-ELECTION] leader={} ballot={}", from, ballot);
+
+                self.metrics.view_changes += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(ballot);
+
+                self.metrics.mp_last_view_change_step = Some(self.metrics.scheduler_steps);
+
+                self.metrics.mp_stable_recovery_step = None;
+                self.metrics.mp_stable_recovery_tick = None;
+
+                self.broadcast(Message {
+                    from,
+                    to: 0,
+                    round: 0,
+                    msg_type: MessageType::MPPrepare { ballot },
+                    payload: "mp-prepare".to_string(),
+                    value: VoteValue::Yes,
+                    delay_count: 0,
+                });
+            }
+
+            _ => {}
+        }
+    }
+
+    fn validate_protocol(&self) {
+        assert!(!self.metrics.safety_violation, "Safety violation detected");
+
+        if self.protocol_name == "stable-multi-paxos" {
+            assert_eq!(
+                self.metrics.chosen_values.len(),
+                3,
+                "Expected three chosen Multi-Paxos slots"
+            );
         }
     }
 
@@ -1164,6 +1471,7 @@ impl Simulation {
 
             MessageType::AppendResponse { success, .. } => {
                 self.metrics.append_response_messages += 1;
+
                 if *success {
                     self.metrics.heartbeat_successes += 1;
                 } else {
@@ -1179,7 +1487,271 @@ impl Simulation {
                 self.metrics.raft_config_acks += 1;
             }
 
+            MessageType::MPPrepare { ballot } => {
+                self.metrics.multi_paxos_prepare_messages += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(*ballot);
+            }
+
+            MessageType::MPPromise { ballot, .. } => {
+                self.metrics.multi_paxos_promise_messages += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(*ballot);
+            }
+
+            MessageType::MPAcceptRequest { ballot, .. } => {
+                self.metrics.multi_paxos_accept_requests += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(*ballot);
+            }
+
+            MessageType::MPAccepted { ballot, .. } => {
+                self.metrics.multi_paxos_accepted_messages += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(*ballot);
+            }
+
+            MessageType::MPHeartbeat { ballot, .. } => {
+                self.metrics.multi_paxos_heartbeat_messages += 1;
+                self.metrics.max_ballot_seen = self.metrics.max_ballot_seen.max(*ballot);
+            }
+
             _ => {}
+        }
+    }
+
+    fn tick_mp_follower_timers(&mut self) -> Vec<NodeAction> {
+        if self.protocol_name != "stable-multi-paxos" {
+            return vec![];
+        }
+
+        let node_count = self.nodes.len() as u64;
+        let mut timed_out_candidate: Option<(u64, u64)> = None;
+
+        for node in &mut self.nodes {
+            if node.id == node.leader {
+                node.mp_heartbeat_age = 0;
+                continue;
+            }
+
+            node.mp_heartbeat_age += 1;
+
+            if node.mp_heartbeat_age < node.mp_election_timeout {
+                continue;
+            }
+
+            println!(
+                "[MP-FOLLOWER-TIMEOUT] step={} logical_tick={} candidate={} current_leader={} \
+                promised_ballot={} heartbeat_age={} threshold={}",
+                self.metrics.scheduler_steps,
+                self.metrics.logical_ticks,
+                node.id,
+                node.leader,
+                node.promised_ballot,
+                node.mp_heartbeat_age,
+                node.mp_election_timeout
+            );
+
+            const FAILED_LEADER: u64 = 1;
+            const FAILURE_STEP: u64 = 40;
+
+            let mut expected_candidate = if node.leader >= node_count {
+                1
+            } else {
+                node.leader + 1
+            };
+
+            // After the injected failure, node 1 is permanently unavailable.
+            // Skip it when choosing the next election candidate.
+            if self.metrics.scheduler_steps >= FAILURE_STEP && expected_candidate == FAILED_LEADER {
+                expected_candidate = if FAILED_LEADER >= node_count {
+                    1
+                } else {
+                    FAILED_LEADER + 1
+                };
+            }
+
+            if node.id != expected_candidate {
+                continue;
+            }
+
+            node.mp_heartbeat_age = 0;
+
+            timed_out_candidate = Some((node.id, node.promised_ballot));
+
+            break;
+        }
+
+        match timed_out_candidate {
+            Some((candidate_id, observed_ballot)) => {
+                println!(
+                    "[MP-FOLLOWER-TIMEOUT] candidate={} observed_ballot={}",
+                    candidate_id, observed_ballot
+                );
+
+                self.protocol
+                    .on_follower_timeout(candidate_id, observed_ballot)
+            }
+
+            None => vec![],
+        }
+    }
+
+    fn tick_raft_heartbeat(&mut self) -> Vec<NodeAction> {
+        if !self.protocol_name.starts_with("raft-") {
+            return vec![];
+        }
+
+        let leader = self.nodes.iter().find(|n| n.raft_role == RaftRole::Leader);
+
+        let Some(leader) = leader else {
+            self.raft_heartbeat_age = 0;
+            return vec![];
+        };
+
+        self.raft_heartbeat_age += 1;
+
+        if self.raft_heartbeat_age < 5 {
+            return vec![];
+        }
+
+        self.raft_heartbeat_age = 0;
+
+        vec![NodeAction::BroadcastAppendEntries {
+            term: leader.raft_current_term,
+            leader_id: leader.id,
+        }]
+    }
+
+    fn tick_raft_follower_timers(&mut self) -> Vec<NodeAction> {
+        if !self.protocol_name.starts_with("raft-") {
+            return vec![];
+        }
+
+        for node in &mut self.nodes {
+            if node.raft_role == RaftRole::Leader {
+                node.raft_election_age = 0;
+                continue;
+            }
+
+            node.raft_election_age += 1;
+
+            if node.raft_election_age < node.raft_election_timeout {
+                continue;
+            }
+
+            let candidate_id = node.id;
+            let new_term = node.raft_current_term + 1;
+
+            println!(
+                "[RAFT-ELECTION-TIMEOUT] step={} logical_tick={} candidate={} term={} age={} threshold={}",
+                self.metrics.scheduler_steps,
+                self.metrics.logical_ticks,
+                candidate_id,
+                new_term,
+                node.raft_election_age,
+                node.raft_election_timeout
+            );
+
+            node.raft_election_age = 0;
+            node.raft_current_term = new_term;
+            node.raft_role = RaftRole::Candidate;
+            node.raft_voted_for = Some(candidate_id);
+
+            return vec![NodeAction::BroadcastRequestVote {
+                term: new_term,
+                candidate_id,
+            }];
+        }
+
+        vec![]
+    }
+
+    fn maybe_advance_time(&mut self) -> Vec<NodeAction> {
+        match self.time_model {
+            TimeModel::EventCoupled => {
+                self.metrics.logical_ticks += 1;
+                self.collect_tick_actions()
+            }
+
+            TimeModel::RoundTick => {
+                self.round_progress += 1;
+
+                if self.round_progress >= self.node_count {
+                    self.round_progress = 0;
+                    self.metrics.logical_ticks += 1;
+                    self.collect_tick_actions()
+                } else {
+                    vec![]
+                }
+            }
+        }
+    }
+
+    fn collect_tick_actions(&mut self) -> Vec<NodeAction> {
+        let mut actions = self.protocol.on_tick();
+
+        let mp_actions = self.tick_mp_follower_timers();
+        actions.extend(mp_actions);
+
+        let raft_actions = self.tick_raft_follower_timers();
+        actions.extend(raft_actions);
+
+        let raft_heartbeat_actions = self.tick_raft_heartbeat();
+        actions.extend(raft_heartbeat_actions);
+
+        let raft_actions = self.tick_raft_follower_timers();
+        actions.extend(raft_actions);
+
+        actions
+    }
+
+    fn verify_stable_multi_paxos_recovery(&mut self) {
+        println!("[MP-VERIFY] Starting recovery verification");
+
+        let expected = ["slot1=v1", "slot2=v2", "slot3=v3"];
+        let mut recovery_ok = true;
+
+        for expected_entry in expected {
+            if !self.metrics.chosen_values.contains(expected_entry) {
+                println!("[MP-VERIFY] Missing recovered value: {expected_entry}");
+                recovery_ok = false;
+            }
+        }
+
+        if self.metrics.chosen_values.len() != expected.len() {
+            println!(
+                "[MP-VERIFY] Unexpected chosen-value count: expected={} actual={}",
+                expected.len(),
+                self.metrics.chosen_values.len()
+            );
+            recovery_ok = false;
+        }
+
+        if self.metrics.safety_violation {
+            println!("[MP-VERIFY] Safety violation detected");
+            recovery_ok = false;
+        }
+
+        if self.metrics.view_changes < 1 {
+            println!(
+                "[MP-VERIFY] No failover occurred: view_changes={}",
+                self.metrics.view_changes
+            );
+            recovery_ok = false;
+        }
+
+        if self.metrics.max_ballot_seen < 2 {
+            println!(
+                "[MP-VERIFY] Ballot did not advance: max_ballot_seen={}",
+                self.metrics.max_ballot_seen
+            );
+            recovery_ok = false;
+        }
+
+        if recovery_ok {
+            println!(
+                "[MP-VERIFY] Recovery successful: 3 slots preserved, ballot={}, view_changes={}",
+                self.metrics.max_ballot_seen, self.metrics.view_changes
+            );
+        } else {
+            println!("[MP-VERIFY] Recovery FAILED");
         }
     }
 }

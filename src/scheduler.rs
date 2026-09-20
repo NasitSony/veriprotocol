@@ -1,10 +1,10 @@
 use crate::message::{Message, MessageType, VoteValue};
+
+use rand::Rng;
 use rand::RngExt;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
-use std::collections::HashMap;
-use rand::Rng;
-
+use std::collections::{HashMap, HashSet};
 
 pub enum SchedulerOutcome {
     Deliver(Message),
@@ -557,9 +557,9 @@ fn paxos_ballot(msg: &Message) -> Option<u64> {
     }
 }
 
-fn is_accept_request(msg: &Message) -> bool {
+/*fn is_accept_request(msg: &Message) -> bool {
     matches!(&msg.msg_type, MessageType::AcceptRequest { .. })
-}
+}*/
 
 fn has_higher_ballot(queue: &[Message], ballot: u64) -> bool {
     queue
@@ -1367,7 +1367,7 @@ impl UniformBudgetDelayScheduler {
         }
     }
 
-    pub fn total_budget(&self) -> usize {
+    /* pub fn total_budget(&self) -> usize {
         self.total_budget
     }
 
@@ -1377,7 +1377,7 @@ impl UniformBudgetDelayScheduler {
 
     pub fn spent_budget(&self) -> usize {
         self.spent_budget
-    }
+    }*/
 
     fn spend_one(&mut self) {
         if self.remaining_budget > 0 {
@@ -1528,7 +1528,7 @@ impl Scheduler for TargetedBudgetDelayScheduler {
     }
 }
 pub struct InterleavedUniformBudgetDelayScheduler {
-    total_budget: usize,
+    // total_budget: usize,
     remaining_budget: usize,
     spent_budget: usize,
     delay_every: usize,
@@ -1538,7 +1538,7 @@ pub struct InterleavedUniformBudgetDelayScheduler {
 impl InterleavedUniformBudgetDelayScheduler {
     pub fn new(total_budget: usize, delay_every: usize) -> Self {
         Self {
-            total_budget,
+            //  total_budget,
             remaining_budget: total_budget,
             spent_budget: 0,
             delay_every,
@@ -1589,10 +1589,8 @@ impl Scheduler for InterleavedUniformBudgetDelayScheduler {
     }
 }
 
-
-
 pub struct InterleavedTargetedBudgetDelayScheduler {
-    total_budget: usize,
+    //  total_budget: usize,
     remaining_budget: usize,
     spent_budget: usize,
     delay_every: usize,
@@ -1602,7 +1600,7 @@ pub struct InterleavedTargetedBudgetDelayScheduler {
 impl InterleavedTargetedBudgetDelayScheduler {
     pub fn new(total_budget: usize, delay_every: usize) -> Self {
         Self {
-            total_budget,
+            //  total_budget,
             remaining_budget: total_budget,
             spent_budget: 0,
             delay_every,
@@ -1623,9 +1621,7 @@ impl InterleavedTargetedBudgetDelayScheduler {
     fn is_critical(msg: &Message) -> bool {
         matches!(
             msg.msg_type,
-            MessageType::Promise { .. }
-                | MessageType::Accepted { .. }
-                | MessageType::Nack { .. }
+            MessageType::Promise { .. } | MessageType::Accepted { .. } | MessageType::Nack { .. }
         )
     }
 }
@@ -1662,7 +1658,7 @@ impl Scheduler for InterleavedTargetedBudgetDelayScheduler {
 }
 
 pub struct InterleavedProgressTargetedBudgetDelayScheduler {
-    total_budget: usize,
+    // total_budget: usize,
     remaining_budget: usize,
     spent_budget: usize,
     delay_every: usize,
@@ -1672,7 +1668,7 @@ pub struct InterleavedProgressTargetedBudgetDelayScheduler {
 impl InterleavedProgressTargetedBudgetDelayScheduler {
     pub fn new(total_budget: usize, delay_every: usize) -> Self {
         Self {
-            total_budget,
+            // total_budget,
             remaining_budget: total_budget,
             spent_budget: 0,
             delay_every,
@@ -1762,11 +1758,10 @@ impl Scheduler for ProbInterleavedUniformBudgetDelayScheduler {
             return SchedulerOutcome::Empty;
         }
 
-       //et mut rng = rand::rng();
+        //et mut rng = rand::rng();
 
         let should_delay =
-            self.remaining_budget > 0 &&
-            self.rng.random_bool(self.delay_probability);
+            self.remaining_budget > 0 && self.rng.random_bool(self.delay_probability);
 
         if should_delay {
             self.spend_one();
@@ -1799,12 +1794,6 @@ pub struct ProbInterleavedTargetedBudgetDelayScheduler {
     rng: rand::rngs::StdRng,
 }
 
-
-
-
-
-
-
 impl ProbInterleavedTargetedBudgetDelayScheduler {
     pub fn new(total_budget: usize, delay_probability: f64, seed: u64) -> Self {
         Self {
@@ -1823,16 +1812,11 @@ impl ProbInterleavedTargetedBudgetDelayScheduler {
     fn is_critical(msg: &Message) -> bool {
         matches!(
             msg.msg_type,
-            MessageType::Promise { .. }
-                | MessageType::Accepted { .. }
-                | MessageType::Nack { .. }
+            MessageType::Promise { .. } | MessageType::Accepted { .. }
         )
     }
 
-   fn random_critical_index(
-        queue: &[Message],
-        rng: &mut impl rand::Rng,
-    ) -> Option<usize> {
+    fn random_critical_index(queue: &[Message], rng: &mut impl rand::Rng) -> Option<usize> {
         let critical_indices: Vec<usize> = queue
             .iter()
             .enumerate()
@@ -1859,10 +1843,9 @@ impl Scheduler for ProbInterleavedTargetedBudgetDelayScheduler {
         if queue.is_empty() {
             return SchedulerOutcome::Empty;
         }
-        
+
         let should_delay =
-            self.remaining_budget > 0 &&
-            self.rng.random_bool(self.delay_probability);
+            self.remaining_budget > 0 && self.rng.random_bool(self.delay_probability);
 
         if should_delay {
             self.spend_one();
@@ -1887,6 +1870,1318 @@ impl Scheduler for ProbInterleavedTargetedBudgetDelayScheduler {
             );
 
             return SchedulerOutcome::Delay;
+        }
+
+        SchedulerOutcome::Deliver(queue.remove(0))
+    }
+}
+
+pub struct DeadlineAwareQuorumDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    quorum_size: usize,
+    //  rng: StdRng,
+}
+
+impl DeadlineAwareQuorumDelayScheduler {
+    pub fn new(total_budget: usize, quorum_size: usize, seed: u64) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            quorum_size,
+            // rng: StdRng::seed_from_u64(seed),
+        }
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn is_promise(msg: &Message) -> bool {
+        matches!(msg.msg_type, MessageType::Promise { .. })
+    }
+
+    fn is_accepted(msg: &Message) -> bool {
+        matches!(msg.msg_type, MessageType::Accepted { .. })
+    }
+
+    fn count_deliverable_before_idx<F>(queue: &[Message], idx: usize, predicate: F) -> usize
+    where
+        F: Fn(&Message) -> bool,
+    {
+        queue[..idx].iter().filter(|m| predicate(m)).count()
+    }
+
+    fn find_quorum_blocking_message(&self, queue: &[Message]) -> Option<usize> {
+        for (idx, msg) in queue.iter().enumerate() {
+            match msg.msg_type {
+                MessageType::Promise { .. } => {
+                    let before = Self::count_deliverable_before_idx(queue, idx, Self::is_promise);
+
+                    if before + 1 >= self.quorum_size {
+                        return Some(idx);
+                    }
+                }
+
+                MessageType::Accepted { .. } => {
+                    let before = Self::count_deliverable_before_idx(queue, idx, Self::is_accepted);
+
+                    if before + 1 >= self.quorum_size {
+                        return Some(idx);
+                    }
+                }
+
+                _ => {}
+            }
+        }
+
+        None
+    }
+}
+
+impl Scheduler for DeadlineAwareQuorumDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(idx) = self.find_quorum_blocking_message(queue) {
+                self.spend_one();
+
+                let msg = queue.remove(idx);
+                let msg_type = format!("{:?}", msg.msg_type);
+                queue.push(msg);
+
+                println!(
+                    "[DEADLINE-QUORUM-DELAY] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            }
+        }
+
+        SchedulerOutcome::Deliver(queue.remove(0))
+    }
+}
+
+pub struct BoundedQuorumUsefulDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    quorum_size: usize,
+    max_consecutive_delay: u64,
+    consecutive_delay: HashMap<String, u64>,
+    rng: StdRng,
+}
+
+impl BoundedQuorumUsefulDelayScheduler {
+    pub fn new(
+        total_budget: usize,
+        quorum_size: usize,
+        max_consecutive_delay: u64,
+        proposer_id: u64,
+        seed: u64,
+    ) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            quorum_size,
+            max_consecutive_delay,
+            consecutive_delay: HashMap::new(),
+            rng: StdRng::seed_from_u64(seed),
+        }
+    }
+
+    fn is_promise_for(msg: &Message, ballot: u64, proposer_id: u64) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::Promise { ballot: b, .. } if b == ballot && msg.to == proposer_id
+        )
+    }
+
+    fn is_accepted_for(msg: &Message, ballot: u64, proposer_id: u64) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::Accepted { ballot: b, .. } if b == ballot && msg.to == proposer_id
+        )
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn message_key(msg: &Message) -> String {
+        format!("{}-{}-{:?}", msg.from, msg.to, msg.msg_type)
+    }
+
+    fn can_delay(&self, msg: &Message) -> bool {
+        let key = Self::message_key(msg);
+        self.consecutive_delay.get(&key).copied().unwrap_or(0) < self.max_consecutive_delay
+    }
+
+    fn record_delay(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        let count = self.consecutive_delay.entry(key.clone()).or_insert(0);
+        *count += 1;
+
+        println!(
+            "[CAP-TRACE] key={} count={} max={}",
+            key, count, self.max_consecutive_delay
+        );
+    }
+
+    fn record_delivery(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        self.consecutive_delay.remove(&key);
+    }
+
+    fn ballot(msg: &Message) -> Option<u64> {
+        match msg.msg_type {
+            MessageType::Prepare { ballot }
+            | MessageType::Promise { ballot, .. }
+            | MessageType::AcceptRequest { ballot, .. }
+            | MessageType::Accepted { ballot, .. }
+            | MessageType::Nack { ballot, .. } => Some(ballot),
+            _ => None,
+        }
+    }
+
+    fn latest_ballot(queue: &[Message]) -> Option<u64> {
+        queue.iter().filter_map(Self::ballot).max()
+    }
+
+    fn count_before<F>(queue: &[Message], idx: usize, pred: F) -> usize
+    where
+        F: Fn(&Message) -> bool,
+    {
+        queue[..idx].iter().filter(|m| pred(m)).count()
+    }
+
+    fn find_candidate(&mut self, queue: &[Message]) -> Option<usize> {
+        let latest = Self::latest_ballot(queue)?;
+
+        let mut candidates = Vec::new();
+        let proposer_id = 1;
+
+        for (idx, msg) in queue.iter().enumerate() {
+            match msg.msg_type {
+                MessageType::Promise { ballot, .. } if ballot == latest => {
+                    let before = Self::count_before(queue, idx, |m| {
+                        Self::is_promise_for(m, latest, proposer_id)
+                    });
+
+                    if before < self.quorum_size && self.can_delay(msg) {
+                        candidates.push(idx);
+                    }
+                }
+
+                MessageType::Accepted { ballot, .. } if ballot == latest => {
+                    let before = Self::count_before(queue, idx, |m| {
+                        Self::is_accepted_for(m, latest, proposer_id)
+                    });
+
+                    if before < self.quorum_size && self.can_delay(msg) {
+                        candidates.push(idx);
+                    }
+                }
+
+                _ => {}
+            }
+        }
+
+        if candidates.is_empty() {
+            None
+        } else {
+            let j = self.rng.random_range(0..candidates.len());
+            Some(candidates[j])
+        }
+    }
+}
+
+impl Scheduler for BoundedQuorumUsefulDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(idx) = self.find_candidate(queue) {
+                self.spend_one();
+
+                let msg = queue.remove(idx);
+                self.record_delay(&msg);
+
+                let msg_type = format!("{:?}", msg.msg_type);
+                queue.push(msg);
+
+                println!(
+                    "[BOUNDED-QUORUM-USEFUL-DELAY] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            }
+        }
+
+        let msg = queue.remove(0);
+        self.record_delivery(&msg);
+
+        if matches!(msg.msg_type, MessageType::Promise { .. }) {
+            println!(
+                "[BOUNDED-QUORUM-USEFUL-DELIVER] from={} to={} type={:?}",
+                msg.from, msg.to, msg.msg_type
+            );
+        }
+
+        SchedulerOutcome::Deliver(msg)
+    }
+}
+
+pub struct ProgressAwareQuorumDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    quorum_size: usize,
+    max_consecutive_delay: u64,
+    consecutive_delay: HashMap<String, u64>,
+    delivered_promises: HashMap<(u64, u64), HashSet<u64>>, // (to, ballot) -> from set
+    delivered_accepted: HashMap<(u64, u64), HashSet<u64>>, // (to, ballot) -> from set
+    rng: StdRng,
+}
+
+impl ProgressAwareQuorumDelayScheduler {
+    pub fn new(
+        total_budget: usize,
+        quorum_size: usize,
+        max_consecutive_delay: u64,
+        seed: u64,
+    ) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            quorum_size,
+            max_consecutive_delay,
+            consecutive_delay: HashMap::new(),
+            delivered_promises: HashMap::new(),
+            delivered_accepted: HashMap::new(),
+            rng: StdRng::seed_from_u64(seed),
+        }
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn message_key(msg: &Message) -> String {
+        format!("{}-{}-{:?}", msg.from, msg.to, msg.msg_type)
+    }
+
+    fn can_delay(&self, msg: &Message) -> bool {
+        let key = Self::message_key(msg);
+        let count = self.consecutive_delay.get(&key).copied().unwrap_or(0);
+        count < self.max_consecutive_delay
+    }
+
+    fn record_delay(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        let count = self.consecutive_delay.entry(key.clone()).or_insert(0);
+        *count += 1;
+
+        println!(
+            "[PROGRESS-CAP] key={} count={} max={}",
+            key, count, self.max_consecutive_delay
+        );
+    }
+
+    fn record_delivery(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        self.consecutive_delay.remove(&key);
+
+        match msg.msg_type {
+            MessageType::Promise { ballot, .. } => {
+                self.delivered_promises
+                    .entry((msg.to, ballot))
+                    .or_insert_with(HashSet::new)
+                    .insert(msg.from);
+            }
+
+            MessageType::Accepted { ballot, .. } => {
+                self.delivered_accepted
+                    .entry((msg.to, ballot))
+                    .or_insert_with(HashSet::new)
+                    .insert(msg.from);
+            }
+
+            _ => {}
+        }
+    }
+
+    fn ballot(msg: &Message) -> Option<u64> {
+        match msg.msg_type {
+            MessageType::Prepare { ballot }
+            | MessageType::Promise { ballot, .. }
+            | MessageType::AcceptRequest { ballot, .. }
+            | MessageType::Accepted { ballot, .. }
+            | MessageType::Nack { ballot, .. } => Some(ballot),
+            _ => None,
+        }
+    }
+
+    fn latest_ballot(queue: &[Message]) -> Option<u64> {
+        queue.iter().filter_map(Self::ballot).max()
+    }
+
+    fn promise_count(&self, to: u64, ballot: u64) -> usize {
+        self.delivered_promises
+            .get(&(to, ballot))
+            .map(|s| s.len())
+            .unwrap_or(0)
+    }
+
+    fn accepted_count(&self, to: u64, ballot: u64) -> usize {
+        self.delivered_accepted
+            .get(&(to, ballot))
+            .map(|s| s.len())
+            .unwrap_or(0)
+    }
+
+    fn find_quorum_forming_candidate(&mut self, queue: &[Message]) -> Option<usize> {
+        let latest = Self::latest_ballot(queue)?;
+
+        let mut candidates = Vec::new();
+
+        for (idx, msg) in queue.iter().enumerate() {
+            match msg.msg_type {
+                MessageType::Promise { ballot, .. } if ballot == latest => {
+                    let count = self.promise_count(msg.to, ballot);
+
+                    if count < self.quorum_size && self.can_delay(msg) {
+                        candidates.push(idx);
+                    }
+                }
+
+                MessageType::Accepted { ballot, .. } if ballot == latest => {
+                    let count = self.accepted_count(msg.to, ballot);
+
+                    if count < self.quorum_size && self.can_delay(msg) {
+                        candidates.push(idx);
+                    }
+                }
+
+                _ => {}
+            }
+        }
+
+        if candidates.is_empty() {
+            None
+        } else {
+            let j = self.rng.random_range(0..candidates.len());
+            Some(candidates[j])
+        }
+    }
+}
+
+impl Scheduler for ProgressAwareQuorumDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(idx) = self.find_quorum_forming_candidate(queue) {
+                self.spend_one();
+
+                let msg = queue.remove(idx);
+                self.record_delay(&msg);
+
+                let msg_type = format!("{:?}", msg.msg_type);
+                queue.push(msg);
+
+                println!(
+                    "[PROGRESS-QUORUM-DELAY] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            }
+        }
+
+        let msg = queue.remove(0);
+        self.record_delivery(&msg);
+
+        if matches!(
+            msg.msg_type,
+            MessageType::Promise { .. } | MessageType::Accepted { .. }
+        ) {
+            println!(
+                "[PROGRESS-QUORUM-DELIVER] from={} to={} type={:?}",
+                msg.from, msg.to, msg.msg_type
+            );
+        }
+
+        SchedulerOutcome::Deliver(msg)
+    }
+}
+
+pub struct UniformActiveBudgetDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    max_consecutive_delay: u64,
+    consecutive_delay: HashMap<String, u64>,
+    rng: StdRng,
+}
+
+impl UniformActiveBudgetDelayScheduler {
+    pub fn new(total_budget: usize, max_consecutive_delay: u64, seed: u64) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            max_consecutive_delay,
+            consecutive_delay: HashMap::new(),
+            rng: StdRng::seed_from_u64(seed),
+        }
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn message_key(msg: &Message) -> String {
+        format!("{}-{}-{:?}", msg.from, msg.to, msg.msg_type)
+    }
+
+    fn can_delay(&self, msg: &Message) -> bool {
+        let key = Self::message_key(msg);
+        let count = self.consecutive_delay.get(&key).copied().unwrap_or(0);
+        count < self.max_consecutive_delay
+    }
+
+    fn record_delay(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        let count = self.consecutive_delay.entry(key.clone()).or_insert(0);
+        *count += 1;
+
+        println!(
+            "[UNIFORM-ACTIVE-CAP] key={} count={} max={}",
+            key, count, self.max_consecutive_delay
+        );
+    }
+
+    fn record_delivery(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        self.consecutive_delay.remove(&key);
+    }
+
+    fn ballot(msg: &Message) -> Option<u64> {
+        match msg.msg_type {
+            MessageType::Prepare { ballot }
+            | MessageType::Promise { ballot, .. }
+            | MessageType::AcceptRequest { ballot, .. }
+            | MessageType::Accepted { ballot, .. }
+            | MessageType::Nack { ballot, .. } => Some(ballot),
+            _ => None,
+        }
+    }
+
+    fn latest_ballot(queue: &[Message]) -> Option<u64> {
+        queue.iter().filter_map(Self::ballot).max()
+    }
+
+    fn find_active_candidate(&mut self, queue: &[Message]) -> Option<usize> {
+        let latest = Self::latest_ballot(queue)?;
+
+        let candidates: Vec<usize> = queue
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, msg)| {
+                if Self::ballot(msg) == Some(latest) && self.can_delay(msg) {
+                    Some(idx)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        if candidates.is_empty() {
+            None
+        } else {
+            let j = self.rng.random_range(0..candidates.len());
+            Some(candidates[j])
+        }
+    }
+}
+
+impl Scheduler for UniformActiveBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(idx) = self.find_active_candidate(queue) {
+                self.spend_one();
+
+                let msg = queue.remove(idx);
+                self.record_delay(&msg);
+
+                let msg_type = format!("{:?}", msg.msg_type);
+                queue.push(msg);
+
+                println!(
+                    "[UNIFORM-ACTIVE-BUDGET-DELAY] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            }
+        }
+
+        let msg = queue.remove(0);
+        self.record_delivery(&msg);
+        SchedulerOutcome::Deliver(msg)
+    }
+}
+pub struct UniformCappedBudgetDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    max_consecutive_delay: u64,
+    consecutive_delay: HashMap<String, u64>,
+    rng: StdRng,
+}
+
+impl UniformCappedBudgetDelayScheduler {
+    pub fn new(total_budget: usize, max_consecutive_delay: u64, seed: u64) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            max_consecutive_delay,
+            consecutive_delay: HashMap::new(),
+            rng: StdRng::seed_from_u64(seed),
+        }
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn message_key(msg: &Message) -> String {
+        format!("{}-{}-{:?}", msg.from, msg.to, msg.msg_type)
+    }
+
+    fn can_delay(&self, msg: &Message) -> bool {
+        let key = Self::message_key(msg);
+        let count = self.consecutive_delay.get(&key).copied().unwrap_or(0);
+        count < self.max_consecutive_delay
+    }
+
+    fn record_delay(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        *self.consecutive_delay.entry(key.clone()).or_insert(0) += 1;
+
+        let count = self.consecutive_delay.get(&key).copied().unwrap_or(0);
+
+        println!(
+            "[UNIFORM-CAPPED-CAP] key={} count={} max={}",
+            key, count, self.max_consecutive_delay
+        );
+    }
+
+    fn record_delivery(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        self.consecutive_delay.remove(&key);
+    }
+
+    fn find_delay_candidate(&mut self, queue: &[Message]) -> Option<usize> {
+        let candidates: Vec<usize> = queue
+            .iter()
+            .enumerate()
+            .filter_map(
+                |(idx, msg)| {
+                    if self.can_delay(msg) { Some(idx) } else { None }
+                },
+            )
+            .collect();
+
+        if candidates.is_empty() {
+            None
+        } else {
+            let j = self.rng.random_range(0..candidates.len());
+            Some(candidates[j])
+        }
+    }
+}
+
+impl Scheduler for UniformCappedBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(idx) = self.find_delay_candidate(queue) {
+                self.spend_one();
+
+                let msg = queue.remove(idx);
+                self.record_delay(&msg);
+
+                let msg_type = format!("{:?}", msg.msg_type);
+                queue.push(msg);
+
+                println!(
+                    "[UNIFORM-CAPPED-BUDGET-DELAY] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            }
+        }
+
+        let msg = queue.remove(0);
+        self.record_delivery(&msg);
+        SchedulerOutcome::Deliver(msg)
+    }
+}
+
+pub struct PhaseBalancedBudgetDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    max_consecutive_delay: u64,
+    consecutive_delay: HashMap<String, u64>,
+    rng: StdRng,
+}
+
+impl PhaseBalancedBudgetDelayScheduler {
+    pub fn new(total_budget: usize, max_consecutive_delay: u64, seed: u64) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            max_consecutive_delay,
+            consecutive_delay: HashMap::new(),
+            rng: StdRng::seed_from_u64(seed),
+        }
+    }
+
+    fn spend_one(&mut self) {
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn message_key(msg: &Message) -> String {
+        format!("{}-{}-{:?}", msg.from, msg.to, msg.msg_type)
+    }
+
+    fn can_delay(&self, msg: &Message) -> bool {
+        let key = Self::message_key(msg);
+        let count = self.consecutive_delay.get(&key).copied().unwrap_or(0);
+        count < self.max_consecutive_delay
+    }
+
+    fn record_delay(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        let count = self.consecutive_delay.entry(key.clone()).or_insert(0);
+        *count += 1;
+
+        println!(
+            "[PHASE-BALANCED-CAP] key={} count={} max={}",
+            key, count, self.max_consecutive_delay
+        );
+    }
+
+    fn record_delivery(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        self.consecutive_delay.remove(&key);
+    }
+
+    fn ballot(msg: &Message) -> Option<u64> {
+        match msg.msg_type {
+            MessageType::Prepare { ballot }
+            | MessageType::Promise { ballot, .. }
+            | MessageType::AcceptRequest { ballot, .. }
+            | MessageType::Accepted { ballot, .. }
+            | MessageType::Nack { ballot, .. } => Some(ballot),
+            _ => None,
+        }
+    }
+
+    fn latest_ballot(queue: &[Message]) -> Option<u64> {
+        queue.iter().filter_map(Self::ballot).max()
+    }
+
+    fn is_phase1(msg: &Message) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::Prepare { .. } | MessageType::Promise { .. }
+        )
+    }
+
+    fn is_phase2(msg: &Message) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::AcceptRequest { .. } | MessageType::Accepted { .. }
+        )
+    }
+
+    fn phase1_candidates(&self, queue: &[Message], latest: u64) -> Vec<usize> {
+        queue
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, msg)| {
+                if Self::ballot(msg) == Some(latest) && Self::is_phase1(msg) && self.can_delay(msg)
+                {
+                    Some(idx)
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    fn phase2_candidates(&self, queue: &[Message], latest: u64) -> Vec<usize> {
+        queue
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, msg)| {
+                if Self::ballot(msg) == Some(latest) && Self::is_phase2(msg) && self.can_delay(msg)
+                {
+                    Some(idx)
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    fn find_phase_balanced_candidate(&mut self, queue: &[Message]) -> Option<usize> {
+        let latest = Self::latest_ballot(queue)?;
+
+        let phase1 = self.phase1_candidates(queue, latest);
+        let phase2 = self.phase2_candidates(queue, latest);
+
+        match (phase1.is_empty(), phase2.is_empty()) {
+            (true, true) => None,
+
+            (false, true) => {
+                let j = self.rng.random_range(0..phase1.len());
+                Some(phase1[j])
+            }
+
+            (true, false) => {
+                let j = self.rng.random_range(0..phase2.len());
+                Some(phase2[j])
+            }
+
+            (false, false) => {
+                let choose_phase1 = self.rng.random_bool(0.5);
+
+                if choose_phase1 {
+                    let j = self.rng.random_range(0..phase1.len());
+                    Some(phase1[j])
+                } else {
+                    let j = self.rng.random_range(0..phase2.len());
+                    Some(phase2[j])
+                }
+            }
+        }
+    }
+}
+
+impl Scheduler for PhaseBalancedBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(idx) = self.find_phase_balanced_candidate(queue) {
+                self.spend_one();
+
+                let msg = queue.remove(idx);
+                self.record_delay(&msg);
+
+                let msg_type = format!("{:?}", msg.msg_type);
+                queue.push(msg);
+
+                println!(
+                    "[PHASE-BALANCED-BUDGET-DELAY] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            }
+        }
+
+        let msg = queue.remove(0);
+        self.record_delivery(&msg);
+        SchedulerOutcome::Deliver(msg)
+    }
+}
+
+pub struct MPPromiseBudgetDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    max_consecutive_delay: u64,
+    consecutive_delay: HashMap<String, u64>,
+    rng: StdRng,
+}
+
+impl MPPromiseBudgetDelayScheduler {
+    pub fn new(total_budget: usize, max_consecutive_delay: u64, seed: u64) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            max_consecutive_delay,
+            consecutive_delay: HashMap::new(),
+            rng: StdRng::seed_from_u64(seed),
+        }
+    }
+
+    fn spend_one(&mut self) {
+        debug_assert!(self.remaining_budget > 0);
+
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn message_key(msg: &Message) -> String {
+        format!("{}-{}-{:?}", msg.from, msg.to, msg.msg_type)
+    }
+
+    fn is_target(msg: &Message) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::MPPromise { ballot, .. } if ballot >= 2
+        )
+    }
+
+    fn can_delay(&self, msg: &Message) -> bool {
+        let key = Self::message_key(msg);
+
+        let delay_count = self.consecutive_delay.get(&key).copied().unwrap_or(0);
+
+        delay_count < self.max_consecutive_delay
+    }
+
+    fn record_delay(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+
+        let count = self.consecutive_delay.entry(key.clone()).or_insert(0);
+        *count += 1;
+
+        println!(
+            "[MP-PROMISE-CAP] key={} count={} max={}",
+            key, count, self.max_consecutive_delay
+        );
+    }
+
+    fn record_delivery(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        self.consecutive_delay.remove(&key);
+    }
+
+    fn candidate_indices(&self, queue: &[Message]) -> Vec<usize> {
+        queue
+            .iter()
+            .enumerate()
+            .filter_map(|(index, msg)| {
+                if Self::is_target(msg) && self.can_delay(msg) {
+                    Some(index)
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    fn find_candidate(&mut self, queue: &[Message]) -> Option<usize> {
+        let candidates = self.candidate_indices(queue);
+
+        if candidates.is_empty() {
+            return None;
+        }
+
+        let selected = self.rng.random_range(0..candidates.len());
+        Some(candidates[selected])
+    }
+
+    pub fn print_summary(&self) {
+        println!(
+            "[MP-PROMISE-SUMMARY] spent={} remaining={} max_consecutive={}",
+            self.spent_budget, self.remaining_budget, self.max_consecutive_delay
+        );
+
+        println!("[MP-PROMISE-SUMMARY] per_message_delay_counts:");
+
+        for (key, count) in &self.consecutive_delay {
+            println!("[MP-PROMISE-SUMMARY] {} -> {}", key, count);
+        }
+    }
+}
+
+impl Scheduler for MPPromiseBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(index) = self.find_candidate(queue) {
+                self.spend_one();
+
+                let msg = queue.remove(index);
+                self.record_delay(&msg);
+
+                let msg_type = format!("{:?}", msg.msg_type);
+                queue.push(msg);
+
+                println!(
+                    "[MP-PROMISE-BUDGET-DELAY] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            } else {
+                println!(
+                    "[MP-PROMISE-NO-CANDIDATE] spent={} remaining={}",
+                    self.spent_budget, self.remaining_budget
+                );
+            }
+        }
+
+        let msg = queue.remove(0);
+        self.record_delivery(&msg);
+
+        SchedulerOutcome::Deliver(msg)
+    }
+}
+
+pub struct MPPrepareBudgetDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    max_consecutive_delay: u64,
+    consecutive_delay: HashMap<String, u64>,
+    rng: StdRng,
+}
+
+impl MPPrepareBudgetDelayScheduler {
+    pub fn new(total_budget: usize, max_consecutive_delay: u64, seed: u64) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            max_consecutive_delay,
+            consecutive_delay: HashMap::new(),
+            rng: StdRng::seed_from_u64(seed),
+        }
+    }
+
+    fn spend_one(&mut self) {
+        debug_assert!(self.remaining_budget > 0);
+
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn message_key(msg: &Message) -> String {
+        format!("{}-{}-{:?}", msg.from, msg.to, msg.msg_type)
+    }
+
+    fn is_target(msg: &Message) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::MPPrepare { ballot } if ballot >= 2
+        )
+    }
+
+    fn can_delay(&self, msg: &Message) -> bool {
+        let key = Self::message_key(msg);
+
+        let delay_count = self.consecutive_delay.get(&key).copied().unwrap_or(0);
+
+        delay_count < self.max_consecutive_delay
+    }
+
+    fn record_delay(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+
+        let count = self.consecutive_delay.entry(key.clone()).or_insert(0);
+        *count += 1;
+
+        println!(
+            "[MP-PREPARE-CAP] key={} count={} max={}",
+            key, count, self.max_consecutive_delay
+        );
+    }
+
+    fn record_delivery(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        self.consecutive_delay.remove(&key);
+    }
+
+    fn candidate_indices(&self, queue: &[Message]) -> Vec<usize> {
+        queue
+            .iter()
+            .enumerate()
+            .filter_map(|(index, msg)| {
+                if Self::is_target(msg) && self.can_delay(msg) {
+                    Some(index)
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    fn find_candidate(&mut self, queue: &[Message]) -> Option<usize> {
+        let candidates = self.candidate_indices(queue);
+
+        if candidates.is_empty() {
+            return None;
+        }
+
+        let selected = self.rng.random_range(0..candidates.len());
+        Some(candidates[selected])
+    }
+}
+
+impl Scheduler for MPPrepareBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(index) = self.find_candidate(queue) {
+                self.spend_one();
+
+                let msg = queue.remove(index);
+                self.record_delay(&msg);
+
+                let msg_type = format!("{:?}", msg.msg_type);
+
+                queue.push(msg);
+
+                println!(
+                    "[MP-PREPARE-BUDGET-DELAY] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            } else {
+                println!(
+                    "[MP-PREPARE-NO-CANDIDATE] spent={} remaining={}",
+                    self.spent_budget, self.remaining_budget
+                );
+            }
+        }
+
+        let msg = queue.remove(0);
+        self.record_delivery(&msg);
+
+        SchedulerOutcome::Deliver(msg)
+    }
+}
+
+pub struct MPAcceptRequestBudgetDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+    max_consecutive_delay: u64,
+    consecutive_delay: HashMap<String, u64>,
+    rng: StdRng,
+}
+
+impl MPAcceptRequestBudgetDelayScheduler {
+    pub fn new(total_budget: usize, max_consecutive_delay: u64, seed: u64) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+            max_consecutive_delay,
+            consecutive_delay: HashMap::new(),
+            rng: StdRng::seed_from_u64(seed),
+        }
+    }
+
+    fn spend_one(&mut self) {
+        debug_assert!(self.remaining_budget > 0);
+
+        self.remaining_budget -= 1;
+        self.spent_budget += 1;
+    }
+
+    fn message_key(msg: &Message) -> String {
+        format!("{}-{}-{:?}", msg.from, msg.to, msg.msg_type)
+    }
+
+    fn is_target(msg: &Message) -> bool {
+        matches!(msg.msg_type, MessageType::MPAcceptRequest { ballot: 2, .. })
+    }
+
+    fn can_delay(&self, msg: &Message) -> bool {
+        let key = Self::message_key(msg);
+
+        let delay_count = self.consecutive_delay.get(&key).copied().unwrap_or(0);
+
+        delay_count < self.max_consecutive_delay
+    }
+
+    fn record_delay(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+
+        let count = self.consecutive_delay.entry(key.clone()).or_insert(0);
+        *count += 1;
+
+        println!(
+            "[MP-ACCEPT-REQUEST-CAP] key={} count={} max={}",
+            key, count, self.max_consecutive_delay
+        );
+    }
+
+    fn record_delivery(&mut self, msg: &Message) {
+        let key = Self::message_key(msg);
+        self.consecutive_delay.remove(&key);
+    }
+
+    fn candidate_indices(&self, queue: &[Message]) -> Vec<usize> {
+        queue
+            .iter()
+            .enumerate()
+            .filter_map(|(index, msg)| {
+                if Self::is_target(msg) && self.can_delay(msg) {
+                    Some(index)
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    fn find_candidate(&mut self, queue: &[Message]) -> Option<usize> {
+        let candidates = self.candidate_indices(queue);
+
+        if candidates.is_empty() {
+            return None;
+        }
+
+        let selected = self.rng.random_range(0..candidates.len());
+        Some(candidates[selected])
+    }
+}
+
+impl Scheduler for MPAcceptRequestBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(index) = self.find_candidate(queue) {
+                self.spend_one();
+
+                let msg = queue.remove(index);
+                self.record_delay(&msg);
+
+                let msg_type = format!("{:?}", msg.msg_type);
+
+                queue.push(msg);
+
+                println!(
+                    "[MP-ACCEPT-REQUEST-BUDGET-DELAY] spent={} remaining={} queue_len={} delayed={}",
+                    self.spent_budget,
+                    self.remaining_budget,
+                    queue.len(),
+                    msg_type
+                );
+
+                return SchedulerOutcome::Delay;
+            } else {
+                println!(
+                    "[MP-ACCEPT-REQUEST-NO-CANDIDATE] spent={} remaining={}",
+                    self.spent_budget, self.remaining_budget
+                );
+            }
+        }
+
+        let msg = queue.remove(0);
+        self.record_delivery(&msg);
+
+        SchedulerOutcome::Deliver(msg)
+    }
+}
+
+pub struct MPHeartbeatBudgetDelayScheduler {
+    remaining_budget: usize,
+    spent_budget: usize,
+}
+
+impl MPHeartbeatBudgetDelayScheduler {
+    pub fn new(total_budget: usize) -> Self {
+        Self {
+            remaining_budget: total_budget,
+            spent_budget: 0,
+        }
+    }
+
+    fn is_target(msg: &Message) -> bool {
+        matches!(
+            msg.msg_type,
+            MessageType::MPHeartbeat {
+                ballot: 2,
+                leader_id: 2
+            }
+        ) && msg.to == 3
+    }
+}
+
+impl Scheduler for MPHeartbeatBudgetDelayScheduler {
+    fn choose_next(&mut self, queue: &mut Vec<Message>) -> SchedulerOutcome {
+        if queue.is_empty() {
+            return SchedulerOutcome::Empty;
+        }
+
+        if self.remaining_budget > 0 {
+            if let Some(index) = queue.iter().position(Self::is_target) {
+                let msg = queue.remove(index);
+
+                self.remaining_budget -= 1;
+                self.spent_budget += 1;
+
+                println!(
+                    "[MP-HEARTBEAT-BUDGET-DELAY] spent={} remaining={} \
+                     from={} to={} type={:?}",
+                    self.spent_budget, self.remaining_budget, msg.from, msg.to, msg.msg_type
+                );
+
+                queue.push(msg);
+
+                return SchedulerOutcome::Delay;
+            }
         }
 
         SchedulerOutcome::Deliver(queue.remove(0))

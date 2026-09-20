@@ -24,6 +24,14 @@ pub trait Protocol {
     fn on_tick(&mut self) -> Vec<NodeAction> {
         vec![]
     }
+
+    fn on_follower_timeout(
+        &mut self,
+        _candidate_id: u64,
+        _observed_ballot: u64,
+    ) -> Vec<NodeAction> {
+        vec![]
+    }
 }
 
 pub struct SimpleConsensusProtocol;

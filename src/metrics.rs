@@ -52,6 +52,22 @@ pub struct Metrics {
 
     pub reached_step_cap: bool,
     pub max_steps: u64,
+
+    pub multi_paxos_prepare_messages: u64,
+    pub multi_paxos_promise_messages: u64,
+    pub multi_paxos_accept_requests: u64,
+    pub multi_paxos_accepted_messages: u64,
+    pub multi_paxos_heartbeat_messages: u64,
+    pub multi_paxos_chosen_slots: u64,
+    pub mp_recovery_completed_step: Option<u64>,
+
+    pub mp_last_view_change_step: Option<u64>,
+    pub mp_stable_recovery_step: Option<u64>,
+
+    pub logical_ticks: u64,
+
+    pub mp_recovery_completed_tick: Option<u64>,
+    pub mp_stable_recovery_tick: Option<u64>,
 }
 
 impl Metrics {
@@ -106,6 +122,21 @@ impl Metrics {
 
             reached_step_cap: false,
             max_steps: 0,
+
+            multi_paxos_prepare_messages: 0,
+            multi_paxos_promise_messages: 0,
+            multi_paxos_accept_requests: 0,
+            multi_paxos_accepted_messages: 0,
+            multi_paxos_heartbeat_messages: 0,
+            multi_paxos_chosen_slots: 0,
+            mp_recovery_completed_step: None,
+            mp_last_view_change_step: None,
+            mp_stable_recovery_step: None,
+
+            logical_ticks: 0,
+
+            mp_recovery_completed_tick: None,
+            mp_stable_recovery_tick: None,
         }
     }
 }
@@ -116,6 +147,7 @@ impl Metrics {
         println!("Messages Sent: {}", self.messages_sent);
         println!("Messages Delivered: {}", self.messages_delivered);
         println!("Scheduler Steps: {}", self.scheduler_steps);
+        println!("Logical Ticks: {}", self.logical_ticks);
         println!("Stale Messages Ignored: {}", self.stale_messages_ignored);
         println!(
             "Messages Sent Until Decision: {}",
@@ -123,7 +155,8 @@ impl Metrics {
         );
         println!(
             "Undelivered Messages At Decision: {}",
-            self.messages_sent_until_decision - self.messages_delivered_until_decision
+            self.messages_sent_until_decision
+                .saturating_sub(self.messages_delivered_until_decision)
         );
         println!("Timeout triggered: {}", self.timeouts_triggered);
         println!("View changes: {}", self.view_changes);
@@ -169,6 +202,56 @@ impl Metrics {
         println!(
             "Delayed Messages Released: {}",
             self.delayed_messages_released
+        );
+
+        println!(
+            "Multi-paxos Prepare Messages: {}",
+            self.multi_paxos_prepare_messages
+        );
+
+        println!(
+            "Multi-paxos Promise Messages: {}",
+            self.multi_paxos_promise_messages
+        );
+
+        println!(
+            "Multi-paxos Accept Requests: {}",
+            self.multi_paxos_accept_requests
+        );
+
+        println!(
+            "Multi-paxos Accepted Messages: {}",
+            self.multi_paxos_accepted_messages
+        );
+
+        println!(
+            "Multi-paxos Heartbeat Messages: {}",
+            self.multi_paxos_heartbeat_messages
+        );
+
+        println!(
+            "Multi-paxos Chosen Slots: {}",
+            self.multi_paxos_chosen_slots
+        );
+
+        println!(
+            "Multi-paxos Recovery Completed Step: {:?}",
+            self.mp_recovery_completed_step
+        );
+
+        println!(
+            "Multi-paxos Stable Recovery Step: {:?}",
+            self.mp_stable_recovery_step
+        );
+
+        println!(
+            "Multi-paxos Recovery Completed Logical Tick: {:?}",
+            self.mp_recovery_completed_tick
+        );
+
+        println!(
+            "Multi-paxos Stable Recovery Logical Tick: {:?}",
+            self.mp_stable_recovery_tick
         );
     }
 }

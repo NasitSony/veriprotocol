@@ -1,4 +1,4 @@
-use crate::message::{MessageType, VoteValue};
+use crate::message::{AcceptedSlot, MessageType, VoteValue};
 use crate::state::NodeState;
 //use crate::trace::{trace, TraceEvent};
 use std::collections::HashMap;
@@ -20,9 +20,16 @@ pub struct Node {
     pub(crate) accepted_ballot: Option<u64>,
     pub(crate) accepted_value: Option<String>,
 
+    pub accepted_slots: HashMap<u64, AcceptedSlot>,
+
     pub raft_role: RaftRole,
     pub raft_current_term: u64,
     pub raft_voted_for: Option<u64>,
+    pub raft_election_age: u64,
+    pub raft_election_timeout: u64,
+
+    pub mp_heartbeat_age: u64,
+    pub mp_election_timeout: u64,
 }
 
 #[derive(Debug)]
@@ -51,6 +58,11 @@ pub enum NodeAction {
     },
 
     BroadcastPrepare {
+        ballot: u64,
+    },
+
+    BroadcastPrepareFrom {
+        from: u64,
         ballot: u64,
     },
 
@@ -115,6 +127,40 @@ pub enum NodeAction {
     ActivateRaftConfig {
         new_node_count: usize,
     },
+
+    SendMPPromise {
+        to: u64,
+        ballot: u64,
+        accepted: Vec<AcceptedSlot>,
+    },
+
+    BroadcastMPAcceptRequest {
+        ballot: u64,
+        slot: u64,
+        value: String,
+    },
+
+    SendMPAccepted {
+        to: u64,
+        ballot: u64,
+        slot: u64,
+        value: String,
+    },
+
+    RecordMPChosen {
+        slot: u64,
+        value: String,
+    },
+
+    BroadcastMPPrepare {
+        from: u64,
+        ballot: u64,
+    },
+
+    BroadcastMPHeartbeat {
+        leader_id: u64,
+        ballot: u64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -138,9 +184,15 @@ impl Node {
             promised_ballot: 0,
             accepted_ballot: None,
             accepted_value: None,
+            accepted_slots: HashMap::new(),
             raft_role: RaftRole::Follower,
             raft_current_term: 0,
             raft_voted_for: None,
+            raft_election_age: 0,
+            raft_election_timeout: 20,
+
+            mp_heartbeat_age: 0,
+            mp_election_timeout: 20,
         }
     }
 }
