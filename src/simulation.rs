@@ -18,6 +18,12 @@ pub enum TimeModel {
     RoundTick,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ObservationHorizon {
+    SchedulerSteps,
+    LogicalTicks,
+}
+
 pub struct Simulation {
     pub network: Network,
     nodes: Vec<Node>,
@@ -33,6 +39,8 @@ pub struct Simulation {
     pub node_count: usize,
     //pub last_timeout_step: u64,
     pub time_model: TimeModel,
+
+    pub observation_horizon: ObservationHorizon,
 
     // Tracks how many scheduler opportunities have happened
     // inside the current logical round.
@@ -52,6 +60,7 @@ impl Simulation {
         delay_probability: f64,
         network_model: &str,
         time_model: &str,
+        observation_horizon: &str,
     ) -> Self {
         //let node_count = 4;
 
@@ -63,6 +72,11 @@ impl Simulation {
         let time_model = match time_model {
             "round-tick" => TimeModel::RoundTick,
             _ => TimeModel::EventCoupled,
+        };
+
+        let observation_horizon = match observation_horizon {
+            "logical-horizon" => ObservationHorizon::LogicalTicks,
+            _ => ObservationHorizon::SchedulerSteps,
         };
 
         let nodes: Vec<Node> = (1..=node_count as u64).map(Node::new).collect();
@@ -200,9 +214,9 @@ impl Simulation {
             protocol_name: protocol_name.to_string(),
             node_count,
             time_model,
-
+            observation_horizon,
             round_progress: 0,
-            
+
             raft_heartbeat_age: 0,
             // last_timeout_step: 0,
         }
@@ -725,17 +739,27 @@ impl Simulation {
                 break;
             }
 
-            if self.protocol_name == "raft-election"
-                && self.metrics.scheduler_steps >= heartbeat_test_steps
-            {
-                println!(
-                    "[SIM] Raft observation window complete at step {} logical_tick={}",
-                    self.metrics.scheduler_steps,
-                    self.metrics.logical_ticks
-                );
-                break;
-            }
+            if self.protocol_name == "raft-election" {
+                let observation_complete = match self.observation_horizon {
+                    ObservationHorizon::SchedulerSteps => {
+                        self.metrics.scheduler_steps >= heartbeat_test_steps
+                    }
+                    ObservationHorizon::LogicalTicks => {
+                        self.metrics.logical_ticks >= heartbeat_test_steps
+                    }
+                };
 
+                if observation_complete {
+                    println!(
+                        "[SIM] Raft observation window complete at step {} logical_tick={} horizon={:?}",
+                        self.metrics.scheduler_steps,
+                        self.metrics.logical_ticks,
+                        self.observation_horizon
+                    );
+
+                    break;
+                }
+            }
 
             if self.metrics.scheduler_steps >= max_steps {
                 println!(
@@ -825,7 +849,6 @@ impl Simulation {
 
                     for node in &mut self.nodes {
                         if node.id == msg.to {
-
                             let actions = self.protocol.handle_message(node, &msg);
 
                             for action in actions {
@@ -1629,8 +1652,6 @@ impl Simulation {
             self.raft_heartbeat_age = 0;
             return vec![];
         };
-
-
 
         self.raft_heartbeat_age += 1;
 

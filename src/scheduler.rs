@@ -3201,13 +3201,14 @@ impl RaftHeartbeatBudgetDelayScheduler {
     }
 
     fn is_target(msg: &Message) -> bool {
-        matches!(
-            msg.msg_type,
-            MessageType::AppendEntries {
-                term: 1,
-                leader_id: 1
-            }
-        )
+        msg.to != 1
+            && matches!(
+                msg.msg_type,
+                MessageType::AppendEntries {
+                    term: 1,
+                    leader_id: 1
+                }
+            )
     }
 }
 
@@ -3227,11 +3228,7 @@ impl Scheduler for RaftHeartbeatBudgetDelayScheduler {
                 println!(
                     "[RAFT-HEARTBEAT-BUDGET-DELAY] spent={} remaining={} \
                      from={} to={} type={:?}",
-                    self.spent_budget,
-                    self.remaining_budget,
-                    msg.from,
-                    msg.to,
-                    msg.msg_type
+                    self.spent_budget, self.remaining_budget, msg.from, msg.to, msg.msg_type
                 );
 
                 queue.push(msg);

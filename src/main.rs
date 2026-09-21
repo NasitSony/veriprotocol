@@ -38,6 +38,11 @@ fn main() {
 
     let time_model = args.get(10).map(String::as_str).unwrap_or("event-coupled");
 
+    let observation_horizon = args
+        .get(11)
+        .map(String::as_str)
+        .unwrap_or("scheduler-horizon");
+
     let mut results: Vec<u64> = Vec::new();
     let mut view_changes_results: Vec<u64> = Vec::new();
     let mut max_ballot_results: Vec<u64> = Vec::new();
@@ -60,6 +65,7 @@ fn main() {
             delay_probability,
             network_model,
             time_model,
+            observation_horizon,
         );
         sim.run();
 
@@ -92,33 +98,25 @@ fn main() {
             .filter(|&&views| views > 1)
             .count();
 
-        let instability_rate =
-            100.0 * unstable_runs as f64 / runs as f64;
+        let instability_rate = 100.0 * unstable_runs as f64 / runs as f64;
 
-        let avg_views =
-            view_changes_results.iter().sum::<u64>() as f64
-            / runs as f64;
+        let avg_views = view_changes_results.iter().sum::<u64>() as f64 / runs as f64;
 
-        let max_views =
-            *view_changes_results.iter().max().unwrap();
+        let max_views = *view_changes_results.iter().max().unwrap();
 
-        let max_ballot =
-            *max_ballot_results.iter().max().unwrap();
+        let max_ballot = *max_ballot_results.iter().max().unwrap();
 
         let stable_ticks: Vec<u64> = stable_tick_results
             .iter()
             .filter_map(|&tick| tick)
             .collect();
 
-        let stable_recovery_count = stable_ticks.len();    
+        let stable_recovery_count = stable_ticks.len();
 
         let avg_stable_tick = if stable_ticks.is_empty() {
             None
         } else {
-            Some(
-                stable_ticks.iter().sum::<u64>() as f64
-                / stable_ticks.len() as f64
-            )
+            Some(stable_ticks.iter().sum::<u64>() as f64 / stable_ticks.len() as f64)
         };
 
         println!("\n=== Multi-Paxos Instability Summary ===");
@@ -131,8 +129,7 @@ fn main() {
 
         println!(
             "Stable Recovery Observed: {}/{}",
-            stable_recovery_count,
-            runs
+            stable_recovery_count, runs
         );
 
         match avg_stable_tick {
